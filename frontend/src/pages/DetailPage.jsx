@@ -73,7 +73,7 @@ function DetailPage() {
   };
 
   const getVideoUrl = () => {
-    return `http://localhost:3000${video.videoUrl}`;
+    return video.videoUrl;
   };
 
   const getStatusText = () => {

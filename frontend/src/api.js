@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:3000/api';
+const API_BASE_URL = '/api';
 
 export async function getVideoList(page = 1, pageSize = 12) {
   const response = await fetch(`${API_BASE_URL}/videos?page=${page}&pageSize=${pageSize}`);

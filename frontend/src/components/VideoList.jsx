@@ -22,7 +22,7 @@ function VideoList({ onUploadSuccess }) {
     try {
       const result = await getVideoList(page, pagination.pageSize);
       if (result.code === 200) {
-        setVideos(result.data.videos);
+        setVideos(result.data.videos || []);
         setPagination({
           ...pagination,
           page,
@@ -32,6 +32,7 @@ function VideoList({ onUploadSuccess }) {
       }
     } catch (error) {
       console.error('加载视频列表失败:', error);
+      setVideos([]);
     } finally {
       setLoading(false);
     }

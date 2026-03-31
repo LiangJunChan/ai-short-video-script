@@ -18,7 +18,7 @@ function VideoCard({ video, onClick }) {
 
   const getThumbnailUrl = (thumbnailPath) => {
     if (!thumbnailPath) return null;
-    return `http://localhost:3000${thumbnailPath}`;
+    return thumbnailPath;
   };
 
   return (
