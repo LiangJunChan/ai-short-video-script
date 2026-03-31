@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+
+# Go
+backend/server
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Database
+backend/videos.db
+
+# Logs
+backend.log
+frontend.log
+
+# Uploads
+uploads/*
+thumbnails/*
+audio/*
+!uploads/.gitkeep
+!thumbnails/.gitkeep
+!audio/.gitkeep
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
