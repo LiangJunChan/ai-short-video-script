@@ -1,219 +1,262 @@
-# AI短视频脚本平台 V1.0
+# AI短视频脚本平台
 
-一款轻量化AI短视频脚本辅助平台，核心价值是实现用户上传短视频的集中展示，以及通过AI技术自动提取视频文案并呈现，降低用户查看、获取短视频文案的成本，适配个人创作者、内容运营者等用户群体。
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Go](https://img.shields.io/badge/Go-1.21+-blue.svg)](https://go.dev/)
+[![React](https://img.shields.io/badge/React-19-61DAFB.svg)](https://react.dev/)
+[![Platform](https://img.shields.io/badge/Platform-macOS%2FLinux-green.svg)]()
 
-## 技术栈
+> 一款轻量化的 AI 短视频脚本辅助平台，帮助用户快速上传短视频、自动提取语音文案，并支持 AI 文案改写。
 
-- **后端**：Go 1.21+ + Gin 框架 + SQLite 数据库
-- **前端**：React 19 + Vite
-- **音视频处理**：FFmpeg
-- **AI语音识别**：Fun-ASR（阿里开源）
-- **AI文案改写**：MiniMax / 火山方舟（可切换）
+## ✨ 功能特性
 
-## 功能特性
+### 视频管理
+- [x] 短视频上传（MP4/FLV/MOV，最大 4GB，15秒-10分钟）
+- [x] 视频列表展示（3列网格、竖屏缩略图、分页）
+- [x] 视频详情页（竖屏播放器 + 左右布局）
+- [x] 自动截取视频缩略图
+- [x] 一键删除视频
 
-- 短视频上传（支持MP4/FLV/MOV，大小≤4GB，时长15秒-10分钟）
-- 短视频列表卡片展示（3列网格，分页，按时间倒序）
-- 短视频详情页（自适应播放器 + AI文案展示）
-- 自动截取视频缩略图
-- 异步AI文案提取
-- 一键复制文案功能
-- AI文案改写（支持多种LLM）
-- 完善的异常处理
+### AI 能力
+- [x] 异步 AI 文案提取（Fun-ASR 离线识别）
+- [x] 一键复制文案
+- [x] AI 文案改写（MiniMax / 火山引擎，可切换）
+- [x] 重新提取文案
 
-## 项目结构
+### 技术特点
+- [x] 前后端分离，JSON API 通信
+- [x] 竖屏 9:16 视频适配
+- [x] 响应式设计
+- [x] 异步任务处理（Go Goroutine）
 
-```
-ai-short-video-script/
-├── backend/                # Go + Gin 后端
-│   ├── main.go            # 入口文件
-│   ├── .env               # 环境配置（LLM API Key等）
-│   ├── database/
-│   │   └── db.go         # SQLite数据库操作
-│   ├── handler/
-│   │   └── video.go      # API处理器
-│   ├── service/
-│   │   ├── processor.go  # 音视频处理和AI识别
-│   │   └── llm.go        # LLM调用（MiniMax/火山方舟）
-│   └── prompts/
-│       └── rewrite_system_prompt.txt  # 文案改写系统提示词
-├── frontend/              # React + Vite 前端
-│   ├── src/
-│   │   ├── App.jsx
-│   │   ├── api.js         # API调用
-│   │   ├── components/   # 组件（VideoCard, UploadModal, Toast等）
-│   │   └── pages/        # 页面（DetailPage）
-│   └── vite.config.js
-├── uploads/               # 上传视频存储
-├── thumbnails/            # 缩略图存储
-├── audio/                 # 临时音频存储
-└── nginx.conf            # Nginx 生产配置
-```
+## 🛠️ 技术栈
 
-## 环境要求
+| 层级 | 技术 |
+|------|------|
+| 后端 | Go 1.21+ · Gin 框架 · SQLite |
+| 前端 | React 19 · Vite · TypeScript · Tailwind CSS · RTK Query |
+| 音视频 | FFmpeg（缩略图 + 音频提取） |
+| 语音识别 | Fun-ASR（阿里开源，离线部署） |
+| 文案改写 | MiniMax M2 / 火山方舟 Doubao |
+
+## 🚀 快速开始
+
+### 环境要求
 
 - Go 1.21+
 - Node.js 18+
-- FFmpeg（用于视频处理和音频提取）
-- Python 3.8+（用于 Fun-ASR 服务）
-- PyTorch（Fun-ASR 依赖）
+- FFmpeg
+- Python 3.8+（Fun-ASR）
 
-## 部署指南
+### 1. 部署 Fun-ASR 服务
 
-### 1. 部署 Fun-ASR 服务（语音识别）
+推荐使用 [fun-asr-deploy](https://github.com/LiangJunChan/fun-asr-deploy) 项目部署 Fun-ASR 服务（基于阿里巴巴 Fun-ASR 框架，支持 ASR + 标点恢复，开箱即用）。
 
-Fun-ASR 是阿里开源的语音识别服务，提供本地部署的离线语音识别能力。
+#### 功能特性
 
-#### 安装步骤
+- **语音识别（ASR）**：基于 Paraformer-large 模型，中文识别精度高
+- **标点恢复**：自动添加句号、逗号、问号等标点
+- **多格式支持**：支持 wav / mp3 / m4a
+- **本地部署**：模型在本地，无需联网调用 API
+- **RESTful API**：HTTP 接口，方便集成
+
+#### 环境要求
+
+| 项目 | 要求 |
+|------|------|
+| 操作系统 | macOS (Apple Silicon) / Linux |
+| Python | 3.13+ |
+| 内存 | 推荐 8GB+ |
+| 磁盘 | 预留 2GB+（模型约 1.9GB） |
+
+#### 快速开始
 
 ```bash
-# 创建 Fun-ASR 目录
-mkdir -p /opt/funasr && cd /opt/funasr
+# 克隆项目
+git clone git@github.com:LiangJunChan/fun-asr-deploy.git /opt/fun-asr
+cd /opt/fun-asr
 
-# 克隆 Fun-ASR 仓库
-git clone https://github.com/modelscope/FunASR.git
+# 创建虚拟环境
+python3 -m venv .venv
+source .venv/bin/activate
 
-# 进入目录
-cd Fun-ASR
-
-# 安装 Python 依赖
+# 安装依赖
 pip install -r requirements.txt
 
-# 安装 FunASR runtime server
-pip install funasr
+# 启动服务
+python app.py
 ```
 
-#### 启动 Fun-ASR 服务
+首次启动时，模型会自动从 [ModelScope](https://www.modelscope.cn) 下载（约 1.9GB），请耐心等待。
+
+```
+INFO:     Uvicorn running on http://127.0.0.1:8000
+模型加载完成，服务已就绪
+```
+
+#### API 接口
+
+启动后可通过浏览器访问交互式文档：
+
+| 文档类型 | 地址 |
+|---------|------|
+| Swagger UI | http://localhost:8000/docs |
+| ReDoc | http://localhost:8000/redoc |
+
+**语音识别** `POST /asr`
 
 ```bash
-# 使用默认模型启动服务（端口 8000）
-python -m funasr_server_sdk.main
-
-# 或使用 GPU 加速（如果有多GPU或GPU服务器）
-python -m funasr_server_sdk.main --gpu 0
+# 识别 wav 文件
+curl -X POST "http://localhost:8000/asr" \
+  -F "file=@./audio.wav"
 ```
 
-服务启动后验证：
+**响应示例**：
+
+```json
+{
+  "success": true,
+  "text": "今天天气很好，我们下午去逛街吧，然后去看电影，怎么样？",
+  "filename": "audio.wav",
+  "punctuation": true
+}
+```
+
+**健康检查** `GET /health`
 
 ```bash
-# 测试服务是否正常运行
-curl -X POST http://localhost:8000/asr \
-  -F "file=@/path/to/test.wav"
+curl http://localhost:8000/health
 ```
 
-**注意**：Fun-ASR 服务需要与后端部署在同一服务器或网络可达的后端服务器上，默认调用地址为 `http://localhost:8000/asr`。
+> **注意**：Fun-ASR 服务需要与后端部署在同一服务器或网络可达的后端服务器上。后端默认调用地址为 `http://localhost:8000/asr`。
 
 ### 2. 部署后端
 
 ```bash
 cd backend
 
-# 安装 Go 依赖
+# 配置环境变量
+cp .env.example .env
+# 编辑 .env 填入你的 API Key
+
+# 安装依赖并启动
 go mod tidy
-
-# 构建后端
 go build -o server
-
-# 运行后端服务
 ./server
 ```
 
-后端服务默认运行在 `http://localhost:3000`
+服务启动后访问 `http://localhost:3000`
 
 ### 3. 部署前端
 
 ```bash
 cd frontend
 
-# 安装前端依赖
-npm install
+# 安装依赖（推荐 pnpm）
+pnpm install
 
-# 开发模式运行
-npm run dev
+# 开发模式
+pnpm dev
 
-# 或生产环境构建
-npm run build
+# 生产构建
+pnpm build
 ```
 
-前端开发模式运行在 `http://localhost:5173`，会自动代理 API 请求到后端。
+前端开发模式 `http://localhost:5173`，会自动代理 API 到后端。
 
-### 4. Nginx 生产部署
+## 📁 项目结构
 
-项目根目录提供了 `nginx.conf` 配置文件，可用于生产环境部署：
-
-```bash
-# 复制 nginx 配置
-sudo cp nginx.conf /etc/nginx/sites-available/ai-video
-
-# 启用站点
-sudo ln -s /etc/nginx/sites-available/ai-video /etc/nginx/sites-enabled/
-
-# 测试配置并重载
-sudo nginx -t && sudo nginx -s reload
+```
+ai-short-video-script/
+├── backend/
+│   ├── main.go                 # 入口 · 路由 · 中间件
+│   ├── .env.example            # 环境变量模板
+│   ├── database/
+│   │   └── db.go               # SQLite CRUD
+│   ├── handler/
+│   │   └── video.go            # API 处理器
+│   └── service/
+│       ├── processor.go        # FFmpeg · Fun-ASR 调用
+│       └── llm.go              # MiniMax / 火山方舟
+├── frontend/
+│   ├── src/
+│   │   ├── store/
+│   │   │   └── videoApi.ts     # RTK Query API
+│   │   ├── components/         # VideoCard · UploadModal · Toast
+│   │   └── pages/
+│   │       └── DetailPage.tsx  # 详情页（左右布局）
+│   └── tailwind.config.js
+├── uploads/                    # 原始视频
+├── thumbnails/                 # 缩略图
+├── audio/                      # 临时音频
+└── nginx.conf                  # 生产 Nginx 配置
 ```
 
-前端静态文件构建后放在 `frontend/dist`，通过 Nginx 直接服务。
+## ⚙️ LLM 配置
 
-## LLM 配置
-
-系统支持切换不同的 LLM 提供者进行文案改写，通过修改 `backend/.env` 文件配置：
+编辑 `backend/.env`：
 
 ```bash
-# 选择 LLM Provider: minimax | volcengine
-LLM_PROVIDER=volcengine
+# 选择 Provider
+LLM_PROVIDER=minimax        # 或 volcengine
 
-# ============ MiniMax 配置 ============
-MINIMAX_API_KEY=your_minimax_api_key_here
+# MiniMax
+MINIMAX_API_KEY=your_key_here
 MINIMAX_API_BASE=https://api.minimaxi.com
-MINIMAX_MODEL=MiniMax-M2.7
+MINIMAX_MODEL=MiniMax-M2
 
-# ============ 火山方舟配置 ============
-VOLCANO_API_KEY=your_volcano_api_key_here
-VOLCANO_API_BASE=https://ark.cn-beijing.volces.com/api/coding/v3
-VOLCANO_MODEL=Doubao-Seed-2.0-lite
+# 火山方舟
+VOLCANO_API_KEY=your_key_here
+VOLCANO_API_BASE=https://ark.cn-beijing.volces.com
+VOLCANO_MODEL=doubao-1.5-pro
 ```
 
-### 切换 LLM 提供者
-
-只需修改 `LLM_PROVIDER` 的值：
-- `minimax` - 使用 MiniMax M2 模型
-- `volcengine` - 使用火山方舟 Doubao/Ark 模型
-
-修改后重启后端服务即可生效。
-
-## API 接口
+## 🌐 API 接口
 
 | 接口 | 方法 | 说明 |
 |------|------|------|
-| `/api/videos` | GET | 获取视频列表（支持分页参数 `page` 和 `pageSize`） |
-| `/api/videos/:id` | GET | 获取视频详情（包含文案、状态等） |
-| `/api/upload` | POST | 上传视频（multipart/form-data，字段：video, title, uploader） |
-| `/api/videos/:id/reextract` | POST | 重新提取视频文案 |
-| `/api/videos/:id/rewrite` | POST | AI改写文案（body: `{"prompt": "改写要求"}`） |
-| `/api/videos/:id/copy` | GET | 获取AI文案用于复制 |
+| `/api/videos` | GET | 视频列表（分页） |
+| `/api/videos/:id` | GET | 视频详情 |
+| `/api/upload` | POST | 上传视频 |
+| `/api/videos/:id/reextract` | POST | 重新提取文案 |
+| `/api/videos/:id/rewrite` | POST | AI 改写文案 |
+| `/api/videos/:id/copy` | GET | 获取文案（复制） |
 | `/api/videos/:id` | DELETE | 删除视频 |
 
-## 数据存储
+## 📦 数据存储
 
-- **SQLite 数据库**：`backend/videos.db`
-- **上传视频**：`backend/uploads/`
-- **视频缩略图**：`backend/thumbnails/`
-- **临时音频**：`backend/audio/`
+| 类型 | 路径 |
+|------|------|
+| SQLite 数据库 | `backend/videos.db` |
+| 上传视频 | `uploads/` |
+| 缩略图 | `thumbnails/` |
+| 临时音频 | `audio/` |
 
-## 视频格式要求
+## 📝 视频要求
 
-- 支持格式：MP4、FLV、MOV
-- 文件大小：最大 4GB
-- 视频时长：15秒 - 10分钟
-- 音频要求：需要包含中文语音以便识别
+- 格式：MP4、FLV、MOV
+- 大小：最大 4GB
+- 时长：15秒 - 10分钟
+- 音频：需包含中文语音
 
-## 后续迭代规划
+## 🔧 生产部署
 
-- **V1.1**：用户注册登录、视频管理、优化AI提取精度
-- **V1.2**：视频搜索分类、文案编辑
-- **V1.3**：AI脚本生成、视频收藏分享
-- **V2.0**：视频编辑、批量上传、移动端适配
+```bash
+# 构建前端
+cd frontend && pnpm build
 
-## 许可证
+# 配置 Nginx
+sudo cp nginx.conf /etc/nginx/sites-available/ai-video
+sudo ln -s /etc/nginx/sites-available/ai-video /etc/nginx/sites-enabled/
+sudo nginx -t && sudo nginx -s reload
+```
 
-MIT
+## 📅 后续规划
+
+- [ ] V1.1 - 用户注册登录、视频管理
+- [ ] V1.2 - 视频搜索分类、文案编辑
+- [ ] V1.3 - AI 脚本生成、视频收藏
+- [ ] V2.0 - 视频编辑、批量上传、移动端适配
+
+## 📄 许可证
+
+MIT License
