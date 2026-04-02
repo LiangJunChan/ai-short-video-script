@@ -44,3 +44,28 @@ export async function getVideoText(id) {
   const response = await fetch(`${API_BASE_URL}/videos/${id}/copy`);
   return await response.json();
 }
+
+export async function reextractVideo(id) {
+  const response = await fetch(`${API_BASE_URL}/videos/${id}/reextract`, {
+    method: 'POST',
+  });
+  return await response.json();
+}
+
+export async function rewriteVideoText(id, prompt) {
+  const response = await fetch(`${API_BASE_URL}/videos/${id}/rewrite`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ prompt }),
+  });
+  return await response.json();
+}
+
+export async function deleteVideo(id) {
+  const response = await fetch(`${API_BASE_URL}/videos/${id}`, {
+    method: 'DELETE',
+  });
+  return await response.json();
+}

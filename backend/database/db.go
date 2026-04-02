@@ -12,18 +12,20 @@ var DB *sql.DB
 
 // Video 视频模型
 type Video struct {
-	ID         int       `json:"id"`
-	Title      string    `json:"title"`
-	Filename   string    `json:"filename"`
-	Originalname string  `json:"originalname"`
-	Thumbnail  *string   `json:"thumbnail"`
-	Duration   float64   `json:"duration"`
-	Size       int64     `json:"size"`
-	Mimetype   string    `json:"mimetype"`
-	AIText     *string   `json:"ai_text"`
-	Uploader   string    `json:"uploader"`
-	CreatedAt  time.Time `json:"created_at"`
-	Status     string    `json:"status"` // processing, done, failed
+	ID            int       `json:"id"`
+	Title         string    `json:"title"`
+	Filename      string    `json:"filename"`
+	Originalname  string    `json:"originalname"`
+	Thumbnail     *string   `json:"thumbnail"`
+	Duration      float64   `json:"duration"`
+	Size          int64     `json:"size"`
+	Mimetype      string    `json:"mimetype"`
+	AIText        *string   `json:"aiText"`
+	RewrittenText *string   `json:"rewrittenText"`
+	RewriteStatus string    `json:"rewriteStatus"` // idle, rewriting, done, failed
+	Uploader      string    `json:"uploader"`
+	CreatedAt     time.Time `json:"createdAt"`
+	Status        string    `json:"status"` // processing, done, failed
 }
 
 func InitDB() {
@@ -55,6 +57,11 @@ func InitDB() {
 		log.Fatalf("Failed to create table: %v", err)
 	}
 
+	// 添加 rewritten_text 列（如果不存在）
+	DB.Exec(`ALTER TABLE videos ADD COLUMN rewritten_text TEXT;`)
+	// 添加 rewrite_status 列（如果不存在）
+	DB.Exec(`ALTER TABLE videos ADD COLUMN rewrite_status TEXT DEFAULT 'idle';`)
+
 	log.Println("Database initialized successfully")
 }
 
@@ -69,7 +76,7 @@ func GetAllVideos(page, pageSize int) ([]Video, int, error) {
 	}
 
 	rows, err := DB.Query(`
-		SELECT id, title, filename, originalname, thumbnail, duration, size, mimetype, ai_text, uploader, created_at, status
+		SELECT id, title, filename, originalname, thumbnail, duration, size, mimetype, ai_text, rewritten_text, rewrite_status, uploader, created_at, status
 		FROM videos
 		ORDER BY created_at DESC
 		LIMIT ? OFFSET ?
@@ -92,6 +99,8 @@ func GetAllVideos(page, pageSize int) ([]Video, int, error) {
 			&v.Size,
 			&v.Mimetype,
 			&v.AIText,
+			&v.RewrittenText,
+			&v.RewriteStatus,
 			&v.Uploader,
 			&v.CreatedAt,
 			&v.Status,
@@ -109,7 +118,7 @@ func GetAllVideos(page, pageSize int) ([]Video, int, error) {
 func GetVideoByID(id int) (*Video, error) {
 	var v Video
 	err := DB.QueryRow(`
-		SELECT id, title, filename, originalname, thumbnail, duration, size, mimetype, ai_text, uploader, created_at, status
+		SELECT id, title, filename, originalname, thumbnail, duration, size, mimetype, ai_text, rewritten_text, rewrite_status, uploader, created_at, status
 		FROM videos WHERE id = ?
 	`, id).Scan(
 		&v.ID,
@@ -121,6 +130,8 @@ func GetVideoByID(id int) (*Video, error) {
 		&v.Size,
 		&v.Mimetype,
 		&v.AIText,
+		&v.RewrittenText,
+		&v.RewriteStatus,
 		&v.Uploader,
 		&v.CreatedAt,
 		&v.Status,
@@ -162,5 +173,21 @@ func UpdateVideoAIResult(id int, aiText *string, status string) error {
 	_, err := DB.Exec(`
 		UPDATE videos SET ai_text = ?, status = ? WHERE id = ?
 	`, aiText, status, id)
+	return err
+}
+
+// UpdateVideoRewrittenText 更新AI改写结果
+func UpdateVideoRewrittenText(id int, rewrittenText *string) error {
+	_, err := DB.Exec(`
+		UPDATE videos SET rewritten_text = ?, rewrite_status = 'done' WHERE id = ?
+	`, rewrittenText, id)
+	return err
+}
+
+// UpdateRewriteStatus 更新改写状态
+func UpdateRewriteStatus(id int, status string) error {
+	_, err := DB.Exec(`
+		UPDATE videos SET rewrite_status = ? WHERE id = ?
+	`, status, id)
 	return err
 }

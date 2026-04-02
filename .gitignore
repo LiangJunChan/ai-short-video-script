@@ -9,6 +9,9 @@ backend/server
 *.so
 *.dylib
 
+# Environment (local secrets - never commit)
+backend/.env
+
 # Database
 backend/videos.db
 

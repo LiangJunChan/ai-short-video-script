@@ -3,12 +3,18 @@ package service
 import (
 	"ai-short-video-backend/database"
 	"bytes"
+	"encoding/json"
 	"fmt"
+	"io"
 	"log"
+	"mime/multipart"
+	"net/http"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
+	"time"
 )
 
 // 中文数字到阿拉伯数字的映射
@@ -70,7 +76,7 @@ func GetVideoDuration(videoPath string) (float64, error) {
 	}
 
 	var duration float64
-	_, err = fmt.Scan(stdout.String(), &duration)
+	_, err = fmt.Sscan(stdout.String(), &duration)
 	if err != nil {
 		return 0, err
 	}
@@ -101,21 +107,64 @@ func CaptureThumbnail(videoPath, outputPath string) error {
 	return nil
 }
 
-// RecognizeSpeech 语音识别 - 需要接入实际的Fun-ASR或其他语音识别服务
-// 这里预留接口，实际使用时请替换为真实的语音识别API调用
+// RecognizeSpeech 调用本地 Fun-ASR 服务进行语音识别
 func RecognizeSpeech(audioPath string) (string, error) {
-	// TODO: 接入Fun-ASR或其他语音识别服务
-	// 例如:
-	// 1. 使用Fun-ASR本地模型
-	// 2. 调用阿里云语音识别API
-	// 3. 调用百度语音识别API
-	// 这里返回空字符串表示识别失败，实际使用时请替换
+	// 打开音频文件
+	file, err := os.Open(audioPath)
+	if err != nil {
+		return "", fmt.Errorf("failed to open audio file: %w", err)
+	}
+	defer file.Close()
 
-	// 示例Fun-ASR调用逻辑（伪代码）:
-	// result := funasr.Recognize(audioPath)
-	// return result.Text, nil
+	// 创建 multipart form 请求
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
 
-	return "", fmt.Errorf("no speech recognition service configured")
+	// 添加音频文件字段（字段名必须与 Fun-ASR 服务端一致: "file"）
+	part, err := writer.CreateFormFile("file", filepath.Base(audioPath))
+	if err != nil {
+		return "", fmt.Errorf("failed to create form file: %w", err)
+	}
+	if _, err := io.Copy(part, file); err != nil {
+		return "", fmt.Errorf("failed to copy audio data: %w", err)
+	}
+	writer.Close()
+
+	// 发送 POST 请求到 Fun-ASR 服务
+	req, err := http.NewRequest("POST", "http://localhost:8000/asr", body)
+	if err != nil {
+		return "", fmt.Errorf("failed to create request: %w", err)
+	}
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+
+	client := &http.Client{Timeout: 120 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("failed to call Fun-ASR: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		respBody, _ := io.ReadAll(resp.Body)
+		return "", fmt.Errorf("Fun-ASR returned status %d: %s", resp.StatusCode, string(respBody))
+	}
+
+	// 解析响应 JSON
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("failed to read response: %w", err)
+	}
+
+	// Fun-ASR 返回格式: {"text": "识别文字内容"}
+	var result struct {
+		Text string `json:"text"`
+	}
+	if err := json.Unmarshal(respBody, &result); err != nil {
+		// 如果 JSON 格式不同，尝试直接返回原始内容
+		return strings.TrimSpace(string(respBody)), nil
+	}
+
+	return result.Text, nil
 }
 
 // PostProcessText 文本后处理
