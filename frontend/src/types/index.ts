@@ -41,3 +41,64 @@ export interface ApiError {
   code: number
   message: string
 }
+
+// 用户类型
+export interface User {
+  id: number
+  username: string
+  user_type: 'normal' | 'vip' | 'admin'
+  credits: number
+}
+
+// 登录响应
+export interface LoginResponse {
+  code: number
+  message: string
+  data: {
+    token: string
+    user: User
+  }
+}
+
+// 当前用户响应
+export interface MeResponse {
+  code: number
+  data: User
+}
+
+// 积分响应
+export interface CreditLog {
+  id: number
+  userId: number
+  action: string
+  amount: number
+  balanceAfter: number
+  videoId?: number
+  createdAt: string
+}
+
+export interface CreditsResponse {
+  code: number
+  data: {
+    credits: number
+    logs: CreditLog[]
+  }
+}
+
+// 签到状态响应
+export interface CheckinStatusResponse {
+  code: number
+  data: {
+    checkedIn: boolean
+    lastCheckinAt: string | null
+  }
+}
+
+// 签到响应
+export interface CheckinResponse {
+  code: number
+  message: string
+  data: {
+    credits: number
+  }
+}

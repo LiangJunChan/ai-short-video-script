@@ -3,6 +3,7 @@ package main
 import (
 	"ai-short-video-backend/database"
 	"ai-short-video-backend/handler"
+	"ai-short-video-backend/middleware"
 	"ai-short-video-backend/service"
 	"bufio"
 	"log"
@@ -11,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func main() {
@@ -42,21 +44,42 @@ func main() {
 	r.Static("/thumbnails", "../thumbnails")
 	r.Static("/video", "../uploads")
 
-	// API路由
+	// 初始化管理员账号
+	initAdmin()
+
+	// API路由（公开）
 	api := r.Group("/api")
 	{
-		api.GET("/videos", handler.GetVideoList)
-		api.GET("/videos/:id", handler.GetVideoDetail)
-		api.POST("/upload", handler.UploadVideo)
-		api.GET("/videos/:id/copy", handler.GetVideoText)
-		api.POST("/videos/:id/reextract", handler.ReextractVideo)
-		api.POST("/videos/:id/rewrite", handler.RewriteVideoText)
-		api.DELETE("/videos/:id", handler.DeleteVideo)
+		api.POST("/auth/register", handler.Register)
+		api.POST("/auth/login", handler.Login)
+	}
+
+	// 受保护的API路由
+	auth := r.Group("/api")
+	auth.Use(middleware.AuthMiddleware())
+	{
+		auth.GET("/auth/me", handler.GetMe)
+		auth.GET("/user/credits", handler.GetCredits)
+		auth.GET("/user/checkin", handler.CheckinStatus)
+		auth.POST("/user/checkin", handler.DoCheckin)
+		auth.GET("/videos", handler.GetVideoList)
+		auth.GET("/videos/:id", handler.GetVideoDetail)
+		auth.POST("/upload", handler.UploadVideo)
+		auth.GET("/videos/:id/copy", handler.GetVideoText)
+		auth.POST("/videos/:id/reextract", handler.ReextractVideo)
+		auth.POST("/videos/:id/rewrite", handler.RewriteVideoText)
+		auth.DELETE("/videos/:id", handler.DeleteVideo)
 	}
 
 	// 启动服务器
 	log.Printf("后端服务已启动，访问地址: http://localhost:3000")
 	log.Printf("API端点:")
+	log.Printf("  POST /api/auth/register - 用户注册")
+	log.Printf("  POST /api/auth/login - 用户登录")
+	log.Printf("  GET  /api/auth/me - 当前用户信息")
+	log.Printf("  GET  /api/user/credits - 用户积分")
+	log.Printf("  GET  /api/user/checkin - 获取签到状态")
+	log.Printf("  POST /api/user/checkin - 执行签到")
 	log.Printf("  GET  /api/videos - 获取视频列表")
 	log.Printf("  GET  /api/videos/:id - 获取视频详情")
 	log.Printf("  POST /api/upload - 上传视频")
@@ -111,4 +134,32 @@ func loadEnvFile() {
 			}
 		}
 	}
+}
+
+// initAdmin 初始化管理员账号
+func initAdmin() {
+	exists, err := database.UserExists("luka")
+	if err != nil {
+		log.Printf("Warning: failed to check admin existence: %v", err)
+		return
+	}
+	if exists {
+		log.Println("Admin user 'luka' already exists")
+		return
+	}
+
+	// 创建管理员账号，密码为 123456
+	hash, err := bcrypt.GenerateFromPassword([]byte("123456"), 12)
+	if err != nil {
+		log.Printf("Warning: failed to hash admin password: %v", err)
+		return
+	}
+
+	_, err = database.CreateUser("luka", string(hash), "admin")
+	if err != nil {
+		log.Printf("Warning: failed to create admin user: %v", err)
+		return
+	}
+
+	log.Println("Admin user 'luka' created with password '123456'")
 }

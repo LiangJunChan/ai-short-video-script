@@ -2,6 +2,7 @@ package database
 
 import (
 	"database/sql"
+	"errors"
 	"log"
 	"time"
 
@@ -9,6 +10,28 @@ import (
 )
 
 var DB *sql.DB
+
+// ErrInsufficientCredits 积分不足
+var ErrInsufficientCredits = errors.New("积分不足")
+
+// ErrUserNotFound 用户不存在
+var ErrUserNotFound = errors.New("用户不存在")
+
+// ErrUserExists 用户已存在
+var ErrUserExists = errors.New("用户名已存在")
+
+// WithTransaction 执行事务
+func WithTransaction(fn func(*sql.Tx) error) error {
+	tx, err := DB.Begin()
+	if err != nil {
+		return err
+	}
+	if err := fn(tx); err != nil {
+		tx.Rollback()
+		return err
+	}
+	return tx.Commit()
+}
 
 // Video 视频模型
 type Video struct {
@@ -26,6 +49,7 @@ type Video struct {
 	Uploader      string    `json:"uploader"`
 	CreatedAt     time.Time `json:"createdAt"`
 	Status        string    `json:"status"` // processing, done, failed
+	UserID        int       `json:"userId"`
 }
 
 func InitDB() {
@@ -35,7 +59,8 @@ func InitDB() {
 		log.Fatalf("Failed to open database: %v", err)
 	}
 
-	createTableSQL := `
+	// 创建 videos 表
+	DB.Exec(`
 	CREATE TABLE IF NOT EXISTS videos (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		title TEXT NOT NULL,
@@ -48,39 +73,86 @@ func InitDB() {
 		ai_text TEXT,
 		uploader TEXT DEFAULT '匿名用户',
 		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-		status TEXT DEFAULT 'processing'
+		status TEXT DEFAULT 'processing',
+		user_id INTEGER
 	);
-	`
+	`)
 
-	_, err = DB.Exec(createTableSQL)
-	if err != nil {
-		log.Fatalf("Failed to create table: %v", err)
-	}
-
-	// 添加 rewritten_text 列（如果不存在）
+	// 添加后续字段
 	DB.Exec(`ALTER TABLE videos ADD COLUMN rewritten_text TEXT;`)
-	// 添加 rewrite_status 列（如果不存在）
 	DB.Exec(`ALTER TABLE videos ADD COLUMN rewrite_status TEXT DEFAULT 'idle';`)
+
+	// 创建 users 表
+	DB.Exec(`
+	CREATE TABLE IF NOT EXISTS users (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		username TEXT UNIQUE NOT NULL,
+		password_hash TEXT NOT NULL,
+		user_type TEXT DEFAULT 'normal',
+		credits INTEGER DEFAULT 0,
+		last_login_bonus_at DATETIME,
+		last_login_at DATETIME,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+	);
+	`)
+
+	// 创建 credit_logs 表
+	DB.Exec(`
+	CREATE TABLE IF NOT EXISTS credit_logs (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		user_id INTEGER NOT NULL,
+		action TEXT NOT NULL,
+		amount INTEGER NOT NULL,
+		balance_after INTEGER NOT NULL,
+		video_id INTEGER,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+	);
+	`)
+
+	// 创建 video_credits 表（防重复扣费）
+	DB.Exec(`
+	CREATE TABLE IF NOT EXISTS video_credits (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		video_id INTEGER NOT NULL,
+		user_id INTEGER NOT NULL,
+		extract_done INTEGER DEFAULT 0,
+		rewrite_done INTEGER DEFAULT 0,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		UNIQUE(video_id, user_id)
+	);
+	`)
+
+	// 创建 checkin_logs 表（签到记录）
+	DB.Exec(`
+	CREATE TABLE IF NOT EXISTS checkin_logs (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		user_id INTEGER NOT NULL,
+		checkin_date DATE NOT NULL,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		UNIQUE(user_id, checkin_date)
+	);
+	`)
 
 	log.Println("Database initialized successfully")
 }
 
-// GetAllVideos 获取分页视频列表
-func GetAllVideos(page, pageSize int) ([]Video, int, error) {
+// GetAllVideos 获取分页视频列表（按用户隔离）
+func GetAllVideos(page, pageSize, userId int) ([]Video, int, error) {
 	offset := (page - 1) * pageSize
 
 	var total int
-	err := DB.QueryRow("SELECT COUNT(*) FROM videos").Scan(&total)
+	err := DB.QueryRow("SELECT COUNT(*) FROM videos WHERE user_id = ?", userId).Scan(&total)
 	if err != nil {
 		return nil, 0, err
 	}
 
 	rows, err := DB.Query(`
-		SELECT id, title, filename, originalname, thumbnail, duration, size, mimetype, ai_text, rewritten_text, rewrite_status, uploader, created_at, status
+		SELECT id, title, filename, originalname, thumbnail, duration, size, mimetype, ai_text, rewritten_text, rewrite_status, uploader, created_at, status, user_id
 		FROM videos
+		WHERE user_id = ?
 		ORDER BY created_at DESC
 		LIMIT ? OFFSET ?
-	`, pageSize, offset)
+	`, userId, pageSize, offset)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -104,6 +176,7 @@ func GetAllVideos(page, pageSize int) ([]Video, int, error) {
 			&v.Uploader,
 			&v.CreatedAt,
 			&v.Status,
+			&v.UserID,
 		)
 		if err != nil {
 			return nil, 0, err
@@ -118,7 +191,7 @@ func GetAllVideos(page, pageSize int) ([]Video, int, error) {
 func GetVideoByID(id int) (*Video, error) {
 	var v Video
 	err := DB.QueryRow(`
-		SELECT id, title, filename, originalname, thumbnail, duration, size, mimetype, ai_text, rewritten_text, rewrite_status, uploader, created_at, status
+		SELECT id, title, filename, originalname, thumbnail, duration, size, mimetype, ai_text, rewritten_text, rewrite_status, uploader, created_at, status, user_id
 		FROM videos WHERE id = ?
 	`, id).Scan(
 		&v.ID,
@@ -135,6 +208,7 @@ func GetVideoByID(id int) (*Video, error) {
 		&v.Uploader,
 		&v.CreatedAt,
 		&v.Status,
+		&v.UserID,
 	)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -145,17 +219,49 @@ func GetVideoByID(id int) (*Video, error) {
 	return &v, nil
 }
 
-// CreateVideo 创建视频记录
-func CreateVideo(title, filename, originalname, thumbnail string, duration float64, size int64, mimetype, uploader string) (int, error) {
+// GetVideoByIDAndUser 根据ID和用户ID获取视频（用户隔离）
+func GetVideoByIDAndUser(id, userId int) (*Video, error) {
+	var v Video
+	err := DB.QueryRow(`
+		SELECT id, title, filename, originalname, thumbnail, duration, size, mimetype, ai_text, rewritten_text, rewrite_status, uploader, created_at, status, user_id
+		FROM videos WHERE id = ? AND user_id = ?
+	`, id, userId).Scan(
+		&v.ID,
+		&v.Title,
+		&v.Filename,
+		&v.Originalname,
+		&v.Thumbnail,
+		&v.Duration,
+		&v.Size,
+		&v.Mimetype,
+		&v.AIText,
+		&v.RewrittenText,
+		&v.RewriteStatus,
+		&v.Uploader,
+		&v.CreatedAt,
+		&v.Status,
+		&v.UserID,
+	)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &v, nil
+}
+
+// CreateVideo 创建视频记录（带用户ID）
+func CreateVideo(title, filename, originalname, thumbnail string, duration float64, size int64, mimetype, uploader string, userId int) (int, error) {
 	var thumbnailPtr *string
 	if thumbnail != "" {
 		thumbnailPtr = &thumbnail
 	}
 
 	result, err := DB.Exec(`
-		INSERT INTO videos (title, filename, originalname, thumbnail, duration, size, mimetype, uploader)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-	`, title, filename, originalname, thumbnailPtr, duration, size, mimetype, uploader)
+		INSERT INTO videos (title, filename, originalname, thumbnail, duration, size, mimetype, uploader, user_id)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+	`, title, filename, originalname, thumbnailPtr, duration, size, mimetype, uploader, userId)
 	if err != nil {
 		return 0, err
 	}

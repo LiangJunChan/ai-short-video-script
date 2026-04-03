@@ -2,7 +2,9 @@ package handler
 
 import (
 	"ai-short-video-backend/database"
+	"ai-short-video-backend/middleware"
 	"ai-short-video-backend/service"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -53,6 +55,7 @@ type VideoResponse struct {
 
 // GetVideoList 获取视频列表
 func GetVideoList(c *gin.Context) {
+	userId := middleware.GetUserID(c)
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "12"))
 
@@ -63,7 +66,7 @@ func GetVideoList(c *gin.Context) {
 		pageSize = 12
 	}
 
-	videos, total, err := database.GetAllVideos(page, pageSize)
+	videos, total, err := database.GetAllVideos(page, pageSize, userId)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{
 			Code:    500,
@@ -115,6 +118,7 @@ func GetVideoList(c *gin.Context) {
 
 // GetVideoDetail 获取视频详情
 func GetVideoDetail(c *gin.Context) {
+	userId := middleware.GetUserID(c)
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
@@ -126,7 +130,7 @@ func GetVideoDetail(c *gin.Context) {
 		return
 	}
 
-	video, err := database.GetVideoByID(id)
+	video, err := database.GetVideoByIDAndUser(id, userId)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{
 			Code:    500,
@@ -205,6 +209,7 @@ func UploadVideo(c *gin.Context) {
 		return
 	}
 
+	userId := middleware.GetUserID(c)
 	title := c.DefaultPostForm("title", "")
 	uploader := c.DefaultPostForm("uploader", "匿名用户")
 
@@ -271,6 +276,7 @@ func UploadVideo(c *gin.Context) {
 		file.Size,
 		file.Header.Get("Content-Type"),
 		uploader,
+		userId,
 	)
 	if err != nil {
 		os.Remove(savePath)
@@ -283,6 +289,24 @@ func UploadVideo(c *gin.Context) {
 			Data:    nil,
 		})
 		return
+	}
+
+	// 扣减提取文案积分（上传触发首次提取，同步扣减）
+	if err := service.DeductExtractCredits(userId, id); err != nil {
+		if errors.Is(err, service.ErrInsufficientCredits) {
+			// 删除已创建的文件和记录
+			os.Remove(savePath)
+			if thumbPath != "" {
+				os.Remove(thumbPath)
+			}
+			database.DB.Exec("DELETE FROM videos WHERE id = ?", id)
+			c.JSON(http.StatusPaymentRequired, APIResponse{
+				Code:    402,
+				Message: "积分不足，上传视频需要5积分，请充值后再试",
+			})
+			return
+		}
+		// 其他错误继续执行，不阻止上传
 	}
 
 	// 异步AI处理
@@ -300,6 +324,7 @@ func UploadVideo(c *gin.Context) {
 
 // GetVideoText 获取视频文案用于复制
 func GetVideoText(c *gin.Context) {
+	userId := middleware.GetUserID(c)
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
@@ -311,7 +336,7 @@ func GetVideoText(c *gin.Context) {
 		return
 	}
 
-	video, err := database.GetVideoByID(id)
+	video, err := database.GetVideoByIDAndUser(id, userId)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{
 			Code:    500,
@@ -341,6 +366,7 @@ func GetVideoText(c *gin.Context) {
 
 // RewriteVideoText AI 改写视频文案
 func RewriteVideoText(c *gin.Context) {
+	userId := middleware.GetUserID(c)
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
@@ -364,7 +390,7 @@ func RewriteVideoText(c *gin.Context) {
 		return
 	}
 
-	video, err := database.GetVideoByID(id)
+	video, err := database.GetVideoByIDAndUser(id, userId)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{
 			Code:    500,
@@ -392,6 +418,22 @@ func RewriteVideoText(c *gin.Context) {
 		return
 	}
 
+	// 扣减积分
+	if err := service.DeductRewriteCredits(userId, id); err != nil {
+		if errors.Is(err, service.ErrInsufficientCredits) {
+			c.JSON(http.StatusPaymentRequired, APIResponse{
+				Code:    402,
+				Message: "积分不足，AI改写需要10积分，请充值后再试",
+			})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, APIResponse{
+			Code:    500,
+			Message: "扣减积分失败",
+		})
+		return
+	}
+
 	// 设置改写状态为进行中
 	database.UpdateRewriteStatus(id, "rewriting")
 
@@ -410,7 +452,6 @@ func RewriteVideoText(c *gin.Context) {
 	rewrittenTextPtr := &rewrittenText
 	if err := database.UpdateVideoRewrittenText(id, rewrittenTextPtr); err != nil {
 		log.Printf("Failed to save rewritten text for video %d: %v", id, err)
-		// 不影响返回，只是警告
 	}
 
 	c.JSON(http.StatusOK, APIResponse{
@@ -424,6 +465,7 @@ func RewriteVideoText(c *gin.Context) {
 
 // ReextractVideo 重新提取视频文案
 func ReextractVideo(c *gin.Context) {
+	userId := middleware.GetUserID(c)
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
@@ -435,7 +477,7 @@ func ReextractVideo(c *gin.Context) {
 		return
 	}
 
-	video, err := database.GetVideoByID(id)
+	video, err := database.GetVideoByIDAndUser(id, userId)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{
 			Code:    500,
@@ -450,6 +492,22 @@ func ReextractVideo(c *gin.Context) {
 			Code:    404,
 			Message: "视频不存在",
 			Data:    nil,
+		})
+		return
+	}
+
+	// 扣减积分
+	if err := service.DeductExtractCredits(userId, id); err != nil {
+		if errors.Is(err, service.ErrInsufficientCredits) {
+			c.JSON(http.StatusPaymentRequired, APIResponse{
+				Code:    402,
+				Message: "积分不足，重新提取需要5积分，请充值后再试",
+			})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, APIResponse{
+			Code:    500,
+			Message: "扣减积分失败",
 		})
 		return
 	}
@@ -478,6 +536,7 @@ func ReextractVideo(c *gin.Context) {
 
 // DeleteVideo 删除视频
 func DeleteVideo(c *gin.Context) {
+	userId := middleware.GetUserID(c)
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
@@ -489,7 +548,7 @@ func DeleteVideo(c *gin.Context) {
 		return
 	}
 
-	video, err := database.GetVideoByID(id)
+	video, err := database.GetVideoByIDAndUser(id, userId)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{
 			Code:    500,

@@ -1,13 +1,71 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
-import type { VideoListResponse, VideoDetailResponse, UploadResponse } from '../types'
+import type {
+  VideoListResponse,
+  VideoDetailResponse,
+  UploadResponse,
+  LoginResponse,
+  MeResponse,
+  CreditsResponse,
+  CheckinStatusResponse,
+  CheckinResponse,
+} from '../types'
 
 const API_BASE_URL = '/api'
 
+// 基础查询函数，自动附加 Token
+const baseQuery = fetchBaseQuery({
+  baseUrl: API_BASE_URL,
+  prepareHeaders: (headers) => {
+    const token = localStorage.getItem('token')
+    if (token) {
+      headers.set('Authorization', `Bearer ${token}`)
+    }
+  },
+})
+
 export const videoApi = createApi({
   reducerPath: 'videoApi',
-  baseQuery: fetchBaseQuery({ baseUrl: API_BASE_URL }),
-  tagTypes: ['Video', 'VideoList'],
+  baseQuery,
+  tagTypes: ['Video', 'VideoList', 'User', 'Checkin'],
   endpoints: (builder) => ({
+    // Auth
+    login: builder.mutation<LoginResponse, { username: string; password: string }>({
+      query: (credentials) => ({
+        url: '/auth/login',
+        method: 'POST',
+        body: credentials,
+      }),
+    }),
+    register: builder.mutation<{ code: number; message: string }, { username: string; password: string }>({
+      query: (credentials) => ({
+        url: '/auth/register',
+        method: 'POST',
+        body: credentials,
+      }),
+    }),
+    getMe: builder.query<MeResponse, void>({
+      query: () => '/auth/me',
+      providesTags: ['User'],
+    }),
+    getCredits: builder.query<CreditsResponse, void>({
+      query: () => '/user/credits',
+      providesTags: ['User'],
+    }),
+
+    // Checkin
+    getCheckinStatus: builder.query<CheckinStatusResponse, void>({
+      query: () => '/user/checkin',
+      providesTags: ['Checkin'],
+    }),
+    doCheckin: builder.mutation<CheckinResponse, void>({
+      query: () => ({
+        url: '/user/checkin',
+        method: 'POST',
+      }),
+      invalidatesTags: ['Checkin', 'User'],
+    }),
+
+    // Videos
     getVideoList: builder.query<VideoListResponse, { page: number; pageSize: number }>({
       query: ({ page, pageSize }) => `/videos?page=${page}&pageSize=${pageSize}`,
       providesTags: ['VideoList'],
@@ -50,6 +108,12 @@ export const videoApi = createApi({
 })
 
 export const {
+  useLoginMutation,
+  useRegisterMutation,
+  useGetMeQuery,
+  useGetCreditsQuery,
+  useGetCheckinStatusQuery,
+  useDoCheckinMutation,
   useGetVideoListQuery,
   useGetVideoDetailQuery,
   useUploadVideoMutation,

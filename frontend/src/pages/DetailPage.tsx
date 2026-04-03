@@ -5,6 +5,7 @@ import {
   useReextractVideoMutation,
   useRewriteVideoTextMutation,
   useDeleteVideoMutation,
+  useGetMeQuery,
 } from '../store/videoApi'
 import Loading from '../components/Loading'
 import Toast from '../components/Toast'
@@ -21,6 +22,7 @@ function DetailPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false)
 
   const { data, isLoading } = useGetVideoDetailQuery(numericId)
+  const { refetch: refetchMe } = useGetMeQuery()
   const [reextractVideo, { isLoading: isReextracting }] = useReextractVideoMutation()
   const [rewriteVideoText, { isLoading: isRewriting }] = useRewriteVideoTextMutation()
   const [deleteVideo] = useDeleteVideoMutation()
@@ -52,11 +54,18 @@ function DetailPage() {
       const result = await reextractVideo(numericId).unwrap()
       if (result.code === 200) {
         showToast('已开始重新提取文案')
+        refetchMe() // 刷新用户积分
       } else {
         showToast(result.message || '重新提取失败')
       }
-    } catch {
-      showToast('网络错误，请重试')
+    } catch (err: any) {
+      if (err.data?.code === 402) {
+        showToast(err.data.message || '积分不足，重新提取需要5积分，请充值后再试')
+      } else if (err.data?.message) {
+        showToast(err.data.message)
+      } else {
+        showToast('网络错误，请重试')
+      }
     }
   }
 
@@ -74,12 +83,19 @@ function DetailPage() {
       const result = await rewriteVideoText({ id: numericId, prompt: rewritePrompt }).unwrap()
       if (result.code === 200) {
         setRewriteResult(result.data?.text ?? null)
+        refetchMe() // 刷新用户积分
         showToast('改写成功')
       } else {
         showToast(result.message || '改写失败')
       }
-    } catch {
-      showToast('网络错误，请重试')
+    } catch (err: any) {
+      if (err.data?.code === 402) {
+        showToast(err.data.message || '积分不足，AI改写需要10积分，请充值后再试')
+      } else if (err.data?.message) {
+        showToast(err.data.message)
+      } else {
+        showToast('网络错误，请重试')
+      }
     }
   }
 

@@ -198,13 +198,21 @@ func ProcessVideoAI(videoID int, videoPath string) {
 	go func() {
 		log.Printf("Starting AI processing for video %d", videoID)
 
+		// 获取视频信息（包含user_id）
+		video, err := database.GetVideoByID(videoID)
+		if err != nil || video == nil {
+			log.Printf("Failed to get video %d: %v", videoID, err)
+			database.UpdateVideoAIResult(videoID, nil, "failed")
+			return
+		}
+
 		// 创建音频文件路径
 		ext := filepath.Ext(videoPath)
 		baseName := filepath.Base(videoPath[:len(videoPath)-len(ext)])
 		audioPath := filepath.Join("../audio", baseName+".wav")
 
 		// 提取音频
-		err := ExtractAudio(videoPath, audioPath)
+		err = ExtractAudio(videoPath, audioPath)
 		if err != nil {
 			log.Printf("Failed to extract audio for video %d: %v", videoID, err)
 			database.UpdateVideoAIResult(videoID, nil, "failed")
@@ -229,9 +237,6 @@ func ProcessVideoAI(videoID int, videoPath string) {
 			log.Printf("Failed to update AI result for video %d: %v", videoID, err)
 			return
 		}
-
-		// 可选: 删除临时音频文件
-		// os.Remove(audioPath)
 
 		log.Printf("AI processing completed for video %d", videoID)
 	}()
