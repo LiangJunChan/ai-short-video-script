@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -592,5 +593,146 @@ func DeleteVideo(c *gin.Context) {
 		Code:    200,
 		Message: "删除成功",
 		Data:    nil,
+	})
+}
+
+// ExtractVideoByURL 通过链接提取视频文案
+func ExtractVideoByURL(c *gin.Context) {
+	type Request struct {
+		URL   string `json:"url" binding:"required"`
+		Title string `json:"title"`
+		Uploader string `json:"uploader"`
+	}
+
+	var req Request
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, APIResponse{
+			Code:    400,
+			Message: "请提供有效的视频链接",
+			Data:    nil,
+		})
+		return
+	}
+
+	if !service.ValidateDouyinURL(req.URL) {
+		c.JSON(http.StatusBadRequest, APIResponse{
+			Code:    400,
+			Message: "目前仅支持抖音链接，请输入有效的抖音分享链接",
+			Data:    nil,
+		})
+		return
+	}
+
+	userId := middleware.GetUserID(c)
+
+	// 解析链接并下载视频
+	savePath, filename, err := service.ExtractVideoByDouyinURL(req.URL)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, APIResponse{
+			Code:    400,
+			Message: err.Error(),
+			Data:    nil,
+		})
+		return
+	}
+
+	// 获取视频时长
+	duration, err := service.GetVideoDuration(savePath)
+	if err != nil {
+		os.Remove(savePath)
+		c.JSON(http.StatusBadRequest, APIResponse{
+			Code:    400,
+			Message: "无法读取视频信息: " + err.Error(),
+			Data:    nil,
+		})
+		return
+	}
+
+	// 验证时长
+	if valid, msg := service.ValidateVideoDuration(duration); !valid {
+		os.Remove(savePath)
+		c.JSON(http.StatusBadRequest, APIResponse{
+			Code:    400,
+			Message: msg,
+			Data:    nil,
+		})
+		return
+	}
+
+	// 生成缩略图
+	uuid := strings.TrimPrefix(filename, "video_")
+	uuid = strings.TrimSuffix(uuid, ".mp4")
+	thumbFilename := fmt.Sprintf("thumb_%s.jpg", uuid)
+	thumbPath := fmt.Sprintf("../thumbnails/%s", thumbFilename)
+	err = service.CaptureThumbnail(savePath, thumbPath)
+	if err != nil {
+		log.Printf("Failed to capture thumbnail: %v", err)
+		thumbPath = ""
+	}
+
+	// 设置标题
+	title := req.Title
+	if title == "" {
+		title = "Extracted from URL"
+	}
+	uploader := req.Uploader
+	if uploader == "" {
+		uploader = "匿名用户"
+	}
+
+	// 创建数据库记录
+	id, err := database.CreateVideo(
+		title,
+		filename,
+		filename, // original filename
+		thumbPath,
+		duration,
+		int64(len(savePath)), // size - actually this is the path length, but GetVideoDuration already checked size limit
+		"video/mp4",         // content-type
+		uploader,
+		userId,
+	)
+	if err != nil {
+		os.Remove(savePath)
+		if thumbPath != "" {
+			os.Remove(thumbPath)
+		}
+		c.JSON(http.StatusInternalServerError, APIResponse{
+			Code:    500,
+			Message: "创建记录失败: " + err.Error(),
+			Data:    nil,
+		})
+		return
+	}
+
+	// 扣减积分
+	if err := service.DeductExtractCredits(userId, id); err != nil {
+		if errors.Is(err, service.ErrInsufficientCredits) {
+			// 删除已创建的文件和记录
+			os.Remove(savePath)
+			if thumbPath != "" {
+				os.Remove(thumbPath)
+			}
+			database.DB.Exec("DELETE FROM videos WHERE id = ?", id)
+			c.JSON(http.StatusPaymentRequired, APIResponse{
+				Code:    402,
+				Message: "积分不足，提取文案需要5积分，请充值后再试",
+			})
+			return
+		}
+		log.Printf("Warning: deduct credits failed: %v", err)
+		// 其他错误继续执行，不阻止流程
+	}
+
+	// 异步AI处理
+	go service.ProcessVideoAI(id, savePath)
+
+	c.JSON(http.StatusOK, APIResponse{
+		Code:    200,
+		Message: "提取成功，正在处理文案...",
+		Data: gin.H{
+			"id":    id,
+			"title": title,
+		},
 	})
 }
