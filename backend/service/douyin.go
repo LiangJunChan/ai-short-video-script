@@ -146,7 +146,7 @@ func extractVideoURL(html string) string {
 	if len(match) >= 2 {
 		url := strings.ReplaceAll(match[1], "amp;", "") // 解编码 &amp;
 		if url != "" {
-			return url
+			return cleanURL(url)
 		}
 	}
 
@@ -155,7 +155,7 @@ func extractVideoURL(html string) string {
 	if len(match) >= 2 {
 		url := strings.ReplaceAll(match[1], "amp;", "")
 		if url != "" {
-			return url
+			return cleanURL(url)
 		}
 	}
 
@@ -164,7 +164,7 @@ func extractVideoURL(html string) string {
 	if len(match) >= 2 {
 		url := strings.ReplaceAll(match[1], "amp;", "")
 		if url != "" {
-			return url
+			return cleanURL(url)
 		}
 	}
 
@@ -175,7 +175,7 @@ func extractVideoURL(html string) string {
 		url = strings.ReplaceAll(url, "\\u0026amp;", "")
 		url = strings.ReplaceAll(url, "\\", "")
 		if url != "" {
-			return url
+			return cleanURL(url)
 		}
 	}
 
@@ -186,20 +186,45 @@ func extractVideoURL(html string) string {
 		url = strings.ReplaceAll(url, "\\u0026amp;", "")
 		url = strings.ReplaceAll(url, "\\", "")
 		if url != "" {
-			return url
+			return cleanURL(url)
 		}
 	}
 
-	// 6. 最后的尝试：搜索所有 mp4 链接
-	all := regexp.MustCompile(`https?://[^\s"]+\.mp4[^\s"]*`).FindString(html)
+	// 6. 尝试从 NEXT_DATA JSON 中提取（抖音新版本页面）
+	// 查找整个页面中所有 play_addr 模式
+	reNextData := regexp.MustCompile(`"play_addr".*?"url".*?\["([^"]+)"`)
+	match = reNextData.FindStringSubmatch(html)
+	if len(match) >= 2 {
+		url := strings.ReplaceAll(match[1], "amp;", "")
+		url = strings.ReplaceAll(url, "\\u0026", "")
+		url = strings.ReplaceAll(url, "\\", "")
+		if url != "" {
+			return cleanURL(url)
+		}
+	}
+
+	// 7. 尝试从 video 找到 videoId 然后构造？不行，抖音需要签名
+
+	// 8. 最后的尝试：搜索页面中第一个 mp4 链接
+	reMp4Link := regexp.MustCompile(`https?://[^\s">]+\.mp4[^\s">]*`)
+	all := reMp4Link.FindString(html)
 	if all != "" {
 		url := strings.ReplaceAll(all, "amp;", "")
 		url = strings.ReplaceAll(url, "\\u0026amp;", "")
 		url = strings.ReplaceAll(url, "\\", "")
-		return url
+		return cleanURL(url)
 	}
 
 	return ""
+}
+
+// cleanURL 清理URL，处理各种编码问题
+func cleanURL(url string) string {
+	url = strings.TrimSpace(url)
+	url = strings.ReplaceAll(url, "&amp;", "&")
+	url = strings.ReplaceAll(url, "\\u0026", "&")
+	url = strings.ReplaceAll(url, "\"", "")
+	return url
 }
 
 // downloadVideo 流式下载视频并直接写入文件，避免内存占用
