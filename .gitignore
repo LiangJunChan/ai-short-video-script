@@ -37,3 +37,4 @@ audio/*
 # OS
 .DS_Store
 Thumbs.db
+backend/ai-short-video-backend
