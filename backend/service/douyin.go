@@ -22,6 +22,12 @@ var (
 	reVideoTag       = regexp.MustCompile(`<video[^>]+src="([^"]+)"`)
 	rePlayAddrScript = regexp.MustCompile(`"playAddr":\["([^"]+)"\]`)
 	reVmURL          = regexp.MustCompile(`vm\.url\s*=\s*"([^"]+)"`)
+	// 新增：匹配 NEXT_DATA 中的视频地址
+	rePlayAddrScript2 = regexp.MustCompile(`"playAddr":.*?"([^"]+\.mp4[^"]*)"`)
+	// 新增：匹配 videoId 模式在 JSON 中
+	reVideoURLInJSON = regexp.MustCompile(`"url":\s*"([^"]+)"`)
+	// 新增：匹配 aweme 结构中的视频
+	reAwemePlayAddr = regexp.MustCompile(`"play_addr":\s*\[\s*"([^"]+)"\s*\]`)
 )
 
 // ExtractVideoByDouyinURL 从抖音分享链接提取视频并下载到本地
@@ -49,8 +55,11 @@ func ExtractVideoByDouyinURL(shareURL string) (string, string, error) {
 	if err != nil {
 		return "", "", err
 	}
-	// 设置User-Agent模拟浏览器
-	req.Header.Set("User-Agent", "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1")
+	// 设置User-Agent模拟最新版iPhone Safari浏览器
+	req.Header.Set("User-Agent", "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1")
+	req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+	req.Header.Set("Accept-Language", "zh-CN,zh;q=0.9,en;q=0.8")
+	req.Header.Set("Referer", "https://www.douyin.com/")
 
 	resp, err := client.Do(req)
 	if err != nil {
@@ -130,26 +139,63 @@ func normalizeShareURL(input string) string {
 
 // extractVideoURL 从抖音页面HTML提取视频播放地址
 func extractVideoURL(html string) string {
-	// 尝试多种提取方式
+	// 尝试多种提取方式，按顺序尝试，找到就返回
 
 	// 1. 寻找 video 标签的 src
 	match := reVideoTag.FindStringSubmatch(html)
 	if len(match) >= 2 {
 		url := strings.ReplaceAll(match[1], "amp;", "") // 解编码 &amp;
-		return url
+		if url != "" {
+			return url
+		}
 	}
 
-	// 2. 寻找 script 中的 video url 匹配 pattern
+	// 2. 寻找 script 中的 video url 匹配 pattern (旧格式)
 	match = rePlayAddrScript.FindStringSubmatch(html)
 	if len(match) >= 2 {
 		url := strings.ReplaceAll(match[1], "amp;", "")
-		return url
+		if url != "" {
+			return url
+		}
 	}
 
 	// 3. 尝试匹配 vm.url 模式
 	match = reVmURL.FindStringSubmatch(html)
 	if len(match) >= 2 {
 		url := strings.ReplaceAll(match[1], "amp;", "")
+		if url != "" {
+			return url
+		}
+	}
+
+	// 4. 新增：匹配 NEXT_DATA 中的 playAddr (新格式)
+	match = rePlayAddrScript2.FindStringSubmatch(html)
+	if len(match) >= 2 {
+		url := strings.ReplaceAll(match[1], "amp;", "")
+		url = strings.ReplaceAll(url, "\\u0026amp;", "")
+		url = strings.ReplaceAll(url, "\\", "")
+		if url != "" {
+			return url
+		}
+	}
+
+	// 5. 新增：匹配 aweme 结构中的 play_addr
+	match = reAwemePlayAddr.FindStringSubmatch(html)
+	if len(match) >= 2 {
+		url := strings.ReplaceAll(match[1], "amp;", "")
+		url = strings.ReplaceAll(url, "\\u0026amp;", "")
+		url = strings.ReplaceAll(url, "\\", "")
+		if url != "" {
+			return url
+		}
+	}
+
+	// 6. 最后的尝试：搜索所有 mp4 链接
+	all := regexp.MustCompile(`https?://[^\s"]+\.mp4[^\s"]*`).FindString(html)
+	if all != "" {
+		url := strings.ReplaceAll(all, "amp;", "")
+		url = strings.ReplaceAll(url, "\\u0026amp;", "")
+		url = strings.ReplaceAll(url, "\\", "")
 		return url
 	}
 
