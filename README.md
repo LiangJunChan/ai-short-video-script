@@ -16,11 +16,22 @@
 - [x] 自动截取视频缩略图
 - [x] 一键删除视频
 
+### 抖音链接提取（V1.3）
+- [x] 抖音分享链接一键提取（粘贴链接即可下载视频）
+- [x] Playwright 无头浏览器绕过反爬机制
+- [x] 自动提取视频标题和上传者
+- [x] 支持完整视频（非预览版本）自动识别
+
 ### AI 能力
 - [x] 异步 AI 文案提取（Fun-ASR 离线识别）
 - [x] 一键复制文案
 - [x] AI 文案改写（MiniMax / 火山引擎，可切换）
 - [x] 重新提取文案
+
+### 积分系统
+- [x] 每日签到（+20积分）
+- [x] 积分不足友好提示
+- [x] 提取文案（5积分）/ 改写文案（10积分）
 
 ### 技术特点
 - [x] 前后端分离，JSON API 通信
@@ -37,6 +48,7 @@
 | 音视频 | FFmpeg（缩略图 + 音频提取） |
 | 语音识别 | Fun-ASR（阿里开源，离线部署） |
 | 文案改写 | MiniMax M2 / 火山方舟 Doubao |
+| 链接提取 | Playwright（抖音反爬绕过） |
 
 ## 🚀 快速开始
 
@@ -46,6 +58,7 @@
 - Node.js 18+
 - FFmpeg
 - Python 3.8+（Fun-ASR）
+- Playwright（`pip install playwright && playwright install chromium`）
 
 ### 1. 部署 Fun-ASR 服务
 
@@ -170,18 +183,20 @@ ai-short-video-script/
 ├── backend/
 │   ├── main.go                 # 入口 · 路由 · 中间件
 │   ├── .env.example            # 环境变量模板
+│   ├── extract_douyin.py       # 抖音链接提取脚本（Playwright）
 │   ├── database/
 │   │   └── db.go               # SQLite CRUD
 │   ├── handler/
 │   │   └── video.go            # API 处理器
 │   └── service/
 │       ├── processor.go        # FFmpeg · Fun-ASR 调用
+│       ├── douyin.go           # 抖音提取服务
 │       └── llm.go              # MiniMax / 火山方舟
 ├── frontend/
 │   ├── src/
 │   │   ├── store/
 │   │   │   └── videoApi.ts     # RTK Query API
-│   │   ├── components/         # VideoCard · UploadModal · Toast
+│   │   ├── components/         # VideoCard · UploadModal · UrlExtractModal · Toast
 │   │   └── pages/
 │   │       └── DetailPage.tsx  # 详情页（左右布局）
 │   └── tailwind.config.js
@@ -217,10 +232,13 @@ VOLCANO_MODEL=doubao-1.5-pro
 | `/api/videos` | GET | 视频列表（分页） |
 | `/api/videos/:id` | GET | 视频详情 |
 | `/api/upload` | POST | 上传视频 |
+| `/api/extract-by-url` | POST | 抖音链接提取 |
 | `/api/videos/:id/reextract` | POST | 重新提取文案 |
 | `/api/videos/:id/rewrite` | POST | AI 改写文案 |
 | `/api/videos/:id/copy` | GET | 获取文案（复制） |
 | `/api/videos/:id` | DELETE | 删除视频 |
+| `/api/user/checkin` | GET/POST | 每日签到 |
+| `/api/user/credits` | GET | 查询积分 |
 
 ## 📦 数据存储
 
@@ -250,11 +268,12 @@ sudo ln -s /etc/nginx/sites-available/ai-video /etc/nginx/sites-enabled/
 sudo nginx -t && sudo nginx -s reload
 ```
 
-## 📅 后续规划
+## 📅 版本历史
 
-- [ ] V1.1 - 用户注册登录、视频管理
-- [ ] V1.2 - 视频搜索分类、文案编辑
-- [ ] V1.3 - AI 脚本生成、视频收藏
+- [x] V1.0 - 核心功能：视频上传、AI文案提取、文案改写
+- [x] V1.1 - 用户注册登录、积分系统
+- [x] V1.2 - 视频搜索分类、文案编辑
+- [x] V1.3 - 抖音链接一键提取
 - [ ] V2.0 - 视频编辑、批量上传、移动端适配
 
 ## 📄 许可证

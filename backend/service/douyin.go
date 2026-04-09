@@ -1,13 +1,18 @@
 package service
 
 import (
+	"bytes"
+	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
+	"net/http/cookiejar"
 	"net/url"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -18,218 +23,157 @@ import (
 
 // 预编译正则表达式（只编译一次）
 var (
-	reURLExtract     = regexp.MustCompile(`https?://[^\s]+`)
-	reVideoTag       = regexp.MustCompile(`<video[^>]+src="([^"]+)"`)
-	rePlayAddrScript = regexp.MustCompile(`"playAddr":\["([^"]+)"\]`)
-	reVmURL          = regexp.MustCompile(`vm\.url\s*=\s*"([^"]+)"`)
-	// 新增：匹配 NEXT_DATA 中的视频地址
-	rePlayAddrScript2 = regexp.MustCompile(`"playAddr":.*?"([^"]+\.mp4[^"]*)"`)
-	// 新增：匹配 videoId 模式在 JSON 中
-	reVideoURLInJSON = regexp.MustCompile(`"url":\s*"([^"]+)"`)
-	// 新增：匹配 aweme 结构中的视频
-	reAwemePlayAddr = regexp.MustCompile(`"play_addr":\s*\[\s*"([^"]+)"\s*\]`)
+	reURLExtract        = regexp.MustCompile(`https?://[^\s]+`)
+	reVideoID          = regexp.MustCompile(`/video/(\d+)`)
+	reNoteID           = regexp.MustCompile(`/note/(\d+)`)
 )
 
 // ExtractVideoByDouyinURL 从抖音分享链接提取视频并下载到本地
-// 返回: 本地文件路径, 文件名, 错误
-func ExtractVideoByDouyinURL(shareURL string) (string, string, error) {
-	// 1. 规范化链接（处理用户粘贴的各种格式）
+// 使用Playwright无头浏览器绕过反爬
+// 返回: 保存路径, 文件名, 标题, 错误
+func ExtractVideoByDouyinURL(shareURL string) (string, string, string, error) {
+	// 1. 规范化链接
 	shareURL = normalizeShareURL(shareURL)
 	if shareURL == "" {
-		return "", "", errors.New("无效的抖音链接")
+		return "", "", "", errors.New("无效的抖音链接")
 	}
+	log.Printf("Extracting video from: %s", shareURL)
 
-	// 2. 请求链接，跟随重定向获取最终页面
-	client := &http.Client{
-		Timeout: 30 * time.Second,
-		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			// 允许最多10次重定向
-			if len(via) >= 10 {
-				return errors.New("太多重定向")
-			}
-			return nil
-		},
-	}
-
-	req, err := http.NewRequest("GET", shareURL, nil)
+	// 2. 使用Playwright提取视频URL和标题
+	videoURL, title, err := extractWithPlaywright(shareURL)
 	if err != nil {
-		return "", "", err
-	}
-	// 设置User-Agent模拟最新版iPhone Safari浏览器
-	req.Header.Set("User-Agent", "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1")
-	req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
-	req.Header.Set("Accept-Language", "zh-CN,zh;q=0.9,en;q=0.8")
-	req.Header.Set("Referer", "https://www.douyin.com/")
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return "", "", err
-	}
-	defer resp.Body.Close()
-
-	// 检查响应状态码
-	if resp.StatusCode != http.StatusOK {
-		return "", "", fmt.Errorf("请求页面失败，状态码: %d", resp.StatusCode)
+		log.Printf("Playwright extraction failed: %v", err)
+		return "", "", "", fmt.Errorf("提取失败: %w", err)
 	}
 
-	// 3. 读取HTML内容（HTML页面不大，io.ReadAll在这里是可接受的）
-	html, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return "", "", err
-	}
-	htmlStr := string(html)
-
-	// 4. 从HTML提取视频URL
-	videoURL := extractVideoURL(htmlStr)
 	if videoURL == "" {
-		return "", "", errors.New("无法提取视频地址，请检查链接是否正确")
+		return "", "", "", errors.New("无法提取视频地址")
+	}
+	log.Printf("Extracted video URL: %s, title: %s", videoURL, title)
+
+	// 3. 下载视频到本地
+	savePath, filename, err := downloadVideoToFile(videoURL, shareURL)
+	if err != nil {
+		return "", "", "", err
 	}
 
-	// 5. 生成文件名和保存路径
+	return savePath, filename, title, nil
+}
+
+// ExtractionResult 提取结果
+type ExtractionResult struct {
+	VideoURL string `json:"video_url"`
+	Title   string `json:"title"`
+	Error   string `json:"error"`
+}
+
+// extractWithPlaywright 使用Python Playwright提取视频URL和标题
+func extractWithPlaywright(shareURL string) (string, string, error) {
+	// 获取当前目录下的Python脚本路径
+	execDir, err := os.Executable()
+	if err != nil {
+		execDir = "."
+	}
+	scriptPath := filepath.Join(filepath.Dir(execDir), "extract_douyin.py")
+
+	// 如果脚本不存在，尝试当前工作目录
+	if _, err := os.Stat(scriptPath); os.IsNotExist(err) {
+		scriptPath = "extract_douyin.py"
+	}
+
+	log.Printf("Calling extraction script: %s", scriptPath)
+
+	// 调用Python脚本
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+
+	cmd := exec.CommandContext(ctx, "python3", scriptPath, shareURL)
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+
+	err = cmd.Run()
+	if err != nil {
+		log.Printf("Extraction script error: %v, stderr: %s", err, stderr.String())
+		return "", "", fmt.Errorf("提取脚本执行失败: %w", err)
+	}
+
+	output := strings.TrimSpace(stdout.String())
+	if output == "" {
+		log.Printf("No output from script, stderr: %s", stderr.String())
+		return "", "", errors.New("脚本未返回数据")
+	}
+
+	// 解析JSON响应
+	var result ExtractionResult
+	if err := json.Unmarshal([]byte(output), &result); err != nil {
+		// 如果不是JSON，尝试直接作为URL处理（旧格式兼容）
+		log.Printf("Failed to parse JSON, treating as direct URL: %v", err)
+		videoURL := strings.ReplaceAll(output, "\\", "")
+		videoURL = strings.TrimSpace(videoURL)
+		return videoURL, "", nil
+	}
+
+	if result.Error != "" {
+		return "", "", fmt.Errorf("提取错误: %s", result.Error)
+	}
+
+	if result.VideoURL == "" {
+		return "", "", errors.New("脚本未返回视频地址")
+	}
+
+	// 清理URL中的转义字符
+	videoURL := strings.ReplaceAll(result.VideoURL, "\\", "")
+	videoURL = strings.TrimSpace(videoURL)
+
+	// 清理标题
+	title := strings.TrimSpace(result.Title)
+
+	return videoURL, title, nil
+}
+
+// downloadVideoToFile 下载视频URL到本地文件
+func downloadVideoToFile(videoURL string, originalURL string) (string, string, error) {
+	jar, err := cookiejar.New(nil)
+	if err != nil {
+		return "", "", err
+	}
+	client := &http.Client{
+		Timeout: 2 * time.Minute,
+		Jar:     jar,
+	}
+
+	// 生成文件名和保存路径
 	uuid := uuid.New().String()
 	filename := fmt.Sprintf("video_%s.mp4", uuid)
-
-	// 使用 filepath.Join 处理路径（相对于项目根目录的backend目录）
 	uploadDir := filepath.Join("..", "uploads")
 	savePath := filepath.Join(uploadDir, filename)
 
-	// 6. 确保uploads目录存在
+	// 确保uploads目录存在
 	if err := os.MkdirAll(uploadDir, 0755); err != nil {
 		return "", "", fmt.Errorf("创建uploads目录失败: %w", err)
 	}
 
-	// 7. 创建输出文件
+	// 创建输出文件
 	outFile, err := os.Create(savePath)
 	if err != nil {
 		return "", "", err
 	}
 	defer outFile.Close()
 
-	// 8. 流式下载视频直接写入文件，不加载整个视频到内存
+	// 流式下载
 	err = downloadVideo(videoURL, outFile, client)
 	if err != nil {
-		// 下载失败删除已创建的文件
 		os.Remove(savePath)
 		return "", "", err
 	}
 
-	log.Printf("Successfully downloaded video from douyin URL: %s -> %s", shareURL, savePath)
+	log.Printf("Successfully downloaded video from %s -> %s", originalURL, savePath)
 	return savePath, filename, nil
 }
 
-// normalizeShareURL 处理各种格式的抖音分享链接
-func normalizeShareURL(input string) string {
-	input = strings.TrimSpace(input)
-	input = strings.TrimSuffix(input, "/")
-
-	// 如果已经是完整URL
-	if strings.HasPrefix(input, "http") {
-		return input
-	}
-
-	// 如果只复制了v.douyin.com/ABC部分，没有scheme
-	if strings.HasPrefix(input, "v.douyin.com") {
-		return "https://" + input
-	}
-
-	// 如果用户复制了整个分享文本，提取链接
-	match := reURLExtract.FindString(input)
-	return match
-}
-
-// extractVideoURL 从抖音页面HTML提取视频播放地址
-func extractVideoURL(html string) string {
-	// 尝试多种提取方式，按顺序尝试，找到就返回
-
-	// 1. 寻找 video 标签的 src
-	match := reVideoTag.FindStringSubmatch(html)
-	if len(match) >= 2 {
-		url := strings.ReplaceAll(match[1], "amp;", "") // 解编码 &amp;
-		if url != "" {
-			return cleanURL(url)
-		}
-	}
-
-	// 2. 寻找 script 中的 video url 匹配 pattern (旧格式)
-	match = rePlayAddrScript.FindStringSubmatch(html)
-	if len(match) >= 2 {
-		url := strings.ReplaceAll(match[1], "amp;", "")
-		if url != "" {
-			return cleanURL(url)
-		}
-	}
-
-	// 3. 尝试匹配 vm.url 模式
-	match = reVmURL.FindStringSubmatch(html)
-	if len(match) >= 2 {
-		url := strings.ReplaceAll(match[1], "amp;", "")
-		if url != "" {
-			return cleanURL(url)
-		}
-	}
-
-	// 4. 新增：匹配 NEXT_DATA 中的 playAddr (新格式)
-	match = rePlayAddrScript2.FindStringSubmatch(html)
-	if len(match) >= 2 {
-		url := strings.ReplaceAll(match[1], "amp;", "")
-		url = strings.ReplaceAll(url, "\\u0026amp;", "")
-		url = strings.ReplaceAll(url, "\\", "")
-		if url != "" {
-			return cleanURL(url)
-		}
-	}
-
-	// 5. 新增：匹配 aweme 结构中的 play_addr
-	match = reAwemePlayAddr.FindStringSubmatch(html)
-	if len(match) >= 2 {
-		url := strings.ReplaceAll(match[1], "amp;", "")
-		url = strings.ReplaceAll(url, "\\u0026amp;", "")
-		url = strings.ReplaceAll(url, "\\", "")
-		if url != "" {
-			return cleanURL(url)
-		}
-	}
-
-	// 6. 尝试从 NEXT_DATA JSON 中提取（抖音新版本页面）
-	// 查找整个页面中所有 play_addr 模式
-	reNextData := regexp.MustCompile(`"play_addr".*?"url".*?\["([^"]+)"`)
-	match = reNextData.FindStringSubmatch(html)
-	if len(match) >= 2 {
-		url := strings.ReplaceAll(match[1], "amp;", "")
-		url = strings.ReplaceAll(url, "\\u0026", "")
-		url = strings.ReplaceAll(url, "\\", "")
-		if url != "" {
-			return cleanURL(url)
-		}
-	}
-
-	// 7. 尝试从 video 找到 videoId 然后构造？不行，抖音需要签名
-
-	// 8. 最后的尝试：搜索页面中第一个 mp4 链接
-	reMp4Link := regexp.MustCompile(`https?://[^\s">]+\.mp4[^\s">]*`)
-	all := reMp4Link.FindString(html)
-	if all != "" {
-		url := strings.ReplaceAll(all, "amp;", "")
-		url = strings.ReplaceAll(url, "\\u0026amp;", "")
-		url = strings.ReplaceAll(url, "\\", "")
-		return cleanURL(url)
-	}
-
-	return ""
-}
-
-// cleanURL 清理URL，处理各种编码问题
-func cleanURL(url string) string {
-	url = strings.TrimSpace(url)
-	url = strings.ReplaceAll(url, "&amp;", "&")
-	url = strings.ReplaceAll(url, "\\u0026", "&")
-	url = strings.ReplaceAll(url, "\"", "")
-	return url
-}
-
-// downloadVideo 流式下载视频并直接写入文件，避免内存占用
+// downloadVideo 流式下载视频并直接写入文件
 func downloadVideo(videoURL string, outFile *os.File, client *http.Client) error {
-	// 处理相对URL
 	if !strings.HasPrefix(videoURL, "http") {
 		if strings.HasPrefix(videoURL, "//") {
 			videoURL = "https:" + videoURL
@@ -238,7 +182,6 @@ func downloadVideo(videoURL string, outFile *os.File, client *http.Client) error
 		}
 	}
 
-	// URL解码
 	parsedURL, err := url.Parse(videoURL)
 	if err != nil {
 		return err
@@ -248,8 +191,9 @@ func downloadVideo(videoURL string, outFile *os.File, client *http.Client) error
 	if err != nil {
 		return err
 	}
-	req.Header.Set("User-Agent", "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1")
+	req.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36")
 	req.Header.Set("Referer", "https://www.douyin.com/")
+	req.Header.Set("Accept-Encoding", "identity")
 
 	resp, err := client.Do(req)
 	if err != nil {
@@ -261,7 +205,6 @@ func downloadVideo(videoURL string, outFile *os.File, client *http.Client) error
 		return fmt.Errorf("下载视频失败，状态码: %d", resp.StatusCode)
 	}
 
-	// 使用 io.Copy 直接流式传输，不加载整个文件到内存
 	written, err := io.Copy(outFile, resp.Body)
 	if err != nil {
 		return err
@@ -271,12 +214,38 @@ func downloadVideo(videoURL string, outFile *os.File, client *http.Client) error
 		return errors.New("下载视频为空")
 	}
 
-	// 检查大小限制 (4GB)
 	if written > 4*1024*1024*1024 {
 		return errors.New("视频文件超过4GB限制")
 	}
 
 	return nil
+}
+
+// extractVideoID 从抖音分享链接提取视频ID
+func extractVideoID(shareURL string) string {
+	if match := reVideoID.FindStringSubmatch(shareURL); len(match) >= 2 {
+		return match[1]
+	}
+	if match := reNoteID.FindStringSubmatch(shareURL); len(match) >= 2 {
+		return match[1]
+	}
+	return ""
+}
+
+// normalizeShareURL 处理各种格式的抖音分享链接
+func normalizeShareURL(input string) string {
+	input = strings.TrimSpace(input)
+	input = strings.TrimSuffix(input, "/")
+
+	if strings.HasPrefix(input, "http") {
+		return input
+	}
+	if strings.HasPrefix(input, "v.douyin.com") {
+		return "https://" + input
+	}
+
+	match := reURLExtract.FindString(input)
+	return match
 }
 
 // ValidateDouyinURL 验证是否是抖音链接

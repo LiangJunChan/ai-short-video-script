@@ -626,7 +626,7 @@ func ExtractVideoByURL(c *gin.Context) {
 	userId := middleware.GetUserID(c)
 
 	// 解析链接并下载视频
-	savePath, filename, err := service.ExtractVideoByDouyinURL(req.URL)
+	savePath, filename, extractedTitle, err := service.ExtractVideoByDouyinURL(req.URL)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, APIResponse{
 			Code:    400,
@@ -670,10 +670,14 @@ func ExtractVideoByURL(c *gin.Context) {
 		thumbPath = ""
 	}
 
-	// 设置标题
+	// 设置标题：如果请求中没有提供，使用提取到的标题
 	title := req.Title
 	if title == "" {
-		title = "Extracted from URL"
+		if extractedTitle != "" {
+			title = extractedTitle
+		} else {
+			title = "抖音视频"
+		}
 	}
 	uploader := req.Uploader
 	if uploader == "" {

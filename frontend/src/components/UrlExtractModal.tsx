@@ -32,7 +32,7 @@ function UrlExtractModal({ onClose }: UrlExtractModalProps) {
 
       if (result.code === 200) {
         onClose()
-        navigate(`/video/${result.data.id}`)
+        navigate(`/detail/${result.data.id}`)
       } else {
         alert(result.message || '提取失败')
       }
