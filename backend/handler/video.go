@@ -599,8 +599,8 @@ func DeleteVideo(c *gin.Context) {
 // ExtractVideoByURL 通过链接提取视频文案
 func ExtractVideoByURL(c *gin.Context) {
 	type Request struct {
-		URL   string `json:"url" binding:"required"`
-		Title string `json:"title"`
+		URL      string `json:"url" binding:"required"`
+		Title    string `json:"title"`
 		Uploader string `json:"uploader"`
 	}
 
@@ -680,6 +680,22 @@ func ExtractVideoByURL(c *gin.Context) {
 		uploader = "匿名用户"
 	}
 
+	// 获取实际文件大小
+	fileInfo, err := os.Stat(savePath)
+	if err != nil {
+		os.Remove(savePath)
+		if thumbPath != "" {
+			os.Remove(thumbPath)
+		}
+		c.JSON(http.StatusInternalServerError, APIResponse{
+			Code:    500,
+			Message: "获取文件信息失败: " + err.Error(),
+			Data:    nil,
+		})
+		return
+	}
+	fileSize := fileInfo.Size()
+
 	// 创建数据库记录
 	id, err := database.CreateVideo(
 		title,
@@ -687,7 +703,7 @@ func ExtractVideoByURL(c *gin.Context) {
 		filename, // original filename
 		thumbPath,
 		duration,
-		int64(len(savePath)), // size - actually this is the path length, but GetVideoDuration already checked size limit
+		fileSize, // size - actual file size from os.Stat
 		"video/mp4",         // content-type
 		uploader,
 		userId,
