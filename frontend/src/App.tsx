@@ -3,6 +3,7 @@ import { useDispatch } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
 import VideoList from './components/VideoList'
 import UploadModal from './components/UploadModal'
+import UrlExtractModal from './components/UrlExtractModal'
 import Toast from './components/Toast'
 import { useAuth } from './hooks/useAuth'
 import { logout, updateCredits } from './store/authSlice'
@@ -13,6 +14,7 @@ function App() {
   const navigate = useNavigate()
   const { user, isAuthenticated } = useAuth()
   const [showUploadModal, setShowUploadModal] = useState(false)
+  const [showUrlExtractModal, setShowUrlExtractModal] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
 
   const { data: checkinData } = videoApi.useGetCheckinStatusQuery(undefined, {
@@ -73,12 +75,12 @@ function App() {
             {isAuthenticated && user ? (
               <>
                 {/* 积分悬浮区域 - 增加 padding 扩大 hover 范围 */}
-                <div className="relative group py-2 px-1">
+                <div className="relative group py-3 px-2">
                   <span className="text-sm text-[#666] cursor-default">
                     积分: <span className="font-medium text-black">{user.credits}</span>
                   </span>
-                  {/* 悬浮面板 - 用 group-hover 显示，mt-1 减小间距 */}
-                  <div className="absolute right-0 top-full mt-1 hidden group-hover:block bg-white shadow-lg rounded-lg p-4 w-48 z-50 border border-[#e5e5e5]">
+                  {/* 悬浮面板 - 负margin向上覆盖，消除间隙确保鼠标可以顺利移动到面板 */}
+                  <div className="absolute right-0 top-full -mt-1 hidden group-hover:block bg-white shadow-lg rounded-lg p-4 w-48 z-50 border border-[#e5e5e5]">
                     <p className="text-xs text-[#999] mb-3">
                       {checkedIn ? '✓ 今日已签到' : '今日未签到'}
                     </p>
@@ -100,6 +102,12 @@ function App() {
                   onClick={handleLogout}
                 >
                   退出
+                </button>
+                <button
+                  className="px-4 py-2.5 bg-black/80 text-white rounded-lg text-sm font-medium hover:opacity-80 transition-opacity"
+                  onClick={() => setShowUrlExtractModal(true)}
+                >
+                  链接提取
                 </button>
                 <button
                   className="px-7 py-2.5 bg-black text-white rounded-lg text-sm font-medium hover:opacity-80 transition-opacity"
@@ -131,6 +139,12 @@ function App() {
             setShowUploadModal(false)
             showToast('上传成功，正在提取文案...')
           }}
+        />
+      )}
+
+      {showUrlExtractModal && (
+        <UrlExtractModal
+          onClose={() => setShowUrlExtractModal(false)}
         />
       )}
 
