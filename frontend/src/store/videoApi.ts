@@ -104,6 +104,18 @@ export const videoApi = createApi({
       }),
       invalidatesTags: (_result, _error, { id }) => [{ type: 'Video', id }],
     }),
+    extractByUrl: builder.mutation<{
+      code: number;
+      message: string;
+      data: { id: number; title: string };
+    }, { url: string; title: string; uploader: string }>({
+      query: (body) => ({
+        url: '/video/extract-by-url',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['VideoList', 'User'],
+    }),
   }),
 })
 
@@ -120,4 +132,5 @@ export const {
   useDeleteVideoMutation,
   useReextractVideoMutation,
   useRewriteVideoTextMutation,
+  useExtractByUrlMutation,
 } = videoApi
