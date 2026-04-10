@@ -54,7 +54,7 @@ func DoCheckin(c *gin.Context) {
 
 	c.JSON(http.StatusOK, APIResponse{
 		Code:    200,
-		Message: "签到成功，获得20积分",
+		Message: "签到成功，获得50积分",
 		Data: gin.H{
 			"credits": newCredits,
 		},

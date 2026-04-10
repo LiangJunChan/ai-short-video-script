@@ -69,6 +69,8 @@ func main() {
 		auth.POST("/videos/:id/reextract", handler.ReextractVideo)
 		auth.POST("/videos/:id/rewrite", handler.RewriteVideoText)
 		auth.POST("/video/extract-by-url", handler.ExtractVideoByURL)
+		auth.POST("/videos/:id/analyze", handler.AnalyzeVideo)
+		auth.GET("/videos/:id/analysis-results", handler.GetAnalysisResults)
 		auth.DELETE("/videos/:id", handler.DeleteVideo)
 	}
 
@@ -88,6 +90,7 @@ func main() {
 	log.Printf("  POST /api/videos/:id/reextract - 重新提取文案")
 	log.Printf("  POST /api/videos/:id/rewrite - AI改写文案")
 	log.Printf("  POST /api/video/extract-by-url - 链接提取视频文案")
+	log.Printf("  POST /api/videos/:id/analyze - AI视频分析")
 
 	if err := r.Run(":3000"); err != nil {
 		log.Fatalf("Failed to start server: %v", err)

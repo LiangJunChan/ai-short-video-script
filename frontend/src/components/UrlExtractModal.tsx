@@ -1,15 +1,16 @@
 import { useState } from 'react'
 import { useExtractByUrlMutation } from '../store/videoApi'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../hooks/useAuth'
 
 interface UrlExtractModalProps {
   onClose: () => void
 }
 
 function UrlExtractModal({ onClose }: UrlExtractModalProps) {
+  const { user } = useAuth()
   const [url, setUrl] = useState('')
   const [title, setTitle] = useState('')
-  const [uploader, setUploader] = useState('')
   const [processing, setProcessing] = useState(false)
   const navigate = useNavigate()
 
@@ -27,7 +28,7 @@ function UrlExtractModal({ onClose }: UrlExtractModalProps) {
       const result = await extractByUrl({
         url: url.trim(),
         title: title.trim(),
-        uploader: uploader.trim(),
+        uploader: user?.username || '匿名用户',
       }).unwrap()
 
       if (result.code === 200) {
@@ -79,17 +80,6 @@ function UrlExtractModal({ onClose }: UrlExtractModalProps) {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="留空将自动生成"
-              className="w-full px-4 py-2.5 border border-[#e5e5e5] rounded-lg text-sm outline-none focus:border-black transition-colors"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-[#333] mb-1.5">上传者（可选）</label>
-            <input
-              type="text"
-              value={uploader}
-              onChange={(e) => setUploader(e.target.value)}
-              placeholder="默认为匿名用户"
               className="w-full px-4 py-2.5 border border-[#e5e5e5] rounded-lg text-sm outline-none focus:border-black transition-colors"
             />
           </div>

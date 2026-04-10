@@ -51,7 +51,7 @@ function App() {
       if (result.code === 200) {
         dispatch(updateCredits(result.data.credits))
         refetchMe() // 刷新用户信息
-        showToast('签到成功，获得20积分')
+        showToast('签到成功，获得50积分')
       }
     } catch (err: any) {
       if (err.data?.message) {
@@ -90,7 +90,7 @@ function App() {
                         disabled={isCheckingIn}
                         className="w-full py-2 bg-black text-white text-sm rounded-lg hover:opacity-80 transition-opacity disabled:opacity-40"
                       >
-                        {isCheckingIn ? '签到中...' : '签到 +20'}
+                        {isCheckingIn ? '签到中...' : '签到 +50'}
                       </button>
                     )}
                   </div>

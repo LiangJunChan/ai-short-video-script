@@ -12,6 +12,14 @@ var ErrInsufficientCredits = errors.New("积分不足")
 const extractCost = 5  // 提取文案消耗积分
 const rewriteCost = 10 // AI改写消耗积分
 
+// 分析类积分常量
+const (
+	StructureAnalysisCost = 5 // 文案结构分析
+	ViralPointsCost       = 3 // 爆款点提炼
+	TagsExtractCost       = 2 // 选题标签提取
+	RhythmAnalysisCost    = 4 // 口播节奏分析
+)
+
 // DeductExtractCredits 扣减提取文案积分（原子操作）
 func DeductExtractCredits(userId, videoId int) error {
 	return deductCredits(userId, videoId, "extract", extractCost)
@@ -43,8 +51,17 @@ func deductCredits(userId, videoId int, action string, cost int) error {
 		// 2. 检查是否已扣过费
 		var done int
 		col := "extract_done"
-		if action == "rewrite" {
+		switch action {
+		case "rewrite":
 			col = "rewrite_done"
+		case "structure_analysis":
+			col = "structure_done"
+		case "viral_points":
+			col = "viral_points_done"
+		case "tags_extract":
+			col = "tags_done"
+		case "rhythm_analysis":
+			col = "rhythm_done"
 		}
 		err = tx.QueryRow(
 			"SELECT "+col+" FROM video_credits WHERE video_id = ? AND user_id = ?",
@@ -74,7 +91,8 @@ func deductCredits(userId, videoId int, action string, cost int) error {
 		}
 
 		// 5. 标记该视频该操作已扣费
-		if action == "extract" {
+		switch action {
+		case "extract":
 			tx.Exec(`
 				INSERT OR IGNORE INTO video_credits (video_id, user_id, extract_done)
 				VALUES (?, ?, 1)
@@ -83,13 +101,49 @@ func deductCredits(userId, videoId int, action string, cost int) error {
 				UPDATE video_credits SET extract_done = 1
 				WHERE video_id = ? AND user_id = ?
 			`, videoId, userId)
-		} else {
+		case "rewrite":
 			tx.Exec(`
 				INSERT OR IGNORE INTO video_credits (video_id, user_id, rewrite_done)
 				VALUES (?, ?, 1)
 			`, videoId, userId)
 			tx.Exec(`
 				UPDATE video_credits SET rewrite_done = 1
+				WHERE video_id = ? AND user_id = ?
+			`, videoId, userId)
+		case "structure_analysis":
+			tx.Exec(`
+				INSERT OR IGNORE INTO video_credits (video_id, user_id, structure_done)
+				VALUES (?, ?, 1)
+			`, videoId, userId)
+			tx.Exec(`
+				UPDATE video_credits SET structure_done = 1
+				WHERE video_id = ? AND user_id = ?
+			`, videoId, userId)
+		case "viral_points":
+			tx.Exec(`
+				INSERT OR IGNORE INTO video_credits (video_id, user_id, viral_points_done)
+				VALUES (?, ?, 1)
+			`, videoId, userId)
+			tx.Exec(`
+				UPDATE video_credits SET viral_points_done = 1
+				WHERE video_id = ? AND user_id = ?
+			`, videoId, userId)
+		case "tags_extract":
+			tx.Exec(`
+				INSERT OR IGNORE INTO video_credits (video_id, user_id, tags_done)
+				VALUES (?, ?, 1)
+			`, videoId, userId)
+			tx.Exec(`
+				UPDATE video_credits SET tags_done = 1
+				WHERE video_id = ? AND user_id = ?
+			`, videoId, userId)
+		case "rhythm_analysis":
+			tx.Exec(`
+				INSERT OR IGNORE INTO video_credits (video_id, user_id, rhythm_done)
+				VALUES (?, ?, 1)
+			`, videoId, userId)
+			tx.Exec(`
+				UPDATE video_credits SET rhythm_done = 1
 				WHERE video_id = ? AND user_id = ?
 			`, videoId, userId)
 		}
@@ -104,5 +158,25 @@ func deductCredits(userId, videoId int, action string, cost int) error {
 
 		return nil
 	})
+}
+
+// DeductStructureAnalysisCredits 扣减文案结构分析积分
+func DeductStructureAnalysisCredits(userId, videoId int) error {
+	return deductCredits(userId, videoId, "structure_analysis", StructureAnalysisCost)
+}
+
+// DeductViralPointsCredits 扣减爆款点提炼积分
+func DeductViralPointsCredits(userId, videoId int) error {
+	return deductCredits(userId, videoId, "viral_points", ViralPointsCost)
+}
+
+// DeductTagsExtractCredits 扣减标签提取积分
+func DeductTagsExtractCredits(userId, videoId int) error {
+	return deductCredits(userId, videoId, "tags_extract", TagsExtractCost)
+}
+
+// DeductRhythmAnalysisCredits 扣减节奏分析积分
+func DeductRhythmAnalysisCredits(userId, videoId int) error {
+	return deductCredits(userId, videoId, "rhythm_analysis", RhythmAnalysisCost)
 }
 

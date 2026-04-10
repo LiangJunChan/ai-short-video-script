@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useUploadVideoMutation } from '../store/videoApi'
+import { useAuth } from '../hooks/useAuth'
 
 interface UploadModalProps {
   onClose: () => void
@@ -7,10 +8,10 @@ interface UploadModalProps {
 }
 
 function UploadModal({ onClose, onUploadSuccess }: UploadModalProps) {
+  const { user } = useAuth()
   const [step, setStep] = useState<'select' | 'form'>('select')
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [title, setTitle] = useState('')
-  const [uploader, setUploader] = useState('')
   const [progress, setProgress] = useState(0)
   const [uploading, setUploading] = useState(false)
 
@@ -55,9 +56,7 @@ function UploadModal({ onClose, onUploadSuccess }: UploadModalProps) {
     const formData = new FormData()
     formData.append('video', selectedFile)
     formData.append('title', title.trim())
-    if (uploader.trim()) {
-      formData.append('uploader', uploader.trim())
-    }
+    formData.append('uploader', user?.username || '匿名用户')
 
     try {
       // Simulate progress since RTK doesn't support upload progress natively
@@ -153,16 +152,6 @@ function UploadModal({ onClose, onUploadSuccess }: UploadModalProps) {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="请输入视频标题"
-                className="w-full px-4 py-2.5 border border-[#e5e5e5] rounded-lg text-sm outline-none focus:border-black transition-colors"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-[#333] mb-1.5">上传者</label>
-              <input
-                type="text"
-                value={uploader}
-                onChange={(e) => setUploader(e.target.value)}
-                placeholder="默认为匿名用户"
                 className="w-full px-4 py-2.5 border border-[#e5e5e5] rounded-lg text-sm outline-none focus:border-black transition-colors"
               />
             </div>

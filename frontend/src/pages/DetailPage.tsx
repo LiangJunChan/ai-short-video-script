@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   useGetVideoDetailQuery,
@@ -6,6 +6,8 @@ import {
   useRewriteVideoTextMutation,
   useDeleteVideoMutation,
   useGetMeQuery,
+  useAnalyzeVideoMutation,
+  useGetAnalysisResultsQuery,
 } from '../store/videoApi'
 import Loading from '../components/Loading'
 import Toast from '../components/Toast'
@@ -20,14 +22,45 @@ function DetailPage() {
   const [rewritePrompt, setRewritePrompt] = useState('')
   const [rewriteResult, setRewriteResult] = useState<string | null>(null)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [activeTab, setActiveTab] = useState<'structure' | 'viral_points' | 'tags' | 'rhythm' | 'report'>('structure')
+  const [structureResult, setStructureResult] = useState<string | null>(null)
+  const [viralPointsResult, setViralPointsResult] = useState<string | null>(null)
+  const [tagsResult, setTagsResult] = useState<string | null>(null)
+  const [rhythmResult, setRhythmResult] = useState<string | null>(null)
+  const [reportResult, setReportResult] = useState<string | null>(null)
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
 
   const { data, isLoading } = useGetVideoDetailQuery(numericId)
   const { refetch: refetchMe } = useGetMeQuery()
   const [reextractVideo, { isLoading: isReextracting }] = useReextractVideoMutation()
   const [rewriteVideoText, { isLoading: isRewriting }] = useRewriteVideoTextMutation()
   const [deleteVideo] = useDeleteVideoMutation()
+  const [analyzeVideo] = useAnalyzeVideoMutation()
+  const { data: analysisResultsData } = useGetAnalysisResultsQuery(numericId)
 
   const video = data?.data
+
+  // 页面加载时，恢复已有的分析结果
+  useEffect(() => {
+    if (analysisResultsData?.data) {
+      const results = analysisResultsData.data
+      if (results.structure) {
+        setStructureResult(results.structure)
+      }
+      if (results.viral_points) {
+        setViralPointsResult(results.viral_points)
+      }
+      if (results.tags) {
+        setTagsResult(results.tags)
+      }
+      if (results.rhythm) {
+        setRhythmResult(results.rhythm)
+      }
+      if (results.report) {
+        setReportResult(results.report)
+      }
+    }
+  }, [analysisResultsData])
 
   const showToast = (message: string) => {
     setToast(message)
@@ -112,6 +145,55 @@ function DetailPage() {
       showToast('网络错误，请重试')
     }
     setShowDeleteModal(false)
+  }
+
+  const handleAnalyze = async (type: string) => {
+    if (!video?.aiText) {
+      showToast('没有原文案可供分析')
+      return
+    }
+
+    setIsAnalyzing(true)
+
+    try {
+      const result = await analyzeVideo({ id: numericId, analysisType: type as any }).unwrap()
+      if (result.code === 200) {
+        const analysisResult = result.data?.result
+        // 根据类型设置对应state
+        switch (type) {
+          case 'structure':
+            setStructureResult(analysisResult)
+            break
+          case 'viral_points':
+            setViralPointsResult(analysisResult)
+            break
+          case 'tags':
+            setTagsResult(analysisResult)
+            break
+          case 'rhythm':
+            setRhythmResult(analysisResult)
+            break
+          case 'report':
+            setReportResult(analysisResult)
+            break
+        }
+        if (!result.data?.fromCache) {
+          refetchMe()
+        }
+      } else {
+        showToast(result.message || '分析失败')
+      }
+    } catch (err: any) {
+      if (err.data?.code === 402) {
+        showToast(err.data.message || '积分不足')
+      } else if (err.data?.message) {
+        showToast(err.data.message)
+      } else {
+        showToast('网络错误，请重试')
+      }
+    } finally {
+      setIsAnalyzing(false)
+    }
   }
 
   const formatDate = (dateStr: string) => {
@@ -301,6 +383,224 @@ function DetailPage() {
                   </div>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* AI 深度分析 */}
+          {video.status === 'done' && video.aiText && (
+            <div className="bg-[#fafafa] rounded-xl p-6">
+              <div className="mb-4">
+                <h2 className="text-lg font-normal" style={{ fontFamily: 'Georgia, serif', letterSpacing: '-0.01em' }}>
+                  AI 深度分析
+                </h2>
+              </div>
+
+              {/* Tab 横向导航 */}
+              <div className="flex border-b border-[#e5e5e5] mb-4">
+                <button
+                  className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+                    activeTab === 'structure'
+                      ? 'border-black text-black'
+                      : 'border-transparent text-[#666] hover:text-black'
+                  }`}
+                  onClick={() => setActiveTab('structure')}
+                >
+                  文案结构分析
+                </button>
+                <button
+                  className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+                    activeTab === 'viral_points'
+                      ? 'border-black text-black'
+                      : 'border-transparent text-[#666] hover:text-black'
+                  }`}
+                  onClick={() => setActiveTab('viral_points')}
+                >
+                  爆款点提炼
+                </button>
+                <button
+                  className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+                    activeTab === 'tags'
+                      ? 'border-black text-black'
+                      : 'border-transparent text-[#666] hover:text-black'
+                  }`}
+                  onClick={() => setActiveTab('tags')}
+                >
+                  选题标签
+                </button>
+                <button
+                  className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+                    activeTab === 'rhythm'
+                      ? 'border-black text-black'
+                      : 'border-transparent text-[#666] hover:text-black'
+                  }`}
+                  onClick={() => setActiveTab('rhythm')}
+                >
+                  口播节奏
+                </button>
+                <button
+                  className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+                    activeTab === 'report'
+                      ? 'border-black text-black'
+                      : 'border-transparent text-[#666] hover:text-black'
+                  }`}
+                  onClick={() => setActiveTab('report')}
+                >
+                  完整报告
+                </button>
+              </div>
+
+              {/* 内容区 */}
+              <div className="min-h-[200px] flex items-center justify-center">
+                {isAnalyzing ? (
+                  /* 加载中 */
+                  <div className="text-center py-8 text-sm text-[#999]">
+                    分析中，请稍候...
+                  </div>
+                ) : (
+                  /* 根据 activeTab 显示对应内容 */
+                  <div className="w-full">
+                    {/* 文案结构分析 */}
+                    {activeTab === 'structure' && !structureResult && (
+                      <div className="text-center py-8">
+                        <button
+                          className="px-6 py-3 bg-black text-white rounded-lg text-sm font-medium hover:opacity-80 transition-opacity"
+                          onClick={() => handleAnalyze('structure')}
+                        >
+                          生成AI分析（消耗5积分）
+                        </button>
+                      </div>
+                    )}
+                    {activeTab === 'structure' && structureResult && (
+                      <div className="bg-white rounded-lg p-4 border border-[#e5e5e5]">
+                        <div className="flex justify-between items-center mb-3">
+                          <span className="text-xs font-medium text-[#999]">文案结构分析结果</span>
+                          <button
+                            className="px-3 py-1 border border-[#e5e5e5] rounded text-xs font-medium text-[#666] hover:border-black hover:text-black transition-colors"
+                            onClick={() => handleCopy(structureResult)}
+                          >
+                            复制
+                          </button>
+                        </div>
+                        <div className="text-sm leading-relaxed text-[#333] whitespace-pre-wrap">
+                          {structureResult}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 爆款点提炼 */}
+                    {activeTab === 'viral_points' && !viralPointsResult && (
+                      <div className="text-center py-8">
+                        <button
+                          className="px-6 py-3 bg-black text-white rounded-lg text-sm font-medium hover:opacity-80 transition-opacity"
+                          onClick={() => handleAnalyze('viral_points')}
+                        >
+                          生成AI分析（消耗3积分）
+                        </button>
+                      </div>
+                    )}
+                    {activeTab === 'viral_points' && viralPointsResult && (
+                      <div className="bg-white rounded-lg p-4 border border-[#e5e5e5]">
+                        <div className="flex justify-between items-center mb-3">
+                          <span className="text-xs font-medium text-[#999]">爆款点提炼结果</span>
+                          <button
+                            className="px-3 py-1 border border-[#e5e5e5] rounded text-xs font-medium text-[#666] hover:border-black hover:text-black transition-colors"
+                            onClick={() => handleCopy(viralPointsResult)}
+                          >
+                            复制
+                          </button>
+                        </div>
+                        <div className="text-sm leading-relaxed text-[#333] whitespace-pre-wrap">
+                          {viralPointsResult}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 选题标签 */}
+                    {activeTab === 'tags' && !tagsResult && (
+                      <div className="text-center py-8">
+                        <button
+                          className="px-6 py-3 bg-black text-white rounded-lg text-sm font-medium hover:opacity-80 transition-opacity"
+                          onClick={() => handleAnalyze('tags')}
+                        >
+                          生成AI分析（消耗2积分）
+                        </button>
+                      </div>
+                    )}
+                    {activeTab === 'tags' && tagsResult && (
+                      <div className="bg-white rounded-lg p-4 border border-[#e5e5e5]">
+                        <div className="flex justify-between items-center mb-3">
+                          <span className="text-xs font-medium text-[#999]">选题标签结果</span>
+                          <button
+                            className="px-3 py-1 border border-[#e5e5e5] rounded text-xs font-medium text-[#666] hover:border-black hover:text-black transition-colors"
+                            onClick={() => handleCopy(tagsResult)}
+                          >
+                            复制
+                          </button>
+                        </div>
+                        <div className="text-sm leading-relaxed text-[#333] whitespace-pre-wrap">
+                          {tagsResult}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 口播节奏 */}
+                    {activeTab === 'rhythm' && !rhythmResult && (
+                      <div className="text-center py-8">
+                        <button
+                          className="px-6 py-3 bg-black text-white rounded-lg text-sm font-medium hover:opacity-80 transition-opacity"
+                          onClick={() => handleAnalyze('rhythm')}
+                        >
+                          生成AI分析（消耗4积分）
+                        </button>
+                      </div>
+                    )}
+                    {activeTab === 'rhythm' && rhythmResult && (
+                      <div className="bg-white rounded-lg p-4 border border-[#e5e5e5]">
+                        <div className="flex justify-between items-center mb-3">
+                          <span className="text-xs font-medium text-[#999]">口播节奏分析结果</span>
+                          <button
+                            className="px-3 py-1 border border-[#e5e5e5] rounded text-xs font-medium text-[#666] hover:border-black hover:text-black transition-colors"
+                            onClick={() => handleCopy(rhythmResult)}
+                          >
+                            复制
+                          </button>
+                        </div>
+                        <div className="text-sm leading-relaxed text-[#333] whitespace-pre-wrap">
+                          {rhythmResult}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 完整报告 */}
+                    {activeTab === 'report' && !reportResult && (
+                      <div className="text-center py-8">
+                        <button
+                          className="px-6 py-3 bg-black text-white rounded-lg text-sm font-medium hover:opacity-80 transition-opacity"
+                          onClick={() => handleAnalyze('report')}
+                        >
+                          生成完整报告（免费）
+                        </button>
+                      </div>
+                    )}
+                    {activeTab === 'report' && reportResult && (
+                      <div className="bg-white rounded-lg p-4 border border-[#e5e5e5]">
+                        <div className="flex justify-between items-center mb-3">
+                          <span className="text-xs font-medium text-[#999]">完整分析报告</span>
+                          <button
+                            className="px-3 py-1 border border-[#e5e5e5] rounded text-xs font-medium text-[#666] hover:border-black hover:text-black transition-colors"
+                            onClick={() => handleCopy(reportResult)}
+                          >
+                            复制
+                          </button>
+                        </div>
+                        <div className="text-sm leading-relaxed text-[#333] whitespace-pre-wrap">
+                          {reportResult}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>

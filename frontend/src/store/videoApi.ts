@@ -116,6 +116,29 @@ export const videoApi = createApi({
       }),
       invalidatesTags: ['VideoList', 'User'],
     }),
+    analyzeVideo: builder.mutation<{
+      code: number;
+      message: string;
+      data: {
+        result: any;
+        creditsDeducted: number;
+        fromCache?: boolean;
+      };
+    }, { id: number; analysisType: 'structure' | 'viral_points' | 'tags' | 'rhythm' | 'report' }>({
+      query: ({ id, analysisType }) => ({
+        url: `/videos/${id}/analyze`,
+        method: 'POST',
+        body: { analysisType },
+      }),
+      invalidatesTags: (_result, _error, { id }) => [{ type: 'Video', id }, 'User'],
+    }),
+    getAnalysisResults: builder.query<{
+      code: number;
+      message: string;
+      data: Record<string, string>;
+    }, number>({
+      query: (id) => `/videos/${id}/analysis-results`,
+    }),
   }),
 })
 
@@ -133,4 +156,6 @@ export const {
   useReextractVideoMutation,
   useRewriteVideoTextMutation,
   useExtractByUrlMutation,
+  useAnalyzeVideoMutation,
+  useGetAnalysisResultsQuery,
 } = videoApi

@@ -133,6 +133,25 @@ func InitDB() {
 	);
 	`)
 
+	// 创建 analysis_results 表（分析结果存储）
+	DB.Exec(`
+	CREATE TABLE IF NOT EXISTS analysis_results (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		video_id INTEGER NOT NULL,
+		user_id INTEGER NOT NULL,
+		analysis_type TEXT NOT NULL,
+		result TEXT,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		UNIQUE(video_id, analysis_type)
+	);
+	`)
+
+	// 为 video_credits 表添加分析类型字段（如果不存在）
+	DB.Exec(`ALTER TABLE video_credits ADD COLUMN structure_done INTEGER DEFAULT 0;`)
+	DB.Exec(`ALTER TABLE video_credits ADD COLUMN viral_points_done INTEGER DEFAULT 0;`)
+	DB.Exec(`ALTER TABLE video_credits ADD COLUMN tags_done INTEGER DEFAULT 0;`)
+	DB.Exec(`ALTER TABLE video_credits ADD COLUMN rhythm_done INTEGER DEFAULT 0;`)
+
 	log.Println("Database initialized successfully")
 }
 
@@ -296,4 +315,47 @@ func UpdateRewriteStatus(id int, status string) error {
 		UPDATE videos SET rewrite_status = ? WHERE id = ?
 	`, status, id)
 	return err
+}
+
+// GetAnalysisResult 获取视频的分析结果
+func GetAnalysisResult(videoId, userId int, analysisType string) (string, error) {
+	var result string
+	err := DB.QueryRow(
+		"SELECT result FROM analysis_results WHERE video_id = ? AND user_id = ? AND analysis_type = ?",
+		videoId, userId, analysisType,
+	).Scan(&result)
+	if err == sql.ErrNoRows {
+		return "", nil
+	}
+	return result, err
+}
+
+// SaveAnalysisResult 保存分析结果
+func SaveAnalysisResult(videoId, userId int, analysisType, result string) error {
+	_, err := DB.Exec(`
+		INSERT OR REPLACE INTO analysis_results (video_id, user_id, analysis_type, result)
+		VALUES (?, ?, ?, ?)
+	`, videoId, userId, analysisType, result)
+	return err
+}
+
+// GetAnalysisResultsByVideo 获取视频的所有分析结果
+func GetAnalysisResultsByVideo(videoId, userId int) (map[string]string, error) {
+	results := make(map[string]string)
+	rows, err := DB.Query(
+		"SELECT analysis_type, result FROM analysis_results WHERE video_id = ? AND user_id = ?",
+		videoId, userId,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var analysisType, result string
+		if err := rows.Scan(&analysisType, &result); err != nil {
+			return nil, err
+		}
+		results[analysisType] = result
+	}
+	return results, nil
 }
