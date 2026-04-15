@@ -376,145 +376,145 @@ function DetailPage() {
                   <p className="text-sm">{getStatusText()}</p>
                 </div>
               )}
-            </div>
-          </div>
 
-          {/* Right: Content Panels */}
-          <div className="lg:col-span-8 space-y-6">
-            {/* V1.6 Material Management */}
-            <div className="card p-6">
-              <h2 className="text-lg font-semibold text-slate-900 mb-4">素材管理</h2>
-              
-              <div className="space-y-4">
-                {/* Collections */}
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-sm font-medium text-slate-700">收藏夹</span>
-                    <button
-                      onClick={() => setShowCollectionSelector(!showCollectionSelector)}
-                      className="text-sm text-sky-600 hover:text-sky-700 font-medium"
-                    >
-                      {showCollectionSelector ? '取消' : '+ 添加'}
-                    </button>
-                  </div>
-                  
-                  {videoCollectionsData?.data && (
-                    <div className="flex flex-wrap gap-2 mb-3">
-                      {videoCollectionsData.data.length === 0 ? (
-                        <span className="text-sm text-slate-400">未添加到任何收藏夹</span>
-                      ) : (
-                        videoCollectionsData.data.map((col: Collection) => (
-                          <div key={col.id} className="group inline-flex items-center gap-1.5">
-                            <span className="badge badge-ice">
-                              {col.icon} {col.name}
-                            </span>
-                            <button
-                              onClick={() => handleRemoveFromCollection(col.id)}
-                              className="text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                            >
-                              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                                <path d="M18 6L6 18M6 6l12 12" strokeLinecap="round"/>
-                              </svg>
-                            </button>
-                          </div>
-                        ))
-                      )}
+              {/* Material Management - moved below video */}
+              <div className="card p-5">
+                <h2 className="text-base font-semibold text-slate-900 mb-4">素材管理</h2>
+
+                <div className="space-y-4">
+                  {/* Collections */}
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-sm font-medium text-slate-700">收藏夹</span>
+                      <button
+                        onClick={() => setShowCollectionSelector(!showCollectionSelector)}
+                        className="text-sm text-sky-600 hover:text-sky-700 font-medium"
+                      >
+                        {showCollectionSelector ? '取消' : '+ 添加'}
+                      </button>
                     </div>
-                  )}
 
-                  {showCollectionSelector && (
-                    <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
-                      <p className="text-sm font-medium text-slate-700 mb-2">选择收藏夹：</p>
-                      <div className="max-h-32 overflow-y-auto space-y-1">
-                        {collectionsData?.data?.collections?.map((col: Collection) => {
-                          const isInCollection = videoCollectionsData?.data?.some((c: Collection) => c.id === col.id)
-                          return (
-                            <button
-                              key={col.id}
-                              onClick={() => !isInCollection && handleAddToCollection(col.id)}
-                              disabled={isInCollection}
-                              className="w-full text-left px-3 py-2 text-sm hover:bg-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                            >
-                              {col.icon} {col.name} {isInCollection ? '(已在收藏)' : `(${col.videoCount})`}
-                            </button>
-                          )
-                        })}
-                        {collectionsData?.data?.collections?.length === 0 && (
-                          <button
-                            onClick={() => navigate('/library')}
-                            className="w-full text-left px-3 py-2 text-sm text-sky-600 hover:bg-white rounded-lg transition-colors"
-                          >
-                            前往素材库创建收藏夹 →
-                          </button>
+                    {videoCollectionsData?.data && (
+                      <div className="flex flex-wrap gap-2 mb-3">
+                        {videoCollectionsData.data.length === 0 ? (
+                          <span className="text-sm text-slate-400">未添加到任何收藏夹</span>
+                        ) : (
+                          videoCollectionsData.data.map((col: Collection) => (
+                            <div key={col.id} className="group inline-flex items-center gap-1.5">
+                              <span className="badge badge-ice">
+                                {col.icon} {col.name}
+                              </span>
+                              <button
+                                onClick={() => handleRemoveFromCollection(col.id)}
+                                className="text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                  <path d="M18 6L6 18M6 6l12 12" strokeLinecap="round"/>
+                                </svg>
+                              </button>
+                            </div>
+                          ))
                         )}
                       </div>
-                    </div>
-                  )}
-                </div>
+                    )}
 
-                {/* Tags */}
-                <div className="pt-4 border-t border-slate-100">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-sm font-medium text-slate-700">标签</span>
-                  </div>
-                  
-                  <div className="flex flex-wrap gap-2 mb-3">
-                    {videoTagsData?.data ? (
-                      videoTagsData.data.length === 0 ? (
-                        <span className="text-sm text-slate-400">还没有添加标签</span>
-                      ) : (
-                        videoTagsData.data.map((tag: Tag) => (
-                          <div key={tag.id} className="group inline-flex items-center gap-1.5">
-                            <span className="badge badge-ice">#{tag.name}</span>
+                    {showCollectionSelector && (
+                      <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                        <p className="text-sm font-medium text-slate-700 mb-2">选择收藏夹：</p>
+                        <div className="max-h-32 overflow-y-auto space-y-1">
+                          {collectionsData?.data?.collections?.map((col: Collection) => {
+                            const isInCollection = videoCollectionsData?.data?.some((c: Collection) => c.id === col.id)
+                            return (
+                              <button
+                                key={col.id}
+                                onClick={() => !isInCollection && handleAddToCollection(col.id)}
+                                disabled={isInCollection}
+                                className="w-full text-left px-3 py-2 text-sm hover:bg-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                              >
+                                {col.icon} {col.name} {isInCollection ? '(已在收藏)' : `(${col.videoCount})`}
+                              </button>
+                            )
+                          })}
+                          {collectionsData?.data?.collections?.length === 0 && (
                             <button
-                              onClick={() => handleRemoveTag(tag.id)}
-                              className="text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                              onClick={() => navigate('/library')}
+                              className="w-full text-left px-3 py-2 text-sm text-sky-600 hover:bg-white rounded-lg transition-colors"
                             >
-                              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                                <path d="M18 6L6 18M6 6l12 12" strokeLinecap="round"/>
-                              </svg>
+                              前往素材库创建收藏夹 →
                             </button>
-                          </div>
-                        ))
-                      )
-                    ) : null}
-                  </div>
-
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={newTagName}
-                      onChange={(e) => setNewTagName(e.target.value)}
-                      onFocus={() => setShowTagSuggestions(true)}
-                      onBlur={() => setTimeout(() => setShowTagSuggestions(false), 200)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && newTagName.trim()) {
-                          handleAddTag(newTagName.trim())
-                        }
-                      }}
-                      className="input-field w-full px-4 py-2.5 text-sm"
-                      placeholder="输入标签名称，回车添加..."
-                    />
-                    {showTagSuggestions && tagSuggestionsData?.data && tagSuggestionsData.data.length > 0 && (
-                      <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-100 rounded-xl shadow-lg p-3 z-10 animate-slide-down">
-                        <div className="flex flex-wrap gap-1.5">
-                          {tagSuggestionsData.data.map((tag: Tag) => (
-                            <button
-                              key={tag.id}
-                              onClick={() => handleAddTag(tag.name)}
-                              className="px-2.5 py-1.5 bg-slate-50 hover:bg-sky-50 hover:text-sky-600 rounded-lg text-sm transition-colors"
-                            >
-                              #{tag.name}
-                            </button>
-                          ))}
+                          )}
                         </div>
                       </div>
                     )}
                   </div>
+
+                  {/* Tags */}
+                  <div className="pt-4 border-t border-slate-100">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-sm font-medium text-slate-700">标签</span>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {videoTagsData?.data ? (
+                        videoTagsData.data.length === 0 ? (
+                          <span className="text-sm text-slate-400">还没有添加标签</span>
+                        ) : (
+                          videoTagsData.data.map((tag: Tag) => (
+                            <div key={tag.id} className="group inline-flex items-center gap-1.5">
+                              <span className="badge badge-ice">#{tag.name}</span>
+                              <button
+                                onClick={() => handleRemoveTag(tag.id)}
+                                className="text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                  <path d="M18 6L6 18M6 6l12 12" strokeLinecap="round"/>
+                                </svg>
+                              </button>
+                            </div>
+                          ))
+                        )
+                      ) : null}
+                    </div>
+
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={newTagName}
+                        onChange={(e) => setNewTagName(e.target.value)}
+                        onFocus={() => setShowTagSuggestions(true)}
+                        onBlur={() => setTimeout(() => setShowTagSuggestions(false), 200)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && newTagName.trim()) {
+                            handleAddTag(newTagName.trim())
+                          }
+                        }}
+                        className="input-field w-full px-4 py-2.5 text-sm"
+                        placeholder="输入标签名称，回车添加..."
+                      />
+                      {showTagSuggestions && tagSuggestionsData?.data && tagSuggestionsData.data.length > 0 && (
+                        <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-100 rounded-xl shadow-lg p-3 z-10 animate-slide-down">
+                          <div className="flex flex-wrap gap-1.5">
+                            {tagSuggestionsData.data.map((tag: Tag) => (
+                              <button
+                                key={tag.id}
+                                onClick={() => handleAddTag(tag.name)}
+                                className="px-2.5 py-1.5 bg-slate-50 hover:bg-sky-50 hover:text-sky-600 rounded-lg text-sm transition-colors"
+                              >
+                                #{tag.name}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
+          </div>
 
+          {/* Right: AI Content */}
+          <div className="lg:col-span-8 space-y-6">
             {/* AI Extracted Text */}
             <div className="card p-6">
               <div className="flex justify-between items-center mb-4">
