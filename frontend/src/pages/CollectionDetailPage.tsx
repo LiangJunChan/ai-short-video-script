@@ -6,6 +6,7 @@ import {
   useExportMarkdownMutation,
 } from '../store/videoApi'
 import VideoCard from '../components/VideoCard'
+import ConfirmModal from '../components/ConfirmModal'
 import type { Video } from '../types'
 
 function CollectionDetailPage() {
@@ -16,13 +17,16 @@ function CollectionDetailPage() {
   const [selectMode, setSelectMode] = useState(false)
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
   const [showToast, setShowToast] = useState<string | null>(null)
+  const [showRemoveConfirm, setShowRemoveConfirm] = useState<{show: boolean, videoId: number}>({show: false, videoId: 0})
+  const [showBatchRemoveConfirm, setShowBatchRemoveConfirm] = useState(false)
 
   const { data, isLoading } = useGetCollectionDetailQuery(collectionId)
   const [removeVideo] = useRemoveVideoFromCollectionMutation()
   const [exportMarkdown, { isLoading: isExporting }] = useExportMarkdownMutation()
 
-  const handleRemoveVideo = async (videoId: number) => {
-    if (!confirm('确定要从收藏夹移除这个视频吗？')) return
+  const confirmRemoveVideo = async () => {
+    const videoId = showRemoveConfirm.videoId
+    setShowRemoveConfirm({show: false, videoId: 0})
     try {
       await removeVideo({ collectionId, videoId }).unwrap()
       // 如果移除的是已选中的，从选中集合中移除
@@ -108,14 +112,17 @@ function CollectionDetailPage() {
     videos.find(v => v.id === id)?.status === 'done'
   )
 
-  const handleBatchRemove = async () => {
-    if (selectedIds.size === 0) return
-    if (!confirm(`确定要从收藏夹移除选中的 ${selectedIds.size} 个视频吗？`)) return
-
+  const confirmBatchRemove = async () => {
+    setShowBatchRemoveConfirm(false)
     let successCount = 0
     for (const videoId of Array.from(selectedIds)) {
       try {
         await removeVideo({ collectionId, videoId }).unwrap()
+        if (selectedIds.has(videoId)) {
+          const newSelected = new Set(selectedIds)
+          newSelected.delete(videoId)
+          setSelectedIds(newSelected)
+        }
         successCount++
       } catch {
         // 失败跳过
@@ -183,7 +190,7 @@ function CollectionDetailPage() {
             {selectMode && selectedIds.size > 0 && (
               <div className="flex items-center gap-3">
                 <button
-                  onClick={handleBatchRemove}
+                  onClick={() => setShowBatchRemoveConfirm(true)}
                   disabled={isLoading}
                   className="px-4 py-2 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors disabled:opacity-50"
                 >
@@ -220,7 +227,7 @@ function CollectionDetailPage() {
                       onToggleSelect={selectMode ? toggleSelect : undefined}
                     />
                     <button
-                      onClick={() => handleRemoveVideo(video.id)}
+                      onClick={() => setShowRemoveConfirm({show: true, videoId: video.id})}
                       className="absolute top-3 right-3 z-10 w-8 h-8 bg-white/90 backdrop-blur-sm hover:bg-red-50 hover:text-red-600 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shadow-sm text-slate-400"
                     >
                       <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -259,6 +266,30 @@ function CollectionDetailPage() {
           <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-6 py-3 rounded-xl shadow-lg z-50 animate-fade-in">
             {showToast}
           </div>
+        )}
+
+        {/* Remove Single Video Confirm */}
+        {showRemoveConfirm.show && (
+          <ConfirmModal
+            title="移除收藏"
+            message="确定要从收藏夹移除这个视频吗？"
+            onConfirm={confirmRemoveVideo}
+            onCancel={() => setShowRemoveConfirm({show: false, videoId: 0})}
+            confirmText="移除"
+            confirmButtonType="danger"
+          />
+        )}
+
+        {/* Batch Remove Confirm */}
+        {showBatchRemoveConfirm && (
+          <ConfirmModal
+            title="批量移出收藏夹"
+            message={`确定要从收藏夹移出选中的 ${selectedIds.size} 个视频吗？`}
+            onConfirm={confirmBatchRemove}
+            onCancel={() => setShowBatchRemoveConfirm(false)}
+            confirmText="移出"
+            confirmButtonType="danger"
+          />
         )}
       </div>
     </div>

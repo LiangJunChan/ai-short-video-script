@@ -11,6 +11,7 @@ import {
 } from '../store/videoApi'
 import VideoCard from '../components/VideoCard'
 import Loading from '../components/Loading'
+import ConfirmModal from '../components/ConfirmModal'
 import { Collection, Tag, Video } from '../types'
 
 function SearchPage() {
@@ -24,6 +25,8 @@ function SearchPage() {
   const [selectMode, setSelectMode] = useState(false)
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
   const [showToast, setShowToast] = useState<string | null>(null)
+  const [showClearHistoryConfirm, setShowClearHistoryConfirm] = useState(false)
+  const [showBatchDeleteConfirm, setShowBatchDeleteConfirm] = useState(false)
 
   const { data: searchResult, isLoading: searching } = useSearchVideosQuery({
     keyword: keyword || undefined,
@@ -59,8 +62,8 @@ function SearchPage() {
     setPage(1)
   }
 
-  const handleClearHistory = async () => {
-    if (!confirm('确定要清空搜索历史吗？')) return
+  const confirmClearHistory = async () => {
+    setShowClearHistoryConfirm(false)
     try {
       await clearHistory().unwrap()
     } catch {
@@ -130,14 +133,17 @@ function SearchPage() {
     videos.find(v => v.id === id)?.status === 'done'
   )
 
-  const handleBatchDelete = async () => {
-    if (selectedIds.size === 0) return
-    if (!confirm(`确定要删除选中的 ${selectedIds.size} 个视频吗？此操作不可撤销。`)) return
-
+  const confirmBatchDelete = async () => {
+    setShowBatchDeleteConfirm(false)
     let successCount = 0
     for (const id of Array.from(selectedIds)) {
       try {
         await deleteVideo(id).unwrap()
+        if (selectedIds.has(id)) {
+          const newSelected = new Set(selectedIds)
+          newSelected.delete(id)
+          setSelectedIds(newSelected)
+        }
         successCount++
       } catch {
         // 失败跳过
@@ -191,7 +197,7 @@ function SearchPage() {
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-sm font-medium text-slate-700">搜索历史</span>
                   <button
-                    onClick={handleClearHistory}
+                    onClick={() => setShowClearHistoryConfirm(true)}
                     className="text-sm text-red-500 hover:text-red-600"
                   >
                     清空
@@ -315,7 +321,7 @@ function SearchPage() {
               {selectMode && selectedIds.size > 0 && (
                 <div className="flex items-center gap-3">
                   <button
-                    onClick={handleBatchDelete}
+                    onClick={() => setShowBatchDeleteConfirm(true)}
                     disabled={isDeleting}
                     className="px-4 py-2 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors disabled:opacity-50"
                   >
@@ -403,6 +409,31 @@ function SearchPage() {
             <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-6 py-3 rounded-xl shadow-lg z-50 animate-fade-in">
               {showToast}
             </div>
+          )}
+
+          {/* Clear History Confirm */}
+          {showClearHistoryConfirm && (
+            <ConfirmModal
+              title="清空搜索历史"
+              message="确定要清空所有搜索历史吗？此操作不可撤销。"
+              onConfirm={confirmClearHistory}
+              onCancel={() => setShowClearHistoryConfirm(false)}
+              confirmText="清空"
+              confirmButtonType="danger"
+            />
+          )}
+
+          {/* Batch Delete Confirm */}
+          {showBatchDeleteConfirm && (
+            <ConfirmModal
+              title="批量删除"
+              message={`确定要删除选中的 ${selectedIds.size} 个视频吗？\n此操作不可撤销。`}
+              onConfirm={confirmBatchDelete}
+              onCancel={() => setShowBatchDeleteConfirm(false)}
+              confirmText="删除"
+              isLoading={isDeleting}
+              confirmButtonType="danger"
+            />
           )}
         </div>
       </div>

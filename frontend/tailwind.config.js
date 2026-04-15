@@ -7,33 +7,35 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Open Sans', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
-        heading: ['Poppins', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
-        serif: ['Georgia', 'serif'],
+        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
       },
       colors: {
-        primary: '#171717',
-        secondary: '#404040',
-        accent: '#D4AF37',
-        neutral: {
-          50: '#fafafa',
-          100: '#f5f5f5',
-          200: '#e5e5e5',
-          300: '#d4d4d4',
-          400: '#a3a3a3',
-          500: '#737373',
-          600: '#525252',
-          700: '#404040',
-          800: '#262626',
-          900: '#171717',
-        }
+        // Ice Blue Palette
+        ice: {
+          50: '#f0f9ff',
+          100: '#e0f2fe',
+          200: '#bae6fd',
+          300: '#7dd3fc',
+          400: '#38bdf8',
+          500: '#0ea5e9',
+          600: '#0284c7',
+          700: '#0369a1',
+        },
+        // Semantic colors
+        success: '#10b981',
+        warning: '#f59e0b',
+        error: '#ef4444',
+      },
+      borderRadius: {
+        'xl': '12px',
+        '2xl': '16px',
+        '3xl': '20px',
       },
       boxShadow: {
-        'glass': '0 8px 32px rgba(0, 0, 0, 0.08)',
-        'glass-hover': '0 12px 48px rgba(0, 0, 0, 0.12)',
-      },
-      backdropBlur: {
-        'glass': '16px',
+        'soft-sm': '0 2px 8px rgba(15, 23, 42, 0.05)',
+        'soft-md': '0 4px 16px rgba(15, 23, 42, 0.07)',
+        'soft-lg': '0 8px 32px rgba(15, 23, 42, 0.09)',
+        'focus': '0 0 0 3px rgba(125, 211, 252, 0.3)',
       },
     },
   },

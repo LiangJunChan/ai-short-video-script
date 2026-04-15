@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { useGetTagVideosQuery, useGetTagsQuery, useExportMarkdownMutation, useDeleteVideoMutation } from '../store/videoApi'
 import VideoCard from '../components/VideoCard'
 import Loading from '../components/Loading'
+import ConfirmModal from '../components/ConfirmModal'
 import type { Video } from '../types'
 
 function TagFilterPage() {
@@ -13,6 +14,7 @@ function TagFilterPage() {
   const [selectMode, setSelectMode] = useState(false)
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
   const [showToast, setShowToast] = useState<string | null>(null)
+  const [showBatchDeleteConfirm, setShowBatchDeleteConfirm] = useState(false)
 
   const { data, isLoading } = useGetTagVideosQuery({ tagId, page, pageSize: 20 })
   const { data: tagsData } = useGetTagsQuery({ page: 1, pageSize: 1 })
@@ -96,14 +98,17 @@ function TagFilterPage() {
     videos.find(v => v.id === id)?.status === 'done'
   )
 
-  const handleBatchDelete = async () => {
-    if (selectedIds.size === 0) return
-    if (!confirm(`确定要删除选中的 ${selectedIds.size} 个视频吗？此操作不可撤销。`)) return
-
+  const confirmBatchDelete = async () => {
+    setShowBatchDeleteConfirm(false)
     let successCount = 0
     for (const id of Array.from(selectedIds)) {
       try {
         await deleteVideo(id).unwrap()
+        if (selectedIds.has(id)) {
+          const newSelected = new Set(selectedIds)
+          newSelected.delete(id)
+          setSelectedIds(newSelected)
+        }
         successCount++
       } catch {
         // 失败跳过
@@ -170,7 +175,7 @@ function TagFilterPage() {
             {selectMode && selectedIds.size > 0 && (
               <div className="flex items-center gap-3">
                 <button
-                  onClick={handleBatchDelete}
+                  onClick={() => setShowBatchDeleteConfirm(true)}
                   disabled={isDeleting}
                   className="px-4 py-2 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors disabled:opacity-50"
                 >
@@ -237,6 +242,19 @@ function TagFilterPage() {
           <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-6 py-3 rounded-xl shadow-lg z-50 animate-fade-in">
             {showToast}
           </div>
+        )}
+
+        {/* Batch Delete Confirm */}
+        {showBatchDeleteConfirm && (
+          <ConfirmModal
+            title="批量删除"
+            message={`确定要删除选中的 ${selectedIds.size} 个视频吗？\n此操作不可撤销。`}
+            onConfirm={confirmBatchDelete}
+            onCancel={() => setShowBatchDeleteConfirm(false)}
+            confirmText="删除"
+            isLoading={isDeleting}
+            confirmButtonType="danger"
+          />
         )}
       </div>
     </div>

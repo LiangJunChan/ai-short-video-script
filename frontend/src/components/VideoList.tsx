@@ -4,6 +4,7 @@ import { useGetVideoListQuery, useDeleteVideoMutation, useExportMarkdownMutation
 import VideoCard from './VideoCard'
 import Loading from './Loading'
 import DeleteModal from './DeleteModal'
+import ConfirmModal from './ConfirmModal'
 import type { Video } from '../types'
 
 function VideoList() {
@@ -14,6 +15,7 @@ function VideoList() {
   const [selectMode, setSelectMode] = useState(false)
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
   const [showToast, setShowToast] = useState<string | null>(null)
+  const [showBatchDeleteConfirm, setShowBatchDeleteConfirm] = useState(false)
 
   const { data, isLoading, isError } = useGetVideoListQuery({ page, pageSize })
   const [deleteVideo, { isLoading: isDeleting }] = useDeleteVideoMutation()
@@ -126,15 +128,18 @@ function VideoList() {
     videos.find(v => v.id === id)?.status === 'done'
   )
 
-  const handleBatchDelete = async () => {
-    if (selectedIds.size === 0) return
-    if (!confirm(`确定要删除选中的 ${selectedIds.size} 个视频吗？此操作不可撤销。`)) return
-
+  const confirmBatchDelete = async () => {
+    setShowBatchDeleteConfirm(false)
     // 逐个删除
     let successCount = 0
     for (const id of Array.from(selectedIds)) {
       try {
         await deleteVideo(id).unwrap()
+        if (selectedIds.has(id)) {
+          const newSelected = new Set(selectedIds)
+          newSelected.delete(id)
+          setSelectedIds(newSelected)
+        }
         successCount++
       } catch {
         // 失败跳过
@@ -183,7 +188,7 @@ function VideoList() {
           {selectMode && selectedIds.size > 0 && (
             <div className="flex items-center gap-3">
               <button
-                onClick={handleBatchDelete}
+                onClick={() => setShowBatchDeleteConfirm(true)}
                 disabled={isDeleting}
                 className="px-4 py-2 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors disabled:opacity-50"
               >
@@ -247,6 +252,19 @@ function VideoList() {
           onConfirm={handleDelete}
           onCancel={() => setDeleteTarget(null)}
           isDeleting={isDeleting}
+        />
+      )}
+
+      {/* Batch Delete Confirm Modal */}
+      {showBatchDeleteConfirm && (
+        <ConfirmModal
+          title="批量删除"
+          message={`确定要删除选中的 ${selectedIds.size} 个视频吗？\n此操作不可撤销。`}
+          onConfirm={confirmBatchDelete}
+          onCancel={() => setShowBatchDeleteConfirm(false)}
+          confirmText="删除"
+          isLoading={isDeleting}
+          confirmButtonType="danger"
         />
       )}
 
