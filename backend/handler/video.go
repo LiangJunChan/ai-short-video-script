@@ -300,6 +300,7 @@ func UploadVideo(c *gin.Context) {
 			if thumbPath != "" {
 				os.Remove(thumbPath)
 			}
+			database.DB.Exec("DELETE FROM video_credits WHERE video_id = ?", id)
 			database.DB.Exec("DELETE FROM videos WHERE id = ?", id)
 			c.JSON(http.StatusPaymentRequired, APIResponse{
 				Code:    402,
@@ -578,6 +579,15 @@ func DeleteVideo(c *gin.Context) {
 		os.Remove(thumbnailPath)
 	}
 
+	// 删除音频文件
+	ext := filepath.Ext(video.Filename)
+	baseName := video.Filename[:len(video.Filename)-len(ext)]
+	audioPath := filepath.Join("../audio", baseName+".wav")
+	os.Remove(audioPath)
+
+	// 删除 video_credits 记录
+	database.DB.Exec("DELETE FROM video_credits WHERE video_id = ?", id)
+
 	// 从数据库删除记录
 	_, err = database.DB.Exec("DELETE FROM videos WHERE id = ?", id)
 	if err != nil {
@@ -733,6 +743,7 @@ func ExtractVideoByURL(c *gin.Context) {
 			if thumbPath != "" {
 				os.Remove(thumbPath)
 			}
+			database.DB.Exec("DELETE FROM video_credits WHERE video_id = ?", id)
 			database.DB.Exec("DELETE FROM videos WHERE id = ?", id)
 			c.JSON(http.StatusPaymentRequired, APIResponse{
 				Code:    402,
