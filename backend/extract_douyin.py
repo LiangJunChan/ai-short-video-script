@@ -7,14 +7,157 @@ import asyncio
 import sys
 import re
 import json
+import time
+from urllib.parse import unquote
 from playwright.async_api import async_playwright
+
+CHALLENGE_CHECK_INTERVAL_MS = 2000
+CHALLENGE_MAX_WAIT_SECONDS = 45
+DETAIL_WAIT_MS = 8000
+
+def _looks_like_waf_challenge(html: str) -> bool:
+    if not html:
+        return True
+    text = html.lower()
+    markers = ["please wait", "waf-jschallenge", "_wafchallengeid", "argus-csp-token"]
+    return any(m in text for m in markers)
+
+async def _wait_until_page_ready(page, max_wait_seconds=CHALLENGE_MAX_WAIT_SECONDS):
+    deadline = time.monotonic() + max_wait_seconds
+    while time.monotonic() < deadline:
+        try:
+            html = await page.content()
+        except Exception as e:
+            msg = str(e).lower()
+            if "navigating" in msg or "execution context was destroyed" in msg:
+                await page.wait_for_timeout(CHALLENGE_CHECK_INTERVAL_MS)
+                continue
+            return False
+        if not _looks_like_waf_challenge(html):
+            return True
+        await page.wait_for_timeout(CHALLENGE_CHECK_INTERVAL_MS)
+    return False
+
+def _first_http_url(urls):
+    if not isinstance(urls, list):
+        return None
+    for url in urls:
+        if isinstance(url, str) and url.startswith("http"):
+            return url
+    return None
+
+def _extract_src_from_aweme_detail(detail_payload):
+    """从 aweme_detail payload 中提取最高质量视频URL"""
+    if not isinstance(detail_payload, dict):
+        return None
+    aweme = detail_payload.get("aweme_detail")
+    if not isinstance(aweme, dict):
+        return None
+    video = aweme.get("video")
+    if not isinstance(video, dict):
+        return None
+
+    # 优先选最高码率
+    bit_rates = video.get("bit_rate")
+    if isinstance(bit_rates, list):
+        sortable = []
+        for item in bit_rates:
+            if not isinstance(item, dict):
+                continue
+            score = item.get("bit_rate", 0)
+            play_addr = item.get("play_addr")
+            urls = play_addr.get("url_list") if isinstance(play_addr, dict) else []
+            src = _first_http_url(urls)
+            if src:
+                sortable.append((score, src))
+        if sortable:
+            sortable.sort(key=lambda x: x[0], reverse=True)
+            return sortable[0][1]
+
+    # fallback 字段
+    for key in ["play_addr_h264", "play_addr", "download_addr", "play_addr_265"]:
+        addr = video.get(key)
+        if isinstance(addr, dict):
+            src = _first_http_url(addr.get("url_list"))
+            if src:
+                return src
+    return None
+
+def _deep_find_aweme_detail(obj):
+    """深度搜索 aweme_detail 结构"""
+    if isinstance(obj, dict):
+        if "aweme_detail" in obj and isinstance(obj.get("aweme_detail"), dict):
+            return obj
+        for v in obj.values():
+            found = _deep_find_aweme_detail(v)
+            if found:
+                return found
+    elif isinstance(obj, list):
+        for it in obj:
+            found = _deep_find_aweme_detail(it)
+            if found:
+                return found
+    return None
+
+def _extract_src_from_sigi_state(state: dict):
+    """从 SIGI_STATE 中提取视频URL"""
+    if not isinstance(state, dict):
+        return None
+    item_module = state.get("ItemModule") or state.get("itemModule") or {}
+    if isinstance(item_module, dict):
+        for _k, v in item_module.items():
+            if not isinstance(v, dict):
+                continue
+            video = v.get("video") or {}
+            if not isinstance(video, dict):
+                continue
+            for key in ["playAddr", "play_addr", "downloadAddr", "download_addr"]:
+                addr = video.get(key)
+                if isinstance(addr, dict):
+                    src = _first_http_url(addr.get("urlList") or addr.get("url_list") or [])
+                    if src:
+                        return src
+    return None
+
+def _extract_from_html_fallback(html: str):
+    """HTML回退解析：SIGI_STATE 和 RENDER_DATA"""
+    if not html:
+        return None
+
+    # SIGI_STATE JSON
+    m = re.search(r'<script id="SIGI_STATE"[^>]*>(.*?)</script>', html, re.S)
+    if m:
+        try:
+            state = json.loads(m.group(1))
+            src = _extract_src_from_sigi_state(state)
+            if src:
+                print(f"Found video from SIGI_STATE", file=sys.stderr)
+                return src
+        except Exception:
+            pass
+
+    # RENDER_DATA urlencoded JSON
+    m = re.search(r'RENDER_DATA=([^&]+)&', html)
+    if m:
+        try:
+            decoded = unquote(m.group(1))
+            data = json.loads(decoded)
+            found = _deep_find_aweme_detail(data)
+            src = _extract_src_from_aweme_detail(found) if found else None
+            if src:
+                print(f"Found video from RENDER_DATA", file=sys.stderr)
+                return src
+        except Exception:
+            pass
+
+    return None
 
 async def extract_video_info(url: str) -> dict:
     """Extract video URL and title from Douyin share URL using headless browser"""
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=True)
         context = await browser.new_context(
-            user_agent='Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
+            user_agent='Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
             viewport={'width': 1920, 'height': 1080},
             locale='zh-CN'
         )
@@ -24,134 +167,128 @@ async def extract_video_info(url: str) -> dict:
 
         page = await context.new_page()
 
+        result = {
+            'video_url': '',
+            'title': '',
+            'error': ''
+        }
+
+        aweme_detail_payload = None
+        media_candidates = []
+        response_tasks = []
+
+        # 拦截非必要资源，减少加载时间
+        async def route_handler(route):
+            if route.request.resource_type in ["image", "font", "stylesheet"]:
+                await route.abort()
+            else:
+                await route.continue_()
+        await page.route("**/*", route_handler)
+
+        # 收集响应
+        async def handle_response(response):
+            nonlocal aweme_detail_payload
+            try:
+                url = response.url
+                if response.status in [200, 206] and "douyinvod.com" in url and url.startswith("http"):
+                    media_candidates.append(url)
+                if response.status == 200 and "/aweme/v1/web/aweme/detail/" in url and aweme_detail_payload is None:
+                    aweme_detail_payload = await response.json()
+            except Exception:
+                return
+
+        page.on("response", handle_response)
+
         try:
             print(f"Navigating to: {url}", file=sys.stderr)
+            await page.goto(url, wait_until='domcontentloaded', timeout=60000)
+        except Exception as e:
+            print(f"Page load error: {e}", file=sys.stderr)
+            result['error'] = f'页面加载失败: {e}'
+            await browser.close()
+            return result
 
-            # Set up network interception BEFORE navigating
-            video_urls = []
-            def handle_response(response):
-                url = response.url
-                if 'douyin_pc_client' in url:
-                    return
-                if '.mp4' in url or 'douyinvideo' in url:
-                    if 'aweme' in url or 'video' in url:
-                        video_urls.append(url)
-                        print(f"Video response: {url[:100]}...", file=sys.stderr)
+        # 检测视频不存在
+        try:
+            u = (page.url or "").lower()
+            if "web_video_404_link" in u or "item_non_existent" in u:
+                print(f"Video non-existent, url={page.url}", file=sys.stderr)
+                result['error'] = '视频不存在或已删除'
+                await browser.close()
+                return result
+        except Exception:
+            pass
 
-            page.on("response", handle_response)
+        # 等待 WAF challenge 完成
+        ready = await _wait_until_page_ready(page, max_wait_seconds=CHALLENGE_MAX_WAIT_SECONDS)
+        if not ready:
+            print(f"WAF challenge not resolved", file=sys.stderr)
+            result['error'] = 'WAF验证超时，请稍后重试'
+            await browser.close()
+            return result
 
-            await page.goto(url, wait_until='domcontentloaded', timeout=30000)
+        # 等待网络响应捕获
+        await page.wait_for_timeout(DETAIL_WAIT_MS)
 
-            result = {
-                'video_url': '',
-                'title': '',
-                'error': ''
-            }
+        src = None
 
-            # Method 1: Try to get video src via JavaScript after page fully loads
-            # Wait longer for the full video to load (preview videos are usually shorter ~9s)
+        # 方法1: 从 aweme_detail API 响应提取
+        if aweme_detail_payload:
+            print(f"Found aweme_detail via network interception", file=sys.stderr)
+            src = _extract_src_from_aweme_detail(aweme_detail_payload)
+            if src:
+                print(f"Extracted from aweme_detail: {src[:100]}...", file=sys.stderr)
+
+        # 方法2: 从 intercept 的 media candidates 选择
+        if not src and media_candidates:
+            print(f"Using intercepted media candidate", file=sys.stderr)
+            src = media_candidates[0]
+
+        # 方法3: HTML 回退解析 (SIGI_STATE / RENDER_DATA)
+        if not src:
             try:
-                video_info = await page.evaluate('''() => {
-                    return new Promise((resolve) => {
-                        setTimeout(() => {
-                            // Try to get title
-                            const title = document.title || '';
-
-                            const video = document.querySelector('video');
-                            let video_url = '';
-                            let video_duration = 0;
-
-                            if (video) {
-                                video_url = video.currentSrc || video.src || '';
-                                video_duration = video.duration || 0;
-                            }
-
-                            // Try to get from RENDER_DATA or __NEXT_DATA__
-                            const scripts = document.querySelectorAll('script');
-                            for (const script of scripts) {
-                                const text = script.textContent;
-                                if (text && text.includes('playAddr')) {
-                                    // Try to find longer video URL (not preview)
-                                    const matches = text.matchAll(/"playAddr"\\s*:\\s*"([^"]+)"/g);
-                                    for (const match of matches) {
-                                        const url = match[1];
-                                        // Prefer URLs that don't contain 'douyin_pc_client' (preview)
-                                        if (url && !url.includes('douyin_pc_client') && !video_url) {
-                                            video_url = url;
-                                        }
-                                    }
-                                }
-                            }
-
-                            resolve({
-                                video_url: video_url,
-                                title: title,
-                                video_duration: video_duration
-                            });
-                        }, 5000);
-                    });
-                }''')
-
-                if video_info:
-                    result['video_url'] = video_info.get('video_url', '')
-                    video_duration = video_info.get('video_duration', 0)
-                    # Clean title - remove common suffixes
-                    title = video_info.get('title', '')
-                    title = re.sub(r'[-_]抖音$', '', title)
-                    title = re.sub(r'@抖音$', '', title)
-                    result['title'] = title.strip()
-
-                    # Check if video duration is too short (preview video is usually ~9 seconds)
-                    if result['video_url'] and video_duration > 0 and video_duration < 30:
-                        print(f"Video duration {video_duration}s is too short (likely preview), trying other methods...", file=sys.stderr)
-                        result['video_url'] = ''  # Force to try other methods
-
-                    if result['video_url']:
-                        clean_url = result['video_url'].replace('\\/', '/').replace('\\u002F', '/').replace('&amp;', '&')
-                        print(f"Found video: {clean_url[:100]}..., duration: {video_duration}s", file=sys.stderr)
-                        print(f"Found title: {result['title']}", file=sys.stderr)
-                        await browser.close()
-                        return result
-
+                html = await page.content()
+                src = _extract_from_html_fallback(html)
             except Exception as e:
-                print(f"JS evaluation error: {e}", file=sys.stderr)
-                result['error'] = str(e)
+                print(f"HTML fallback error: {e}", file=sys.stderr)
 
-            # Clear error for next method attempt
-            result['error'] = ''
+        # 方法4: DOM video 标签
+        if not src:
+            try:
+                print(f"Attempting DOM extraction", file=sys.stderr)
+                src = await page.evaluate("""() => {
+                    const v = document.querySelector('video');
+                    if (!v) return null;
+                    if (v.src && v.src.startsWith('http')) return v.src;
+                    const sources = Array.from(v.querySelectorAll('source'));
+                    const mp4 = sources.find(s => s.type === 'video/mp4');
+                    return mp4 ? mp4.src : (sources[0] ? sources[0].src : null);
+                }""")
+            except Exception as e:
+                print(f"DOM src evaluate failed: {e}", file=sys.stderr)
 
-            # Method 2: Network interception (listener already set up before navigation)
-            print("Waiting for network responses...", file=sys.stderr)
-            await asyncio.sleep(8)
-
-            if video_urls:
-                # Filter and select the best URL
-                valid_urls = []
-                for vurl in video_urls:
-                    if vurl.startswith('http') and '.mp4' in vurl:
-                        # Skip URLs with size indicators that suggest previews
-                        clean_url = vurl.replace('\\/', '/').replace('&amp;', '&')
-                        # Prefer URLs with 'aweme' (full video) over generic 'video' URLs
-                        if 'aweme' in clean_url:
-                            valid_urls.insert(0, clean_url)  # Priority to aweme URLs
-                        else:
-                            valid_urls.append(clean_url)
-
-                if valid_urls:
-                    result['video_url'] = valid_urls[0]
-                    print(f"Returning from network: {valid_urls[0][:100]}...", file=sys.stderr)
-                    await browser.close()
-                    return result
-
-            result['error'] = 'No video URL found'
+        if not src:
+            result['error'] = '无法提取视频地址'
             print(result['error'], file=sys.stderr)
             await browser.close()
             return result
 
-        except Exception as e:
-            print(f"Error: {e}", file=sys.stderr)
-            await browser.close()
-            return {'video_url': '', 'title': '', 'error': str(e)}
+        # 清理 URL
+        clean_url = src.replace('\\/', '/').replace('\\u002F', '/').replace('&amp;', '&')
+        result['video_url'] = clean_url
+
+        # 获取标题
+        try:
+            title = await page.title()
+            title = re.sub(r'[-_]抖音$', '', title)
+            title = re.sub(r'@抖音$', '', title)
+            result['title'] = title.strip()
+            print(f"Title: {result['title']}", file=sys.stderr)
+        except Exception:
+            pass
+
+        await browser.close()
+        return result
 
 def main():
     if len(sys.argv) < 2:
