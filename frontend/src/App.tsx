@@ -96,6 +96,13 @@ function App() {
                   </div>
                 </div>
                 <span className="text-sm text-[#999]">|</span>
+                <button
+                  className="px-4 py-2 border border-[#e5e5e5] rounded-lg text-sm text-[#666] hover:border-black hover:text-black transition-colors"
+                  onClick={() => navigate('/library')}
+                >
+                  我的素材库
+                </button>
+                <span className="text-sm text-[#999]">|</span>
                 <span className="text-sm text-[#666]">{user.username}</span>
                 <button
                   className="px-4 py-2 border border-[#e5e5e5] rounded-lg text-sm text-[#666] hover:border-black hover:text-black transition-colors"

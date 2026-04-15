@@ -102,3 +102,79 @@ export interface CheckinResponse {
     credits: number
   }
 }
+
+// V1.6 收藏夹类型
+export interface Collection {
+  id: number
+  userId: number
+  name: string
+  icon: string | null
+  color: string | null
+  description: string | null
+  videoCount: number
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CollectionListResponse {
+  code: number
+  message: string
+  data: {
+    collections: Collection[]
+    pagination: Pagination
+  }
+}
+
+export interface CollectionDetailResponse {
+  code: number
+  message: string
+  data: {
+    collection: Collection
+    videos: Video[]
+    pagination: Pagination
+  }
+}
+
+// V1.6 标签类型
+export interface Tag {
+  id: number
+  userId: number
+  name: string
+  usageCount: number
+  createdAt: string
+}
+
+export interface TagListResponse {
+  code: number
+  message: string
+  data: {
+    tags: Tag[]
+    pagination: Pagination
+  }
+}
+
+export interface TagVideosResponse {
+  code: number
+  message: string
+  data: {
+    videos: Video[]
+    pagination: Pagination
+  }
+}
+
+// V1.6 搜索历史类型
+export interface SearchHistory {
+  id: number
+  userId: number
+  keyword: string
+  createdAt: string
+}
+
+export interface SearchVideosParams {
+  keyword?: string
+  tagId?: number
+  collectionId?: number
+  sort?: string
+  page?: number
+  pageSize?: number
+}

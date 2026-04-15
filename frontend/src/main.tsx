@@ -7,6 +7,10 @@ import App from './App'
 import DetailPage from './pages/DetailPage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
+import LibraryPage from './pages/LibraryPage'
+import CollectionDetailPage from './pages/CollectionDetailPage'
+import TagFilterPage from './pages/TagFilterPage'
+import SearchPage from './pages/SearchPage'
 import './index.css'
 
 // 受保护路由组件
@@ -32,6 +36,38 @@ const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <DetailPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/library',
+    element: (
+      <ProtectedRoute>
+        <LibraryPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/library/collections/:id',
+    element: (
+      <ProtectedRoute>
+        <CollectionDetailPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/library/tags/:id',
+    element: (
+      <ProtectedRoute>
+        <TagFilterPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/library/search',
+    element: (
+      <ProtectedRoute>
+        <SearchPage />
       </ProtectedRoute>
     ),
   },

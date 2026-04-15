@@ -54,6 +54,28 @@ type VideoResponse struct {
 	Status        string     `json:"status"`
 }
 
+// formatVideoResponse 将database.Video转换为VideoResponse
+func formatVideoResponse(v database.Video) VideoResponse {
+	thumbPath := ""
+	if v.Thumbnail != nil {
+		thumbName := filepath.Base(*v.Thumbnail)
+		thumbPath = fmt.Sprintf("/thumbnails/%s", thumbName)
+	}
+	return VideoResponse{
+		ID:            v.ID,
+		Title:         v.Title,
+		VideoUrl:      fmt.Sprintf("/uploads/%s", v.Filename),
+		Thumbnail:     &thumbPath,
+		Duration:      v.Duration,
+		AIText:        v.AIText,
+		RewrittenText: v.RewrittenText,
+		RewriteStatus: v.RewriteStatus,
+		Uploader:      v.Uploader,
+		CreatedAt:     v.CreatedAt,
+		Status:        v.Status,
+	}
+}
+
 // GetVideoList 获取视频列表
 func GetVideoList(c *gin.Context) {
 	userId := middleware.GetUserID(c)

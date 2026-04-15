@@ -8,10 +8,19 @@ import {
   useGetMeQuery,
   useAnalyzeVideoMutation,
   useGetAnalysisResultsQuery,
+  useGetVideoCollectionsQuery,
+  useAddVideoToCollectionMutation,
+  useRemoveVideoFromCollectionMutation,
+  useGetCollectionsQuery,
+  useGetVideoTagsQuery,
+  useAddTagToVideoMutation,
+  useRemoveTagFromVideoMutation,
+  useSearchTagsQuery,
 } from '../store/videoApi'
 import Loading from '../components/Loading'
 import Toast from '../components/Toast'
 import DeleteModal from '../components/DeleteModal'
+import { Collection, Tag } from '../types'
 
 function DetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -29,6 +38,21 @@ function DetailPage() {
   const [rhythmResult, setRhythmResult] = useState<string | null>(null)
   const [reportResult, setReportResult] = useState<string | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
+
+  // V1.6 素材库相关状态
+  const [showCollectionSelector, setShowCollectionSelector] = useState(false)
+  const [newTagName, setNewTagName] = useState('')
+  const [showTagSuggestions, setShowTagSuggestions] = useState(false)
+
+  const { data: videoCollectionsData } = useGetVideoCollectionsQuery(numericId, { skip: !numericId })
+  const { data: collectionsData } = useGetCollectionsQuery({ page: 1, pageSize: 100 })
+  const { data: videoTagsData } = useGetVideoTagsQuery(numericId, { skip: !numericId })
+  const { data: tagSuggestionsData } = useSearchTagsQuery(newTagName, { skip: !newTagName || newTagName.length < 1 })
+
+  const [addVideoToCollection] = useAddVideoToCollectionMutation()
+  const [removeVideoFromCollection] = useRemoveVideoFromCollectionMutation()
+  const [addTagToVideo] = useAddTagToVideoMutation()
+  const [removeTagFromVideo] = useRemoveTagFromVideoMutation()
 
   const { data, isLoading } = useGetVideoDetailQuery(numericId)
   const { refetch: refetchMe } = useGetMeQuery()
@@ -79,6 +103,48 @@ function DetailPage() {
       document.execCommand('copy')
       document.body.removeChild(textArea)
       showToast('文案已复制')
+    }
+  }
+
+  // V1.6 收藏夹管理
+  const handleAddToCollection = async (collectionId: number) => {
+    try {
+      await addVideoToCollection({ collectionId, videoId: numericId }).unwrap()
+      showToast('已添加到收藏夹')
+      setShowCollectionSelector(false)
+    } catch (err: any) {
+      showToast(err.data?.message || '添加失败')
+    }
+  }
+
+  const handleRemoveFromCollection = async (collectionId: number) => {
+    try {
+      await removeVideoFromCollection({ collectionId, videoId: numericId }).unwrap()
+      showToast('已从收藏夹移除')
+    } catch (err: any) {
+      showToast(err.data?.message || '移除失败')
+    }
+  }
+
+  // V1.6 标签管理
+  const handleAddTag = async (tagName: string) => {
+    if (!tagName.trim()) return
+    try {
+      await addTagToVideo({ videoId: numericId, tagName }).unwrap()
+      setNewTagName('')
+      setShowTagSuggestions(false)
+      showToast('标签已添加')
+    } catch (err: any) {
+      showToast(err.data?.message || '添加标签失败')
+    }
+  }
+
+  const handleRemoveTag = async (tagId: number) => {
+    try {
+      await removeTagFromVideo({ videoId: numericId, tagId }).unwrap()
+      showToast('标签已移除')
+    } catch (err: any) {
+      showToast(err.data?.message || '移除标签失败')
     }
   }
 
@@ -299,6 +365,142 @@ function DetailPage() {
 
         {/* Right: Text panels */}
         <div className="flex-1 min-w-0 space-y-6">
+          {/* V1.6 素材管理 */}
+          <div className="bg-white border border-gray-200 rounded-xl p-6">
+            <h2 className="text-lg font-normal mb-4" style={{ fontFamily: 'Georgia, serif', letterSpacing: '-0.01em' }}>
+              素材管理
+            </h2>
+            
+            <div className="space-y-4">
+              {/* 收藏夹管理 */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-gray-700">收藏夹</span>
+                  <button
+                    onClick={() => setShowCollectionSelector(!showCollectionSelector)}
+                    className="text-sm text-blue-600 hover:text-blue-700"
+                  >
+                    {showCollectionSelector ? '取消' : '+ 添加到收藏夹'}
+                  </button>
+                </div>
+                
+                {videoCollectionsData?.data ? (
+                  <div className="flex flex-wrap gap-2">
+                    {videoCollectionsData.data.length === 0 ? (
+                      <span className="text-sm text-gray-500">未添加到任何收藏夹</span>
+                    ) : (
+                      videoCollectionsData.data.map((col: Collection) => (
+                        <div key={col.id} className="group inline-flex items-center gap-1">
+                          <span className="px-2 py-1 bg-gray-100 rounded text-sm">
+                            {col.icon} {col.name}
+                          </span>
+                          <button
+                            onClick={() => handleRemoveFromCollection(col.id)}
+                            className="text-gray-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                ) : null}
+
+                {/* 收藏夹选择器 */}
+                {showCollectionSelector && (
+                  <div className="mt-3 p-3 bg-gray-50 rounded-lg">
+                    <p className="text-sm text-gray-600 mb-2">选择收藏夹：</p>
+                    <div className="max-h-40 overflow-y-auto space-y-1">
+                      {collectionsData?.data?.collections?.map((col: Collection) => {
+                        const isInCollection = videoCollectionsData?.data?.some((c: Collection) => c.id === col.id)
+                        return (
+                          <button
+                            key={col.id}
+                            onClick={() => !isInCollection && handleAddToCollection(col.id)}
+                            disabled={isInCollection}
+                            className="w-full text-left px-3 py-2 text-sm hover:bg-gray-200 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {col.icon} {col.name} {isInCollection ? '(已在收藏)' : `(${col.videoCount})`}
+                          </button>
+                        )
+                      })}
+                      {collectionsData?.data?.collections?.length === 0 && (
+                        <button
+                          onClick={() => navigate('/library')}
+                          className="w-full text-left px-3 py-2 text-sm text-blue-600 hover:bg-gray-200 rounded"
+                        >
+                          前往素材库创建收藏夹
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* 标签管理 */}
+              <div className="pt-4 border-t border-gray-200">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-gray-700">标签</span>
+                </div>
+                
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {videoTagsData?.data ? (
+                    videoTagsData.data.length === 0 ? (
+                      <span className="text-sm text-gray-500">还没有添加标签</span>
+                    ) : (
+                      videoTagsData.data.map((tag: Tag) => (
+                        <div key={tag.id} className="group inline-flex items-center gap-1">
+                          <span className="px-2 py-1 bg-blue-50 text-blue-700 rounded-full text-sm">
+                            #{tag.name}
+                          </span>
+                          <button
+                            onClick={() => handleRemoveTag(tag.id)}
+                            className="text-blue-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))
+                    )
+                  ) : null}
+                </div>
+
+                {/* 添加标签输入框 */}
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={newTagName}
+                    onChange={(e) => setNewTagName(e.target.value)}
+                    onFocus={() => setShowTagSuggestions(true)}
+                    onBlur={() => setTimeout(() => setShowTagSuggestions(false), 200)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && newTagName.trim()) {
+                        handleAddTag(newTagName.trim())
+                      }
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="输入标签名称，回车添加..."
+                  />
+                  {showTagSuggestions && tagSuggestionsData?.data && tagSuggestionsData.data.length > 0 && (
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg p-2 z-10">
+                      <div className="flex flex-wrap gap-1">
+                        {tagSuggestionsData.data.map((tag: Tag) => (
+                          <button
+                            key={tag.id}
+                            onClick={() => handleAddTag(tag.name)}
+                            className="px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded text-sm"
+                          >
+                            #{tag.name}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* AI 提取文案 */}
           <div className="bg-[#fafafa] rounded-xl p-6">
             <div className="flex justify-between items-baseline mb-4">

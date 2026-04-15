@@ -152,6 +152,72 @@ func InitDB() {
 	DB.Exec(`ALTER TABLE video_credits ADD COLUMN tags_done INTEGER DEFAULT 0;`)
 	DB.Exec(`ALTER TABLE video_credits ADD COLUMN rhythm_done INTEGER DEFAULT 0;`)
 
+	// 创建 collections 表（收藏夹）
+	DB.Exec(`
+	CREATE TABLE IF NOT EXISTS collections (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		user_id INTEGER NOT NULL,
+		name TEXT NOT NULL,
+		icon TEXT,
+		color TEXT,
+		description TEXT,
+		video_count INTEGER DEFAULT 0,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		FOREIGN KEY (user_id) REFERENCES users(id)
+	);
+	`)
+
+	// 创建 collection_videos 表（收藏夹与视频关联）
+	DB.Exec(`
+	CREATE TABLE IF NOT EXISTS collection_videos (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		collection_id INTEGER NOT NULL,
+		video_id INTEGER NOT NULL,
+		added_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		UNIQUE(collection_id, video_id),
+		FOREIGN KEY (collection_id) REFERENCES collections(id) ON DELETE CASCADE,
+		FOREIGN KEY (video_id) REFERENCES videos(id) ON DELETE CASCADE
+	);
+	`)
+
+	// 创建 tags 表（标签）
+	DB.Exec(`
+	CREATE TABLE IF NOT EXISTS tags (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		user_id INTEGER NOT NULL,
+		name TEXT NOT NULL,
+		usage_count INTEGER DEFAULT 0,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		UNIQUE(user_id, name),
+		FOREIGN KEY (user_id) REFERENCES users(id)
+	);
+	`)
+
+	// 创建 video_tags 表（视频与标签关联）
+	DB.Exec(`
+	CREATE TABLE IF NOT EXISTS video_tags (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		video_id INTEGER NOT NULL,
+		tag_id INTEGER NOT NULL,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		UNIQUE(video_id, tag_id),
+		FOREIGN KEY (video_id) REFERENCES videos(id) ON DELETE CASCADE,
+		FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
+	);
+	`)
+
+	// 创建 search_history 表（搜索历史）
+	DB.Exec(`
+	CREATE TABLE IF NOT EXISTS search_history (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		user_id INTEGER NOT NULL,
+		keyword TEXT NOT NULL,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		FOREIGN KEY (user_id) REFERENCES users(id)
+	);
+	`)
+
 	log.Println("Database initialized successfully")
 }
 

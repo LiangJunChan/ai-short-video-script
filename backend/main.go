@@ -72,6 +72,33 @@ func main() {
 		auth.POST("/videos/:id/analyze", handler.AnalyzeVideo)
 		auth.GET("/videos/:id/analysis-results", handler.GetAnalysisResults)
 		auth.DELETE("/videos/:id", handler.DeleteVideo)
+
+		// V1.6 收藏夹管理
+		auth.POST("/collections", handler.CreateCollection)
+		auth.GET("/collections", handler.GetCollections)
+		auth.GET("/collections/:id", handler.GetCollectionDetail)
+		auth.PUT("/collections/:id", handler.UpdateCollection)
+		auth.DELETE("/collections/:id", handler.DeleteCollection)
+		auth.POST("/collections/:id/videos", handler.AddVideoToCollection)
+		auth.DELETE("/collections/:id/videos/:videoId", handler.RemoveVideoFromCollection)
+		auth.GET("/videos/:id/collections", handler.GetVideoCollections)
+
+		// V1.6 标签管理
+		auth.POST("/videos/:id/tags", handler.AddTagToVideo)
+		auth.DELETE("/videos/:id/tags/:tagId", handler.RemoveTagFromVideo)
+		auth.GET("/videos/:id/tags", handler.GetVideoTags)
+		auth.GET("/tags", handler.GetTags)
+		auth.GET("/tags/:id/videos", handler.GetTagVideos)
+		auth.DELETE("/tags/:id", handler.DeleteTag)
+		auth.GET("/tags/search", handler.SearchTags)
+
+		// V1.6 搜索功能
+		auth.GET("/videos/search", handler.SearchVideos)
+		auth.GET("/search/history", handler.GetSearchHistory)
+		auth.POST("/search/history", handler.ClearSearchHistory)
+
+		// V1.6 导出功能
+		auth.POST("/export/markdown", handler.ExportMarkdown)
 	}
 
 	// 启动服务器
@@ -91,6 +118,10 @@ func main() {
 	log.Printf("  POST /api/videos/:id/rewrite - AI改写文案")
 	log.Printf("  POST /api/video/extract-by-url - 链接提取视频文案")
 	log.Printf("  POST /api/videos/:id/analyze - AI视频分析")
+	log.Printf("  V1.6 收藏夹: POST/GET /api/collections, GET/PUT/DELETE /api/collections/:id")
+	log.Printf("  V1.6 标签: POST/GET/DELETE /api/videos/:id/tags, GET /api/tags")
+	log.Printf("  V1.6 搜索: GET /api/videos/search, GET/POST /api/search/history")
+	log.Printf("  V1.6 导出: POST /api/export/markdown")
 
 	if err := r.Run(":3000"); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
