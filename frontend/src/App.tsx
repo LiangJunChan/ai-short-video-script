@@ -25,7 +25,6 @@ function App() {
   })
   const [doCheckin, { isLoading: isCheckingIn }] = videoApi.useDoCheckinMutation()
 
-  // 页面加载时同步最新用户积分
   useEffect(() => {
     if (meData?.data?.credits !== undefined && meData.data.credits !== user?.credits) {
       dispatch(updateCredits(meData.data.credits))
@@ -34,9 +33,7 @@ function App() {
 
   const showToast = (message: string) => {
     setToast(message)
-    setTimeout(() => {
-      setToast(null)
-    }, 3000)
+    setTimeout(() => setToast(null), 3000)
   }
 
   const handleLogout = () => {
@@ -50,88 +47,122 @@ function App() {
       const result = await doCheckin().unwrap()
       if (result.code === 200) {
         dispatch(updateCredits(result.data.credits))
-        refetchMe() // 刷新用户信息
+        refetchMe()
         showToast('签到成功，获得50积分')
       }
     } catch (err: any) {
-      if (err.data?.message) {
-        showToast(err.data.message)
-      } else {
-        showToast('签到失败，请重试')
-      }
+      showToast(err.data?.message || '签到失败，请重试')
     }
   }
 
   const checkedIn = checkinData?.data?.checkedIn ?? false
 
   return (
-    <div className="min-h-screen">
-      <div className="max-w-7xl mx-auto px-12">
-        <header className="flex justify-between items-center py-8 pb-12">
-          <h1 className="text-4xl font-heading font-semibold text-primary tracking-tight" style={{ letterSpacing: '-0.03em' }}>
-            AI短视频脚本平台
-          </h1>
-          <div className="flex items-center gap-4">
-            {isAuthenticated && user ? (
-              <>
-                {/* 积分悬浮区域 - 增加 padding 扩大 hover 范围 */}
-                <div className="relative group py-3 px-2">
-                  <span className="text-sm text-neutral-600 cursor-default">
-                    积分: <span className="font-semibold text-primary">{user.credits}</span>
-                  </span>
-                  {/* 悬浮面板 - 负margin向上覆盖，消除间隙确保鼠标可以顺利移动到面板 */}
-                  <div className="absolute right-0 top-full -mt-1 hidden group-hover:block bg-white/80 backdrop-blur-glass shadow-glass rounded-lg p-4 w-48 z-50 border border-border-glass transition-all duration-200">
-                    <p className="text-xs text-neutral-500 mb-3">
-                      {checkedIn ? '✓ 今日已签到' : '今日未签到'}
-                    </p>
-                    {!checkedIn && (
-                      <button
-                        onClick={handleCheckin}
-                        disabled={isCheckingIn}
-                        className="w-full py-2 bg-accent text-white text-sm rounded-lg hover:opacity-90 transition-all duration-200 disabled:opacity-40 cursor-pointer"
-                      >
-                        {isCheckingIn ? '签到中...' : '签到 +50'}
-                      </button>
-                    )}
+    <div className="min-h-screen bg-white">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-lg border-b border-slate-100">
+          <div className="flex justify-between items-center h-16 px-6">
+            {/* Logo */}
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-sky-400 to-blue-500 flex items-center justify-center">
+                <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+              <h1 className="text-lg font-semibold text-slate-900 tracking-tight">
+                AI短视频脚本平台
+              </h1>
+            </div>
+
+            {/* Right Actions */}
+            <div className="flex items-center gap-3">
+              {isAuthenticated && user ? (
+                <>
+                  {/* Credits Badge */}
+                  <div className="relative group">
+                    <button className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-sky-50 border border-sky-100 hover:bg-sky-100 transition-colors">
+                      <svg className="w-4 h-4 text-sky-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 6v12M8 10h8M8 14h8" strokeLinecap="round"/>
+                      </svg>
+                      <span className="text-sm font-medium text-sky-700">{user.credits}</span>
+                    </button>
+                    
+                    {/* Checkin Dropdown */}
+                    <div className="absolute right-0 top-full mt-2 hidden group-hover:block w-52 animate-scale-in">
+                      <div className="bg-white rounded-xl shadow-lg border border-slate-100 p-4">
+                        <p className="text-xs text-slate-500 mb-3">
+                          {checkedIn ? '✓ 今日已签到' : '今日未签到'}
+                        </p>
+                        {!checkedIn && (
+                          <button
+                            onClick={handleCheckin}
+                            disabled={isCheckingIn}
+                            className="w-full py-2 bg-gradient-to-r from-sky-400 to-blue-500 text-white text-sm font-medium rounded-lg hover:from-sky-500 hover:to-blue-600 transition-all disabled:opacity-50 shadow-sm"
+                          >
+                            {isCheckingIn ? '签到中...' : '签到 +50'}
+                          </button>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                </div>
-                <span className="text-sm text-neutral-400">|</span>
-                <span className="text-sm text-neutral-600">{user.username}</span>
+
+                  {/* Library */}
+                  <button
+                    onClick={() => navigate('/library')}
+                    className="px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-colors"
+                  >
+                    素材库
+                  </button>
+
+                  {/* User */}
+                  <span className="text-sm text-slate-500 px-2">{user.username}</span>
+
+                  {/* Action Buttons */}
+                  <button
+                    onClick={() => setShowUrlExtractModal(true)}
+                    className="btn-secondary px-4 py-2 text-sm"
+                  >
+                    链接提取
+                  </button>
+                  <button
+                    onClick={() => setShowUploadModal(true)}
+                    className="btn-primary px-4 py-2 text-sm shadow-sm"
+                  >
+                    上传视频
+                  </button>
+
+                  {/* Logout */}
+                  <button
+                    onClick={handleLogout}
+                    className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-lg transition-colors"
+                    title="退出登录"
+                  >
+                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </button>
+                </>
+              ) : (
                 <button
-                  className="px-4 py-2 border border-neutral-200 rounded-lg text-sm text-neutral-600 hover:border-primary hover:text-primary transition-all duration-200 cursor-pointer"
-                  onClick={handleLogout}
+                  onClick={() => navigate('/login')}
+                  className="btn-primary px-6 py-2 text-sm shadow-sm"
                 >
-                  退出
+                  登录
                 </button>
-                <button
-                  className="px-4 py-2.5 bg-primary/90 text-white rounded-lg text-sm font-medium hover:bg-primary transition-all duration-200 cursor-pointer"
-                  onClick={() => setShowUrlExtractModal(true)}
-                >
-                  链接提取
-                </button>
-                <button
-                  className="px-7 py-2.5 bg-accent text-white rounded-lg text-sm font-medium hover:opacity-90 transition-all duration-200 cursor-pointer"
-                  onClick={() => setShowUploadModal(true)}
-                >
-                  上传视频
-                </button>
-              </>
-            ) : (
-              <button
-                className="px-7 py-2.5 bg-accent text-white rounded-lg text-sm font-medium hover:opacity-90 transition-all duration-200 cursor-pointer"
-                onClick={() => navigate('/login')}
-              >
-                登录
-              </button>
-            )}
+              )}
+            </div>
           </div>
         </header>
 
-        <main className="min-h-[calc(100vh-160px)]">
+        {/* Main Content */}
+        <main className="min-h-[calc(100vh-4rem)] py-8">
           <VideoList />
         </main>
       </div>
 
+      {/* Modals */}
       {showUploadModal && (
         <UploadModal
           onClose={() => setShowUploadModal(false)}

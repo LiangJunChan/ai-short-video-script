@@ -300,7 +300,15 @@ export const videoApi = createApi({
       invalidatesTags: ['SearchHistory'],
     }),
 
-    // V1.6 导出功能（不使用RTK Query，直接调用）
+    // V1.6 导出功能
+    exportMarkdown: builder.mutation<Blob, { videoIds: number[] }>({
+      query: ({ videoIds }) => ({
+        url: '/export/markdown',
+        method: 'POST',
+        body: { videoIds },
+        responseHandler: (response) => response.blob(),
+      }),
+    }),
   }),
 })
 
@@ -341,4 +349,6 @@ export const {
   useSearchVideosQuery,
   useGetSearchHistoryQuery,
   useClearSearchHistoryMutation,
+  // V1.6 导出
+  useExportMarkdownMutation,
 } = videoApi

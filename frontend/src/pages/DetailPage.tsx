@@ -279,6 +279,16 @@ function DetailPage() {
     }
   }
 
+  const getAnalysisCredit = (tab: typeof activeTab): number => {
+    switch (tab) {
+      case 'structure': return 5
+      case 'viral_points': return 3
+      case 'tags': return 2
+      case 'rhythm': return 4
+      case 'report': return 6
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-white">
@@ -543,7 +553,7 @@ function DetailPage() {
                   {getStatusText()}
                 </div>
               ) : video.aiText ? (
-                <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                <div className="p-4 bg-sky-50 rounded-xl border border-sky-100">
                   <div className="text-sm leading-relaxed text-slate-700 whitespace-pre-wrap max-h-64 overflow-y-auto">
                     {video.aiText}
                   </div>
@@ -569,7 +579,7 @@ function DetailPage() {
                     onClick={handleRewrite}
                     disabled={isRewriting || !rewritePrompt.trim() || video.rewriteStatus === 'rewriting'}
                   >
-                    {isRewriting ? '改写中...' : '改写'}
+                    {isRewriting ? '改写中...' : '改写(10积分)'}
                   </button>
                 </div>
 
@@ -620,9 +630,20 @@ function DetailPage() {
                 {/* Analysis Content */}
                 <div className="min-h-[200px]">
                   {getAnalysisResult(activeTab) ? (
-                    <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
-                      <div className="text-sm leading-relaxed text-slate-700 whitespace-pre-wrap max-h-96 overflow-y-auto">
-                        {getAnalysisResult(activeTab)}
+                    <div>
+                      <div className="flex justify-between items-center mb-3">
+                        <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">分析结果</span>
+                        <button
+                          className="btn-secondary px-3 py-1.5 text-xs"
+                          onClick={() => handleCopy(getAnalysisResult(activeTab)!)}
+                        >
+                          复制
+                        </button>
+                      </div>
+                      <div className="p-4 bg-sky-50 rounded-xl border border-sky-100">
+                        <div className="text-sm leading-relaxed text-slate-700 whitespace-pre-wrap max-h-96 overflow-y-auto">
+                          {getAnalysisResult(activeTab)}
+                        </div>
                       </div>
                     </div>
                   ) : (
@@ -639,7 +660,7 @@ function DetailPage() {
                         onClick={() => handleAnalyze(activeTab)}
                         disabled={isAnalyzing}
                       >
-                        {isAnalyzing ? '分析中...' : `开始${tabs.find(t => t.key === activeTab)?.label}分析`}
+                        {isAnalyzing ? '分析中...' : `开始${tabs.find(t => t.key === activeTab)?.label}分析(${getAnalysisCredit(activeTab)}积分)`}
                       </button>
                     </div>
                   )}

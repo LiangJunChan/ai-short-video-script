@@ -1,31 +1,69 @@
-@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* ========== Design Tokens - Light Minimalist AI Theme ========== */
 :root {
-  --font-serif: 'Instrument Serif', 'Georgia', serif;
-  --font-sans: 'Open Sans', 'Helvetica Neue', system-ui, sans-serif;
-  --font-heading: 'Poppins', 'Helvetica Neue', system-ui, sans-serif;
-  --text-primary: #171717;
-  --text-secondary: #404040;
-  --text-tertiary: #737373;
-  --accent: #D4AF37;
-  --bg: #ffffff;
-  --surface: #ffffff;
-  --border: #e5e5e5;
-  --border-glass: rgba(255, 255, 255, 0.2);
-  --radius: 12px;
+  /* Typography */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  
+  /* Colors - Light Minimalist with Ice Blue Accent */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8fafc;
+  --bg-tertiary: #f1f5f9;
+  
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-tertiary: #94a3b8;
+  --text-quaternary: #cbd5e1;
+  
+  --border-light: #e2e8f0;
+  --border-medium: #cbd5e1;
+  --border-focus: #7dd3fc;
+  
+  /* Ice Blue Palette */
+  --ice-50: #f0f9ff;
+  --ice-100: #e0f2fe;
+  --ice-200: #bae6fd;
+  --ice-300: #7dd3fc;
+  --ice-400: #38bdf8;
+  --ice-500: #0ea5e9;
+  --ice-600: #0284c7;
+  
+  /* Semantic Colors */
+  --success: #10b981;
+  --success-bg: #ecfdf5;
+  --success-border: #a7f3d0;
+  --warning: #f59e0b;
+  --warning-bg: #fffbeb;
+  --warning-border: #fde68a;
+  --error: #ef4444;
+  --error-bg: #fef2f2;
+  --error-border: #fecaca;
+  
+  /* Soft Shadows for Light Theme */
+  --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.03);
+  --shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.05);
+  --shadow-md: 0 4px 16px rgba(15, 23, 42, 0.07);
+  --shadow-lg: 0 8px 32px rgba(15, 23, 42, 0.09);
+  --shadow-xl: 0 12px 48px rgba(15, 23, 42, 0.11);
+  --shadow-focus: 0 0 0 3px rgba(125, 211, 252, 0.3);
+  
+  /* Border Radius */
   --radius-sm: 8px;
-  --shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
-  --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.08);
-  --shadow-hover: 0 12px 48px rgba(0, 0, 0, 0.12);
-  --backdrop-blur: 16px;
-  --ease: cubic-bezier(0.25, 0.1, 0.25, 1);
-  --duration: 240ms;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  
+  /* Transitions */
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --duration: 200ms;
+  --duration-slow: 300ms;
 }
 
+/* ========== Base Reset ========== */
 *, *::before, *::after {
   margin: 0;
   padding: 0;
@@ -37,11 +75,12 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  scroll-behavior: smooth;
 }
 
 body {
   font-family: var(--font-sans);
-  background: linear-gradient(135deg, #fafafa 0%, #ffffff 50%, #f5f5f5 100%);
+  background: var(--bg-primary);
   color: var(--text-primary);
   line-height: 1.6;
   min-height: 100vh;
@@ -49,7 +88,7 @@ body {
 
 #root {
   width: 100%;
-  max-width: 1280px;
+  max-width: 1400px;
   margin: 0 auto;
   padding: 0 48px;
   min-height: 100vh;
@@ -61,11 +100,36 @@ body {
   }
 }
 
-::selection {
-  background: var(--accent);
-  color: #fff;
+/* ========== Element Defaults ========== */
+a {
+  color: inherit;
+  text-decoration: none;
 }
 
+button {
+  font-family: var(--font-sans);
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+input, textarea, select {
+  font-family: var(--font-sans);
+  font-size: inherit;
+}
+
+/* ========== Selection ========== */
+::selection {
+  background: var(--ice-100);
+  color: var(--ice-600);
+}
+
+/* ========== Scrollbar ========== */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -76,53 +140,189 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #d1d1d1;
+  background: var(--border-medium);
   border-radius: 3px;
+  transition: background var(--duration) var(--ease);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #999;
+  background: var(--text-tertiary);
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
+/* ========== Focus Styles ========== */
+:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+  border-color: var(--border-focus);
 }
 
-button {
-  font-family: var(--font-sans);
-  cursor: pointer;
-}
-
-img {
-  display: block;
-  max-width: 100%;
-}
-
-/* Animation utilities */
-@keyframes overlayIn {
+/* ========== Animations ========== */
+@keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
 }
 
-@keyframes modalIn {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
+@keyframes slideUp {
+  from { 
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDown {
+  from { 
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 @keyframes toastIn {
-  from { opacity: 0; transform: translateX(-50%) translateY(8px); }
-  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
 }
 
-.animate-overlay-in {
-  animation: overlayIn var(--duration) var(--ease) forwards;
+.animate-fade-in {
+  animation: fadeIn var(--duration) var(--ease);
 }
 
-.animate-modal-in {
-  animation: modalIn 240ms var(--ease) forwards;
+.animate-slide-up {
+  animation: slideUp var(--duration-slow) var(--ease);
+}
+
+.animate-slide-down {
+  animation: slideDown var(--duration) var(--ease);
+}
+
+.animate-scale-in {
+  animation: scaleIn var(--duration-slow) var(--ease);
 }
 
 .animate-toast-in {
-  animation: toastIn 240ms var(--ease) forwards;
+  animation: toastIn var(--duration) var(--ease);
+}
+
+/* ========== Common Component Styles ========== */
+.card {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-xs);
+  transition: all var(--duration) var(--ease);
+}
+
+.card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--border-medium);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--ice-500), var(--ice-600));
+  color: white;
+  font-weight: 500;
+  border-radius: var(--radius-sm);
+  transition: all var(--duration) var(--ease);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, var(--ice-400), var(--ice-500));
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-secondary {
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+  transition: all var(--duration) var(--ease);
+}
+
+.btn-secondary:hover {
+  background: var(--bg-secondary);
+  border-color: var(--border-medium);
+  color: var(--text-primary);
+}
+
+.input-field {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  transition: all var(--duration) var(--ease);
+}
+
+.input-field:focus {
+  border-color: var(--ice-300);
+  box-shadow: 0 0 0 3px rgba(125, 211, 252, 0.15);
+}
+
+.input-field::placeholder {
+  color: var(--text-tertiary);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.badge-ice {
+  background: var(--ice-50);
+  border-color: var(--ice-200);
+  color: var(--ice-600);
+}
+
+.badge-success {
+  background: var(--success-bg);
+  border-color: var(--success-border);
+  color: var(--success);
+}
+
+.badge-warning {
+  background: var(--warning-bg);
+  border-color: var(--warning-border);
+  color: var(--warning);
+}
+
+.badge-error {
+  background: var(--error-bg);
+  border-color: var(--error-border);
+  color: var(--error);
 }

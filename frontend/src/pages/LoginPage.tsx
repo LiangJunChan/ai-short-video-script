@@ -1,96 +1,119 @@
 import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useLoginMutation } from '../store/videoApi'
-import { login } from '../store/authSlice'
 import { useDispatch } from 'react-redux'
+import { login } from '../store/authSlice'
 
 function LoginPage() {
   const navigate = useNavigate()
   const dispatch = useDispatch()
-  const [loginMutation, { isLoading }] = useLoginMutation()
-
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+
+  const [loginMutation] = useLoginMutation()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError('')
-
-    if (!username.trim() || !password.trim()) {
+    if (!username.trim() || !password) {
       setError('请输入用户名和密码')
       return
     }
 
+    setIsLoading(true)
+    setError('')
+
     try {
       const result = await loginMutation({ username, password }).unwrap()
       if (result.code === 200) {
-        dispatch(login({ user: result.data.user, token: result.data.token }))
+        localStorage.setItem('token', result.data.token)
+        dispatch(login(result.data))
         navigate('/')
       } else {
         setError(result.message || '登录失败')
       }
     } catch (err: any) {
-      if (err.data?.message) {
-        setError(err.data.message)
-      } else {
-        setError('网络错误，请重试')
-      }
+      setError(err.data?.message || '用户名或密码错误')
+    } finally {
+      setIsLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="w-full max-w-sm px-8 py-12 bg-white/80 backdrop-blur-glass rounded-2xl shadow-glass border border-border-glass">
-        <div className="text-center mb-10">
-          <h1
-            className="text-3xl font-heading font-semibold mb-3 text-primary tracking-tight"
-          >
-            AI短视频脚本平台
-          </h1>
-          <p className="text-sm text-neutral-500">登录你的账号</p>
+    <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 flex items-center justify-center p-6">
+      <div className="w-full max-w-md">
+        {/* Logo */}
+        <div className="text-center mb-8">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-sky-400 to-blue-500 flex items-center justify-center shadow-lg">
+            <svg className="w-9 h-9 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </div>
+          <h1 className="text-2xl font-bold text-slate-900">AI短视频脚本平台</h1>
+          <p className="text-slate-500 mt-2">登录到您的账户</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div>
-            <input
-              type="text"
-              placeholder="用户名"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="w-full px-4 py-3 border border-neutral-200 rounded-lg text-sm outline-none focus:border-accent transition-all duration-200 bg-white/50"
-            />
+        {/* Form */}
+        <div className="card p-8">
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">用户名</label>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="input-field w-full px-4 py-3 text-sm rounded-xl"
+                placeholder="输入用户名"
+                autoFocus
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">密码</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="input-field w-full px-4 py-3 text-sm rounded-xl"
+                placeholder="输入密码"
+              />
+            </div>
+
+            {error && (
+              <div className="p-3 bg-red-50 border border-red-100 rounded-xl text-sm text-red-600">
+                {error}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full btn-primary py-3 text-sm shadow-md disabled:opacity-50"
+            >
+              {isLoading ? '登录中...' : '登录'}
+            </button>
+          </form>
+
+          <div className="mt-6 text-center">
+            <p className="text-sm text-slate-500">
+              还没有账户？{' '}
+              <button
+                onClick={() => navigate('/register')}
+                className="text-sky-600 font-medium hover:text-sky-700"
+              >
+                立即注册
+              </button>
+            </p>
           </div>
+        </div>
 
-          <div>
-            <input
-              type="password"
-              placeholder="密码"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 border border-neutral-200 rounded-lg text-sm outline-none focus:border-accent transition-all duration-200 bg-white/50"
-            />
-          </div>
-
-          {error && (
-            <p className="text-sm text-red-500 text-center">{error}</p>
-          )}
-
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full py-3 bg-accent text-white rounded-lg text-sm font-medium hover:opacity-90 transition-all duration-200 disabled:opacity-40 cursor-pointer"
-          >
-            {isLoading ? '登录中...' : '登录'}
-          </button>
-        </form>
-
-        <p className="text-center text-sm text-neutral-500 mt-8">
-          没有账号？{' '}
-          <Link to="/register" className="text-accent font-medium hover:underline">
-            立即注册
-          </Link>
-        </p>
+        {/* Tips */}
+        <div className="mt-6 p-4 bg-white/60 backdrop-blur rounded-xl border border-slate-100">
+          <p className="text-xs text-slate-500 text-center">
+            💡 演示账号：用户名 luka，密码 123456
+          </p>
+        </div>
       </div>
     </div>
   )
