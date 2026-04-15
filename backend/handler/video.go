@@ -914,8 +914,22 @@ func AnalyzeVideo(c *gin.Context) {
 		}
 
 	case "report":
-		// 生成报告不扣积分（免费功能）
-		creditsToDeduct = 0
+		creditsToDeduct = 6
+		if err := service.DeductReportCredits(userId, videoId); err != nil {
+			if errors.Is(err, service.ErrInsufficientCredits) {
+				c.JSON(http.StatusPaymentRequired, APIResponse{
+					Code:    402,
+					Message: "积分不足，完整分析报告需要6积分",
+				})
+				return
+			}
+			c.JSON(http.StatusInternalServerError, APIResponse{
+				Code:    500,
+				Message: "扣减积分失败: " + err.Error(),
+				Data:    nil,
+			})
+			return
+		}
 		result, err = service.GenerateAnalysisReport(text, duration, nil, nil, nil)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, APIResponse{

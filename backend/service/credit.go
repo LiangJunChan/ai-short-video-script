@@ -18,6 +18,7 @@ const (
 	ViralPointsCost       = 3 // 爆款点提炼
 	TagsExtractCost       = 2 // 选题标签提取
 	RhythmAnalysisCost    = 4 // 口播节奏分析
+	ReportCost            = 6 // 完整分析报告
 )
 
 // DeductExtractCredits 扣减提取文案积分（原子操作）
@@ -62,6 +63,8 @@ func deductCredits(userId, videoId int, action string, cost int) error {
 			col = "tags_done"
 		case "rhythm_analysis":
 			col = "rhythm_done"
+		case "report":
+			col = "report_done"
 		}
 		err = tx.QueryRow(
 			"SELECT "+col+" FROM video_credits WHERE video_id = ? AND user_id = ?",
@@ -146,6 +149,15 @@ func deductCredits(userId, videoId int, action string, cost int) error {
 				UPDATE video_credits SET rhythm_done = 1
 				WHERE video_id = ? AND user_id = ?
 			`, videoId, userId)
+		case "report":
+			tx.Exec(`
+				INSERT OR IGNORE INTO video_credits (video_id, user_id, report_done)
+				VALUES (?, ?, 1)
+			`, videoId, userId)
+			tx.Exec(`
+				UPDATE video_credits SET report_done = 1
+				WHERE video_id = ? AND user_id = ?
+			`, videoId, userId)
 		}
 
 		// 6. 记录积分日志
@@ -180,3 +192,7 @@ func DeductRhythmAnalysisCredits(userId, videoId int) error {
 	return deductCredits(userId, videoId, "rhythm_analysis", RhythmAnalysisCost)
 }
 
+// DeductReportCredits 扣减完整分析报告积分
+func DeductReportCredits(userId, videoId int) error {
+	return deductCredits(userId, videoId, "report", ReportCost)
+}

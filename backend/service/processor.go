@@ -85,6 +85,7 @@ func GetVideoDuration(videoPath string) (float64, error) {
 }
 
 // CaptureThumbnail 截取视频第一帧作为缩略图
+// 保持原始视频比例，输出宽度320，高度自适应，不足则padding
 func CaptureThumbnail(videoPath, outputPath string) error {
 	cmd := exec.Command(
 		"ffmpeg",
@@ -92,7 +93,7 @@ func CaptureThumbnail(videoPath, outputPath string) error {
 		"-ss", "00:00:01",
 		"-i", videoPath,
 		"-vframes", "1",
-		"-s", "320x180",
+		"-vf", "scale=w=320:h=568:force_original_aspect_ratio=decrease,pad=320:568:(ow-iw)/2:(oh-ih)/2:color=white",
 		outputPath,
 	)
 
@@ -256,10 +257,7 @@ func ValidateVideoFormat(filename string) bool {
 // ValidateVideoDuration 验证视频时长
 func ValidateVideoDuration(duration float64) (bool, string) {
 	if duration < 15 {
-		return false, "视频时长过短，要求15秒-10分钟"
-	}
-	if duration > 600 {
-		return false, "视频时长过长，要求15秒-10分钟"
+		return false, "视频时长过短，要求至少15秒"
 	}
 	return true, ""
 }

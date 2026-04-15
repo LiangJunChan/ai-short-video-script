@@ -575,10 +575,10 @@ function DetailPage() {
                     {activeTab === 'report' && !reportResult && (
                       <div className="text-center py-8">
                         <button
-                          className="px-6 py-3 bg-black text-white rounded-lg text-sm font-medium hover:opacity-80 transition-opacity"
+                          className="px-6 py-3 bg-black text-white rounded-lg text-sm font-medium hover:opacity-80 transition-opacity cursor-pointer"
                           onClick={() => handleAnalyze('report')}
                         >
-                          生成完整报告（免费）
+                          生成完整报告（消耗6积分）
                         </button>
                       </div>
                     )}
