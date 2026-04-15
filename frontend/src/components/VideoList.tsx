@@ -55,7 +55,7 @@ function VideoList() {
   return (
     <>
       {videos.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-32 text-[#999]">
+        <div className="flex flex-col items-center justify-center py-32 text-neutral-500">
           <svg
             className="w-14 h-14 mb-6 opacity-30"
             viewBox="0 0 56 56"
@@ -71,7 +71,7 @@ function VideoList() {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {videos.map((video) => (
               <VideoCard
                 key={video.id}

@@ -99,22 +99,22 @@ function UploadModal({ onClose, onUploadSuccess }: UploadModalProps) {
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-xl p-10 w-[480px] max-w-[calc(100vw-48px)] animate-modal-in"
+        className="bg-white/90 backdrop-blur-glass rounded-xl p-8 w-[480px] max-w-[calc(100vw-48px)] animate-modal-in shadow-glass border border-border-glass"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-2xl font-normal mb-7" style={{ fontFamily: 'var(--font-serif)' }}>
+        <h2 className="text-2xl font-heading font-semibold text-primary mb-6 tracking-tight">
           上传视频
         </h2>
 
         {step === 'select' && (
           <div
-            className="border-2 border-dashed border-[#e5e5e5] rounded-xl p-12 text-center cursor-pointer hover:border-[#999] transition-colors"
+            className="border-2 border-dashed border-neutral-200 rounded-xl p-12 text-center cursor-pointer hover:border-accent/50 transition-all duration-200 bg-neutral-50/50"
             onClick={() => document.getElementById('fileInput')?.click()}
             onDragOver={handleDragOver}
             onDrop={handleDrop}
           >
             <svg
-              className="w-12 h-12 mx-auto mb-4 text-[#999]"
+              className="w-12 h-12 mx-auto mb-4 text-neutral-400"
               viewBox="0 0 48 48"
               fill="none"
               stroke="currentColor"
@@ -123,8 +123,8 @@ function UploadModal({ onClose, onUploadSuccess }: UploadModalProps) {
               <path d="M8 32h32M24 8v20M16 16l8-8 8 8" />
               <rect x="4" y="28" width="40" height="16" rx="4" />
             </svg>
-            <p className="text-sm text-[#666] mb-4">点击或拖拽视频文件到此处上传</p>
-            <p className="text-xs text-[#999] font-light">
+            <p className="text-sm text-neutral-600 mb-4">点击或拖拽视频文件到此处上传</p>
+            <p className="text-xs text-neutral-500">
               支持格式：MP4、FLV、MOV<br />
               文件大小：不超过 4GB<br />
               时长：15秒 - 10分钟
@@ -144,37 +144,39 @@ function UploadModal({ onClose, onUploadSuccess }: UploadModalProps) {
         )}
 
         {step === 'form' && (
-          <div className="space-y-4">
+          <div className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-[#333] mb-1.5">视频标题</label>
+              <label className="block text-sm font-medium text-secondary mb-2">视频标题</label>
               <input
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="请输入视频标题"
-                className="w-full px-4 py-2.5 border border-[#e5e5e5] rounded-lg text-sm outline-none focus:border-black transition-colors"
+                className="w-full px-4 py-3 border border-neutral-200 rounded-lg text-sm outline-none focus:border-accent transition-all duration-200 bg-white/50"
               />
             </div>
 
             {/* Progress bar */}
-            <div className="relative h-2 bg-[#e5e5e5] rounded-full overflow-hidden">
-              <div
-                className="absolute inset-y-0 left-0 bg-black rounded-full transition-all duration-300"
-                style={{ width: `${progress}%` }}
-              />
+            <div>
+              <div className="relative h-2 bg-neutral-200 rounded-full overflow-hidden">
+                <div
+                  className="absolute inset-y-0 left-0 bg-accent rounded-full transition-all duration-300"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+              <span className="text-xs text-neutral-500 text-center block mt-2">{progress}%</span>
             </div>
-            <span className="text-xs text-[#999] text-center block">{progress}%</span>
 
             <div className="flex gap-3 pt-2">
               <button
-                className="flex-1 px-4 py-2.5 border border-[#e5e5e5] rounded-lg text-sm font-medium text-[#666] hover:border-[#999] transition-colors disabled:opacity-40"
+                className="flex-1 px-4 py-3 border border-neutral-200 rounded-lg text-sm font-medium text-neutral-600 hover:border-neutral-400 transition-all duration-200 disabled:opacity-40 cursor-pointer"
                 onClick={onClose}
                 disabled={uploading}
               >
                 取消
               </button>
               <button
-                className="flex-1 px-4 py-2.5 bg-black text-white rounded-lg text-sm font-medium hover:opacity-80 transition-opacity disabled:opacity-40"
+                className="flex-1 px-4 py-3 bg-accent text-white rounded-lg text-sm font-medium hover:opacity-90 transition-all duration-200 disabled:opacity-40 cursor-pointer"
                 onClick={handleUpload}
                 disabled={uploading}
               >

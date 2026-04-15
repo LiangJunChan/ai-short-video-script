@@ -55,16 +55,15 @@ function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white">
-      <div className="w-full max-w-sm px-8">
-        <div className="text-center mb-12">
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="w-full max-w-sm px-8 py-12 bg-white/80 backdrop-blur-glass rounded-2xl shadow-glass border border-border-glass">
+        <div className="text-center mb-10">
           <h1
-            className="text-3xl font-normal mb-3"
-            style={{ fontFamily: 'Georgia, serif', letterSpacing: '-0.02em' }}
+            className="text-3xl font-heading font-semibold mb-3 text-primary tracking-tight"
           >
             AI短视频脚本平台
           </h1>
-          <p className="text-sm text-[#999]">创建新账号</p>
+          <p className="text-sm text-neutral-500">创建新账号</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
@@ -74,7 +73,7 @@ function RegisterPage() {
               placeholder="用户名（3-20字符）"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full px-4 py-3 border border-[#e5e5e5] rounded-lg text-sm outline-none focus:border-black transition-colors"
+              className="w-full px-4 py-3 border border-neutral-200 rounded-lg text-sm outline-none focus:border-accent transition-all duration-200 bg-white/50"
             />
           </div>
 
@@ -84,7 +83,7 @@ function RegisterPage() {
               placeholder="密码（6-50字符）"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 border border-[#e5e5e5] rounded-lg text-sm outline-none focus:border-black transition-colors"
+              className="w-full px-4 py-3 border border-neutral-200 rounded-lg text-sm outline-none focus:border-accent transition-all duration-200 bg-white/50"
             />
           </div>
 
@@ -94,7 +93,7 @@ function RegisterPage() {
               placeholder="确认密码"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full px-4 py-3 border border-[#e5e5e5] rounded-lg text-sm outline-none focus:border-black transition-colors"
+              className="w-full px-4 py-3 border border-neutral-200 rounded-lg text-sm outline-none focus:border-accent transition-all duration-200 bg-white/50"
             />
           </div>
 
@@ -105,15 +104,15 @@ function RegisterPage() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-3 bg-black text-white rounded-lg text-sm font-medium hover:opacity-80 transition-opacity disabled:opacity-40"
+            className="w-full py-3 bg-accent text-white rounded-lg text-sm font-medium hover:opacity-90 transition-all duration-200 disabled:opacity-40 cursor-pointer"
           >
             {isLoading ? '注册中...' : '注册'}
           </button>
         </form>
 
-        <p className="text-center text-sm text-[#999] mt-8">
+        <p className="text-center text-sm text-neutral-500 mt-8">
           已有账号？{' '}
-          <Link to="/login" className="text-black hover:underline">
+          <Link to="/login" className="text-accent font-medium hover:underline">
             立即登录
           </Link>
         </p>

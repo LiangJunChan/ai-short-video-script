@@ -7,11 +7,13 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Poppins', 'Open Sans', 'Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+        sans: ['Open Sans', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+        heading: ['Poppins', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
         serif: ['Georgia', 'serif'],
       },
       colors: {
         primary: '#171717',
+        secondary: '#404040',
         accent: '#D4AF37',
         neutral: {
           50: '#fafafa',
@@ -24,7 +26,14 @@ export default {
           700: '#404040',
           800: '#262626',
           900: '#171717',
-        },
+        }
+      },
+      boxShadow: {
+        'glass': '0 8px 32px rgba(0, 0, 0, 0.08)',
+        'glass-hover': '0 12px 48px rgba(0, 0, 0, 0.12)',
+      },
+      backdropBlur: {
+        'glass': '16px',
       },
     },
   },

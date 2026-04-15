@@ -67,8 +67,8 @@ function App() {
   return (
     <div className="min-h-screen">
       <div className="max-w-7xl mx-auto px-12">
-        <header className="flex justify-between items-center py-10 pb-12">
-          <h1 className="text-3xl font-normal" style={{ fontFamily: 'var(--font-serif)', letterSpacing: '-0.02em' }}>
+        <header className="flex justify-between items-center py-8 pb-12">
+          <h1 className="text-4xl font-heading font-semibold text-primary tracking-tight" style={{ letterSpacing: '-0.03em' }}>
             AI短视频脚本平台
           </h1>
           <div className="flex items-center gap-4">
@@ -76,48 +76,41 @@ function App() {
               <>
                 {/* 积分悬浮区域 - 增加 padding 扩大 hover 范围 */}
                 <div className="relative group py-3 px-2">
-                  <span className="text-sm text-[#666] cursor-default">
-                    积分: <span className="font-medium text-black">{user.credits}</span>
+                  <span className="text-sm text-neutral-600 cursor-default">
+                    积分: <span className="font-semibold text-primary">{user.credits}</span>
                   </span>
                   {/* 悬浮面板 - 负margin向上覆盖，消除间隙确保鼠标可以顺利移动到面板 */}
-                  <div className="absolute right-0 top-full -mt-1 hidden group-hover:block bg-white shadow-lg rounded-lg p-4 w-48 z-50 border border-[#e5e5e5]">
-                    <p className="text-xs text-[#999] mb-3">
+                  <div className="absolute right-0 top-full -mt-1 hidden group-hover:block bg-white/80 backdrop-blur-glass shadow-glass rounded-lg p-4 w-48 z-50 border border-border-glass transition-all duration-200">
+                    <p className="text-xs text-neutral-500 mb-3">
                       {checkedIn ? '✓ 今日已签到' : '今日未签到'}
                     </p>
                     {!checkedIn && (
                       <button
                         onClick={handleCheckin}
                         disabled={isCheckingIn}
-                        className="w-full py-2 bg-black text-white text-sm rounded-lg hover:opacity-80 transition-opacity disabled:opacity-40"
+                        className="w-full py-2 bg-accent text-white text-sm rounded-lg hover:opacity-90 transition-all duration-200 disabled:opacity-40 cursor-pointer"
                       >
                         {isCheckingIn ? '签到中...' : '签到 +50'}
                       </button>
                     )}
                   </div>
                 </div>
-                <span className="text-sm text-[#999]">|</span>
+                <span className="text-sm text-neutral-400">|</span>
+                <span className="text-sm text-neutral-600">{user.username}</span>
                 <button
-                  className="px-4 py-2 border border-[#e5e5e5] rounded-lg text-sm text-[#666] hover:border-black hover:text-black transition-colors"
-                  onClick={() => navigate('/library')}
-                >
-                  我的素材库
-                </button>
-                <span className="text-sm text-[#999]">|</span>
-                <span className="text-sm text-[#666]">{user.username}</span>
-                <button
-                  className="px-4 py-2 border border-[#e5e5e5] rounded-lg text-sm text-[#666] hover:border-black hover:text-black transition-colors"
+                  className="px-4 py-2 border border-neutral-200 rounded-lg text-sm text-neutral-600 hover:border-primary hover:text-primary transition-all duration-200 cursor-pointer"
                   onClick={handleLogout}
                 >
                   退出
                 </button>
                 <button
-                  className="px-4 py-2.5 bg-black/80 text-white rounded-lg text-sm font-medium hover:opacity-80 transition-opacity"
+                  className="px-4 py-2.5 bg-primary/90 text-white rounded-lg text-sm font-medium hover:bg-primary transition-all duration-200 cursor-pointer"
                   onClick={() => setShowUrlExtractModal(true)}
                 >
                   链接提取
                 </button>
                 <button
-                  className="px-7 py-2.5 bg-black text-white rounded-lg text-sm font-medium hover:opacity-80 transition-opacity"
+                  className="px-7 py-2.5 bg-accent text-white rounded-lg text-sm font-medium hover:opacity-90 transition-all duration-200 cursor-pointer"
                   onClick={() => setShowUploadModal(true)}
                 >
                   上传视频
@@ -125,7 +118,7 @@ function App() {
               </>
             ) : (
               <button
-                className="px-7 py-2.5 bg-black text-white rounded-lg text-sm font-medium hover:opacity-80 transition-opacity"
+                className="px-7 py-2.5 bg-accent text-white rounded-lg text-sm font-medium hover:opacity-90 transition-all duration-200 cursor-pointer"
                 onClick={() => navigate('/login')}
               >
                 登录

@@ -29,7 +29,7 @@ function VideoCard({ video, onClick, onDelete }: VideoCardProps) {
 
   return (
     <div
-      className="bg-white rounded-xl overflow-hidden border border-[#e5e5e5] hover:shadow-lg hover:border-[#d1d1d1] transition-all cursor-pointer group"
+      className="bg-white/80 backdrop-blur-glass rounded-xl overflow-hidden border border-border-glass shadow-glass hover:shadow-glass-hover hover:border-accent/30 transition-all duration-240 cursor-pointer group"
       onClick={onClick}
     >
       {/* Thumbnail - 竖屏 9:16 */}
@@ -60,7 +60,7 @@ function VideoCard({ video, onClick, onDelete }: VideoCardProps) {
 
         {/* Processing badge */}
         {video.status === 'processing' && (
-          <div className="absolute top-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
+          <div className="absolute top-2 left-2 bg-primary/80 backdrop-blur text-white text-xs px-2 py-1 rounded-lg">
             提取文案中
           </div>
         )}
@@ -88,14 +88,14 @@ function VideoCard({ video, onClick, onDelete }: VideoCardProps) {
       </div>
 
       {/* Video info */}
-      <div className="p-3">
+      <div className="p-4">
         <h3
-          className="font-medium text-sm truncate"
+          className="font-heading font-medium text-sm text-primary truncate"
           title={video.title}
         >
           {truncateText(video.title, 22)}
         </h3>
-        <div className="flex items-center gap-2 mt-1 text-xs text-[#999] font-light">
+        <div className="flex items-center gap-2 mt-2 text-xs text-neutral-500">
           <span>{formatDate(video.createdAt)}</span>
           <span>·</span>
           <span>{video.uploader}</span>

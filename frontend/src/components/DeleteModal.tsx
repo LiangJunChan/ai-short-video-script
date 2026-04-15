@@ -21,12 +21,12 @@ function DeleteModal({
       onClick={onCancel}
     >
       <div
-        className="bg-white rounded-xl p-8 w-[420px] max-w-[calc(100vw-48px)] animate-modal-in"
+        className="bg-white/90 backdrop-blur-glass rounded-xl p-8 w-[420px] max-w-[calc(100vw-48px)] animate-modal-in shadow-glass border border-border-glass"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-center mb-4">
           <svg
-            className="w-12 h-12 text-[#dc2626]"
+            className="w-12 h-12 text-red-500"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -39,21 +39,21 @@ function DeleteModal({
             />
           </svg>
         </div>
-        <h3 className="text-xl font-normal text-center mb-2" style={{ fontFamily: 'var(--font-serif)' }}>
+        <h3 className="text-xl font-heading font-semibold text-center mb-2 text-primary">
           {title}
         </h3>
-        <p className="text-sm text-[#666] text-center mb-6 font-light">
+        <p className="text-sm text-neutral-600 text-center mb-6">
           {message}
         </p>
         <div className="flex gap-3">
           <button
-            className="flex-1 px-4 py-2.5 border border-[#e5e5e5] rounded-lg text-sm font-medium text-[#666] hover:border-[#999] transition-colors"
+            className="flex-1 px-4 py-3 border border-neutral-200 rounded-lg text-sm font-medium text-neutral-600 hover:border-neutral-400 transition-all duration-200 cursor-pointer"
             onClick={onCancel}
           >
             {cancelText}
           </button>
           <button
-            className="flex-1 px-4 py-2.5 bg-[#dc2626] text-white rounded-lg text-sm font-medium hover:opacity-80 transition-opacity"
+            className="flex-1 px-4 py-3 bg-red-600 text-white rounded-lg text-sm font-medium hover:opacity-90 transition-all duration-200 cursor-pointer"
             onClick={onConfirm}
           >
             {confirmText}

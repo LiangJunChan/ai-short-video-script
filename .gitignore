@@ -38,6 +38,4 @@ audio/*
 .DS_Store
 Thumbs.db
 backend/ai-short-video-backend
-
-## Claude
-.claude/*
+.claude/
