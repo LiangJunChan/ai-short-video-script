@@ -34,7 +34,7 @@ function VideoCard({ video, onClick, onDelete, selected, onToggleSelect }: Video
     onDelete(video)
   }
 
-  const handleCheckboxClick = (e: React.MouseEvent) => {
+  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.stopPropagation()
     onToggleSelect?.(video)
   }
@@ -75,7 +75,7 @@ function VideoCard({ video, onClick, onDelete, selected, onToggleSelect }: Video
             <input
               type="checkbox"
               checked={selected ?? false}
-              onChange={handleCheckboxClick}
+              onChange={handleCheckboxChange}
               className="w-4 h-4 text-sky-600 rounded focus:ring-sky-500 border-slate-300"
             />
           </div>

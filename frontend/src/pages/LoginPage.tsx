@@ -111,7 +111,7 @@ function LoginPage() {
         {/* Tips */}
         <div className="mt-6 p-4 bg-white/60 backdrop-blur rounded-xl border border-slate-100">
           <p className="text-xs text-slate-500 text-center">
-            💡 演示账号：用户名 luka，密码 123456
+            💡
           </p>
         </div>
       </div>

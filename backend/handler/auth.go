@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"database/sql"
 	"net/http"
 	"time"
 
@@ -12,7 +11,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-const dailyLoginBonus = 50
+const dailyLoginBonus = 30
 
 // Register 注册
 func Register(c *gin.Context) {
@@ -57,11 +56,21 @@ func Register(c *gin.Context) {
 	}
 
 	// 创建用户（默认 normal 类型）
-	_, err = database.CreateUser(req.Username, string(hash), "normal")
+	userId, err := database.CreateUser(req.Username, string(hash), "normal")
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{
 			Code:    500,
 			Message: "创建用户失败",
+		})
+		return
+	}
+
+	// 给新用户赠送初始积分
+	_, err = database.DB.Exec("UPDATE users SET credits = 30 WHERE id = ?", userId)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, APIResponse{
+			Code:    500,
+			Message: "初始化积分失败",
 		})
 		return
 	}
@@ -106,52 +115,9 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	// 处理每日登录积分（管理员除外）
-	var creditsToAdd int
-	if user.UserType != "admin" {
-		now := time.Now()
-		today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
-
-		shouldBonus := true
-		if user.LastLoginBonusAt != nil {
-			lastDay := time.Date(
-				user.LastLoginBonusAt.Year(),
-				user.LastLoginBonusAt.Month(),
-				user.LastLoginBonusAt.Day(),
-				0, 0, 0, 0,
-				user.LastLoginBonusAt.Location(),
-			)
-			if !lastDay.Before(today) {
-				shouldBonus = false
-			}
-		}
-
-		if shouldBonus {
-			creditsToAdd = dailyLoginBonus
-		}
-	}
-
-	// 更新登录状态并发放积分
-	if creditsToAdd > 0 {
-		database.WithTransaction(func(tx *sql.Tx) error {
-			// 更新积分
-			_, err := database.UpdateUserCredits(tx, user.ID, creditsToAdd)
-			if err != nil {
-				return err
-			}
-			// 设置登录奖励时间
-			if err := database.SetLastLoginBonus(tx, user.ID, time.Now()); err != nil {
-				return err
-			}
-			// 更新登录时间
-			if err := database.SetLastLogin(tx, user.ID, time.Now()); err != nil {
-				return err
-			}
-			return nil
-		})
-	} else {
-		database.DB.Exec("UPDATE users SET last_login_at = ? WHERE id = ?", time.Now(), user.ID)
-	}
+	// 只更新最后登录时间，不自动发放积分
+	// 积分奖励只在手动签到时发放
+	database.DB.Exec("UPDATE users SET last_login_at = ? WHERE id = ?", time.Now(), user.ID)
 
 	// 重新获取用户信息（包含更新后的积分）
 	user, _ = database.GetUserByID(user.ID)

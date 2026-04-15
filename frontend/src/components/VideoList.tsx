@@ -155,8 +155,8 @@ function VideoList() {
     <div>
       {/* Batch Action Bar */}
       {videos.some(v => v.status === 'done') && (
-        <div className="flex items-center justify-between mb-6 p-4 bg-sky-50 border border-sky-100 rounded-xl">
-          <div className="flex items-center gap-4">
+        <div className="flex items-center justify-end mb-6 p-4 bg-sky-50 border border-sky-100 rounded-xl">
+          <div className="flex items-center gap-3">
             {!selectMode ? (
               <button
                 onClick={() => setSelectMode(true)}
@@ -169,6 +169,7 @@ function VideoList() {
                 <span className="text-sm text-slate-600">
                   已选择 {selectedIds.size} 个视频
                 </span>
+                <div className="w-px h-5 bg-sky-200" />
                 <button
                   onClick={selectAll}
                   className="px-3 py-1.5 text-sm text-sky-600 hover:bg-sky-100 rounded-lg transition-colors"
@@ -179,30 +180,30 @@ function VideoList() {
                   onClick={clearSelection}
                   className="px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
                 >
-                  取消
+                  取消选择
                 </button>
+                {selectedIds.size > 0 && (
+                  <>
+                    <div className="w-px h-5 bg-sky-200" />
+                    <button
+                      onClick={() => setShowBatchDeleteConfirm(true)}
+                      disabled={isDeleting}
+                      className="px-4 py-2 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors disabled:opacity-50"
+                    >
+                      {isDeleting ? '删除中...' : `删除选中 (${selectedIds.size}个)`}
+                    </button>
+                    <button
+                      onClick={handleExport}
+                      disabled={isExporting || !hasSelectedDone}
+                      className="btn-primary px-4 py-2 text-sm shadow-sm disabled:opacity-50"
+                    >
+                      {isExporting ? '导出中...' : `导出Markdown`}
+                    </button>
+                  </>
+                )}
               </>
             )}
           </div>
-
-          {selectMode && selectedIds.size > 0 && (
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setShowBatchDeleteConfirm(true)}
-                disabled={isDeleting}
-                className="px-4 py-2 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors disabled:opacity-50"
-              >
-                {isDeleting ? '删除中...' : `删除选中 (${selectedIds.size}个)`}
-              </button>
-              <button
-                onClick={handleExport}
-                disabled={isExporting || !hasSelectedDone}
-                className="btn-primary px-4 py-2 text-sm shadow-sm disabled:opacity-50"
-              >
-                {isExporting ? '导出中...' : `导出Markdown (${selectedIds.size}个)`}
-              </button>
-            </div>
-          )}
         </div>
       )}
 

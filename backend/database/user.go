@@ -172,8 +172,8 @@ func DoCheckin(userId int) (int, error) {
 		return 0, err
 	}
 
-	// 增加50积分
-	const checkinBonus = 50
+	// 增加签到积分
+	const checkinBonus = 30
 	_, err = DB.Exec("UPDATE users SET credits = credits + ? WHERE id = ?", checkinBonus, userId)
 	if err != nil {
 		return 0, err
