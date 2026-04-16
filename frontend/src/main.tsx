@@ -11,6 +11,7 @@ import LibraryPage from './pages/LibraryPage'
 import CollectionDetailPage from './pages/CollectionDetailPage'
 import TagFilterPage from './pages/TagFilterPage'
 import SearchPage from './pages/SearchPage'
+import SquarePage from './pages/SquarePage'
 import './index.css'
 
 // 受保护路由组件
@@ -68,6 +69,14 @@ const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <SearchPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/square',
+    element: (
+      <ProtectedRoute>
+        <SquarePage />
       </ProtectedRoute>
     ),
   },
