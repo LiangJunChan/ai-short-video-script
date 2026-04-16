@@ -99,6 +99,13 @@ func main() {
 
 		// V1.6 导出功能
 		auth.POST("/export/markdown", handler.ExportMarkdown)
+
+		// Square routes
+		squareGroup := auth.Group("/square")
+		{
+			squareGroup.GET("/videos", handler.GetPublicVideos)
+			squareGroup.POST("/collect/:id", handler.CollectSquareVideo)
+		}
 	}
 
 	// 启动服务器
