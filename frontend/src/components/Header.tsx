@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useDispatch } from 'react-redux'
 import { User } from '../types'
 import { videoApi } from '../store/videoApi'
@@ -15,6 +15,7 @@ interface HeaderProps {
 function Header({ user, isAuthenticated, onOpenUpload, onOpenUrlExtract, onShowToast }: HeaderProps) {
   const dispatch = useDispatch()
   const navigate = useNavigate()
+  const location = useLocation()
 
   const { data: checkinData } = videoApi.useGetCheckinStatusQuery(undefined, {
     skip: !isAuthenticated,
@@ -36,7 +37,7 @@ function Header({ user, isAuthenticated, onOpenUpload, onOpenUrlExtract, onShowT
       if (result.code === 200) {
         dispatch(updateCredits(result.data.credits))
         refetchMe()
-        onShowToast('签到成功，获得50积分')
+        onShowToast('签到成功，获得30积分')
       }
     } catch (err: any) {
       onShowToast(err.data?.message || '签到失败，请重试')
@@ -86,17 +87,33 @@ function Header({ user, isAuthenticated, onOpenUpload, onOpenUrlExtract, onShowT
                         disabled={isCheckingIn}
                         className="w-full py-2 bg-gradient-to-r from-sky-400 to-blue-500 text-white text-sm font-medium rounded-lg hover:from-sky-500 hover:to-blue-600 transition-all disabled:opacity-50 shadow-sm"
                       >
-                        {isCheckingIn ? '签到中...' : '签到 +50'}
+                        {isCheckingIn ? '签到中...' : '签到 +30'}
                       </button>
                     )}
                   </div>
                 </div>
               </div>
 
+              {/* Square */}
+              <button
+                onClick={() => navigate('/square')}
+                className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+                  location.pathname === '/square'
+                    ? 'bg-sky-100 text-sky-700'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                }`}
+              >
+                广场
+              </button>
+
               {/* Library */}
               <button
                 onClick={() => navigate('/library')}
-                className="px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-colors"
+                className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+                  location.pathname === '/library'
+                    ? 'bg-sky-100 text-sky-700'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                }`}
               >
                 素材库
               </button>
