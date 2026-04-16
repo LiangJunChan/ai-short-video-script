@@ -36,9 +36,11 @@ function SquarePage() {
     try {
       await collectVideo({ videoId, collectionId }).unwrap()
       setToast('收藏成功！请到我的素材库查看')
+      setTimeout(() => setToast(null), 3000)
       setSelectedVideoId(null)
     } catch (err: any) {
       setToast(err.data?.message || '收藏失败，请重试')
+      setTimeout(() => setToast(null), 3000)
     }
   }
 
