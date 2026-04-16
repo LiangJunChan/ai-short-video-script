@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useGetPublicVideosQuery, useCollectSquareVideoMutation, useGetCollectionsQuery } from '../store/videoApi'
 import Loading from '../components/Loading'
@@ -16,6 +16,16 @@ function SquarePage() {
   const pageSize = 12
   const [selectedVideoId, setSelectedVideoId] = useState<number | null>(null)
   const [toast, setToast] = useState<string | null>(null)
+  const toastTimeoutRef = useRef<number | null>(null)
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (toastTimeoutRef.current) {
+        clearTimeout(toastTimeoutRef.current)
+      }
+    }
+  }, [])
 
   const { data, isLoading, isError, refetch } = useGetPublicVideosQuery(
     { page, pageSize, sortBy },
@@ -35,12 +45,20 @@ function SquarePage() {
 
     try {
       await collectVideo({ videoId, collectionId }).unwrap()
+      // Clear any existing timeout
+      if (toastTimeoutRef.current) {
+        clearTimeout(toastTimeoutRef.current)
+      }
       setToast('收藏成功！请到我的素材库查看')
-      setTimeout(() => setToast(null), 3000)
+      toastTimeoutRef.current = setTimeout(() => setToast(null), 3000)
       setSelectedVideoId(null)
     } catch (err: any) {
+      // Clear any existing timeout
+      if (toastTimeoutRef.current) {
+        clearTimeout(toastTimeoutRef.current)
+      }
       setToast(err.data?.message || '收藏失败，请重试')
-      setTimeout(() => setToast(null), 3000)
+      toastTimeoutRef.current = setTimeout(() => setToast(null), 3000)
     }
   }
 
