@@ -16,6 +16,7 @@ import type {
   TagVideosResponse,
   SearchHistory,
   SearchVideosParams,
+  PublicVideosResponse,
 } from '../types'
 
 const API_BASE_URL = '/api'
@@ -311,32 +312,13 @@ export const videoApi = createApi({
     }),
 
     // V1.7 Square endpoints
-    getPublicVideos: builder.query<{
-      code: number;
-      message: string;
-      data: {
-        videos: Array<{
-          id: number
-          title: string
-          thumbnailUrl: string
-          username: string
-          tags: string | null
-          collectCount: number
-          createdAt: string
-        }>
-        pagination: {
-          page: number
-          pageSize: number
-          total: number
-          totalPages: number
-        }
-      }
-    }, { page?: number; pageSize?: number; sortBy?: 'newest' | 'popular' }>({
+    getPublicVideos: builder.query<PublicVideosResponse, { page?: number; pageSize?: number; sortBy?: 'newest' | 'popular' }>({
       query: (params) => ({
         url: '/square/videos',
         method: 'GET',
         params,
       }),
+      providesTags: ['VideoList'],
     }),
 
     collectSquareVideo: builder.mutation<{ code: number; message: string }, { videoId: number; collectionId?: number }>({

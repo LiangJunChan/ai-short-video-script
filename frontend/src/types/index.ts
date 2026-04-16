@@ -178,3 +178,23 @@ export interface SearchVideosParams {
   page?: number
   pageSize?: number
 }
+
+// 公开广场视频类型
+export interface SquareVideo {
+  id: number
+  title: string
+  thumbnailUrl: string
+  username: string
+  tags: string | null
+  collectCount: number
+  createdAt: string
+}
+
+export interface PublicVideosResponse {
+  code: number
+  message: string
+  data: {
+    videos: SquareVideo[]
+    pagination: Pagination
+  }
+}
