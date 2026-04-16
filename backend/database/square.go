@@ -1,6 +1,7 @@
 package database
 
 import (
+	"database/sql"
 	"time"
 )
 
@@ -101,6 +102,9 @@ func CheckVideoIsPublic(videoId int) (bool, error) {
 		WHERE v.id = ?
 	`, videoId).Scan(&allow)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return false, nil
+		}
 		return false, err
 	}
 	return allow, nil
