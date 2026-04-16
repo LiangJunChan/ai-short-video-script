@@ -219,6 +219,9 @@ func InitDB() {
 	`)
 
 	log.Println("Database initialized successfully")
+
+	// Run migrations for new features
+	RunSquareMigrations()
 }
 
 // GetAllVideos 获取分页视频列表（按用户隔离）
