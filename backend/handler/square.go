@@ -90,7 +90,7 @@ func CollectSquareVideo(c *gin.Context) {
 
 	// 添加到收藏夹
 	if req.CollectionID != nil {
-		err := database.AddVideoToCollection(userId, videoId, *req.CollectionID)
+		err := database.AddVideoToCollection(*req.CollectionID, videoId, userId)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, APIResponse{
 				Code:    500,
