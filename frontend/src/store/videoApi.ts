@@ -309,6 +309,44 @@ export const videoApi = createApi({
         responseHandler: (response) => response.blob(),
       }),
     }),
+
+    // V1.7 Square endpoints
+    getPublicVideos: builder.query<{
+      code: number;
+      message: string;
+      data: {
+        videos: Array<{
+          id: number
+          title: string
+          thumbnailUrl: string
+          username: string
+          tags: string | null
+          collectCount: number
+          createdAt: string
+        }>
+        pagination: {
+          page: number
+          pageSize: number
+          total: number
+          totalPages: number
+        }
+      }
+    }, { page?: number; pageSize?: number; sortBy?: 'newest' | 'popular' }>({
+      query: (params) => ({
+        url: '/square/videos',
+        method: 'GET',
+        params,
+      }),
+    }),
+
+    collectSquareVideo: builder.mutation<{ code: number; message: string }, { videoId: number; collectionId?: number }>({
+      query: ({ videoId, collectionId }) => ({
+        url: `/square/collect/${videoId}`,
+        method: 'POST',
+        body: { collectionId },
+      }),
+      invalidatesTags: ['Collection'],
+    }),
   }),
 })
 
@@ -351,4 +389,7 @@ export const {
   useClearSearchHistoryMutation,
   // V1.6 导出
   useExportMarkdownMutation,
+  // V1.7 Square
+  useGetPublicVideosQuery,
+  useCollectSquareVideoMutation,
 } = videoApi
