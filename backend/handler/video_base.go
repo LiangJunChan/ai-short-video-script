@@ -47,28 +47,64 @@ type VideoResponse struct {
 	Uploader      string     `json:"uploader"`
 	CreatedAt     time.Time  `json:"createdAt"`
 	Status        string     `json:"status"`
+	IsOwner       bool       `json:"isOwner"`
+	HasExtracted  bool       `json:"hasExtracted"`
 }
 
-// formatVideoResponse 将database.Video转换为VideoResponse
-func formatVideoResponse(v database.Video) VideoResponse {
+// formatVideoResponse 将database.Video和UserVideo合并转换为VideoResponse
+// 如果非所有者且未提取，则清空敏感字段
+func formatVideoResponse(v database.Video, uv *database.UserVideo, isOwner bool) VideoResponse {
 	thumbPath := ""
 	if v.Thumbnail != nil {
 		thumbName := filepath.Base(*v.Thumbnail)
 		thumbPath = fmt.Sprintf("/thumbnails/%s", thumbName)
 	}
-	return VideoResponse{
+
+	resp := VideoResponse{
 		ID:            v.ID,
 		Title:         v.Title,
 		VideoUrl:      fmt.Sprintf("/uploads/%s", v.Filename),
 		Thumbnail:     &thumbPath,
 		Duration:      v.Duration,
-		AIText:        v.AIText,
-		RewrittenText: v.RewrittenText,
-		RewriteStatus: v.RewriteStatus,
+		AIText:        nil,
+		RewrittenText: nil,
+		RewriteStatus: "idle",
 		Uploader:      v.Uploader,
 		CreatedAt:     v.CreatedAt,
 		Status:        v.Status,
+		IsOwner:       isOwner,
+		HasExtracted:  false,
 	}
+
+	// For owner: fallback to original data if user_videos is empty
+	if isOwner {
+		resp.AIText = v.AIText
+		resp.RewrittenText = v.RewrittenText
+		resp.RewriteStatus = v.RewriteStatus
+		resp.HasExtracted = v.Status == "done"
+	}
+
+	// Fill user-specific content (overrides original if exists)
+	if uv != nil {
+		if uv.Text != nil {
+			resp.AIText = uv.Text
+		}
+		// Always keep HasExtracted in sync with user_videos
+		resp.HasExtracted = uv.Extracted
+		if uv.RewrittenText != nil {
+			resp.RewrittenText = uv.RewrittenText
+		}
+		resp.RewriteStatus = uv.RewriteStatus
+	}
+
+	// If not owner and not extracted, clear content
+	if !isOwner && (uv == nil || !uv.Extracted) {
+		resp.AIText = nil
+		resp.RewrittenText = nil
+		resp.HasExtracted = false
+	}
+
+	return resp
 }
 
 // GetVideoList 获取视频列表
@@ -99,7 +135,9 @@ func GetVideoList(c *gin.Context) {
 	// 转换为 VideoResponse
 	videoResponses := make([]VideoResponse, len(videos))
 	for i, v := range videos {
-		videoResponses[i] = formatVideoResponse(v)
+		isOwner := v.UserID == userId
+		userVideo, _ := database.GetUserVideo(userId, v.ID)
+		videoResponses[i] = formatVideoResponse(v, userVideo, isOwner)
 	}
 
 	c.JSON(http.StatusOK, APIResponse{
@@ -118,25 +156,26 @@ func GetVideoList(c *gin.Context) {
 }
 
 // GetVideoDetail 获取视频详情
+// 公开视频：所有人可访问，非所有者仅能看到公开信息，文案需要付费提取
 func GetVideoDetail(c *gin.Context) {
-	userId := middleware.GetUserID(c)
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, APIResponse{
 			Code:    400,
-			Message: "无效的视频ID",
-			Data:    nil,
+			Message: "ID错误",
 		})
 		return
 	}
 
-	video, err := database.GetVideoByIDAndUser(id, userId)
+	userId := middleware.GetUserID(c)
+
+	// 1. 获取视频基础信息（不需要用户校验）
+	video, err := database.GetVideoByID(id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{
 			Code:    500,
-			Message: "获取视频详情失败",
-			Data:    nil,
+			Message: "获取失败",
 		})
 		return
 	}
@@ -145,15 +184,32 @@ func GetVideoDetail(c *gin.Context) {
 		c.JSON(http.StatusNotFound, APIResponse{
 			Code:    404,
 			Message: "视频不存在",
-			Data:    nil,
 		})
 		return
 	}
 
+	// 2. 判断是否是所有者
+	isOwner := video.UserID == userId
+
+	// 3. 获取当前用户对该视频的提取状态
+	userVideo, err := database.GetUserVideo(userId, id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, APIResponse{
+			Code:    500,
+			Message: "获取用户状态失败",
+		})
+		return
+	}
+
+	// 4. 如果用户第一次访问，确保记录存在
+	if userVideo == nil {
+		database.EnsureUserVideoExists(userId, id)
+		userVideo, _ = database.GetUserVideo(userId, id)
+	}
+
 	c.JSON(http.StatusOK, APIResponse{
-		Code:    200,
-		Message: "获取成功",
-		Data:    formatVideoResponse(*video),
+		Code: 200,
+		Data: formatVideoResponse(*video, userVideo, isOwner),
 	})
 }
 

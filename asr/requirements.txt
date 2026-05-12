@@ -1,0 +1,6 @@
+funasr>=1.0.0
+torch>=2.0.0
+torchaudio>=2.0.0
+uvicorn>=0.20.0
+fastapi>=0.100.0
+python-multipart>=0.0.6

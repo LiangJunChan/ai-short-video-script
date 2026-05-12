@@ -13,6 +13,7 @@ import (
 )
 
 // AnalyzeVideo 视频AI分析
+// 支持自己上传视频和广场公开视频，每个用户独立保存分析结果
 func AnalyzeVideo(c *gin.Context) {
 	videoIdStr := c.Param("id")
 	videoId, err := strconv.Atoi(videoIdStr)
@@ -27,8 +28,8 @@ func AnalyzeVideo(c *gin.Context) {
 
 	userId := middleware.GetUserID(c)
 
-	// 获取视频信息
-	video, err := database.GetVideoByIDAndUser(videoId, userId)
+	// 获取视频基础信息（公开视频总是可以访问）
+	video, err := database.GetVideoByID(videoId)
 	if err != nil || video == nil {
 		c.JSON(http.StatusNotFound, APIResponse{
 			Code:    404,
@@ -38,8 +39,36 @@ func AnalyzeVideo(c *gin.Context) {
 		return
 	}
 
-	// 检查是否有AI文案
-	if video.AIText == nil || *video.AIText == "" {
+	// 获取用户提取状态
+	userVideo, err := database.GetUserVideo(userId, videoId)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, APIResponse{
+			Code:    500,
+			Message: "获取用户状态失败",
+			Data:    nil,
+		})
+		return
+	}
+
+	// 获取原文案 - 如果是所有者从videos获取，否则从user_videos获取
+	var originalText string
+	var hasOriginalText bool
+
+	isOwner := video.UserID == userId
+
+	if isOwner {
+		if video.AIText != nil && *video.AIText != "" {
+			originalText = *video.AIText
+			hasOriginalText = true
+		}
+	} else {
+		if userVideo != nil && userVideo.Extracted && userVideo.Text != nil && *userVideo.Text != "" {
+			originalText = *userVideo.Text
+			hasOriginalText = true
+		}
+	}
+
+	if !hasOriginalText {
 		c.JSON(http.StatusBadRequest, APIResponse{
 			Code:    400,
 			Message: "该视频还没有提取文案，请先提取文案后再进行分析",
@@ -77,7 +106,6 @@ func AnalyzeVideo(c *gin.Context) {
 		return
 	}
 
-	text := *video.AIText
 	duration := video.Duration
 
 	var result string
@@ -95,7 +123,7 @@ func AnalyzeVideo(c *gin.Context) {
 				return
 			}
 		}
-		result, err = service.AnalyzeVideoStructure(text, duration)
+		result, err = service.AnalyzeVideoStructure(originalText, duration)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, APIResponse{
 				Code:    500,
@@ -116,7 +144,7 @@ func AnalyzeVideo(c *gin.Context) {
 				return
 			}
 		}
-		result, err = service.AnalyzeViralPoints(text)
+		result, err = service.AnalyzeViralPoints(originalText)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, APIResponse{
 				Code:    500,
@@ -137,7 +165,7 @@ func AnalyzeVideo(c *gin.Context) {
 				return
 			}
 		}
-		result, err = service.ExtractTags(text)
+		result, err = service.ExtractTags(originalText)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, APIResponse{
 				Code:    500,
@@ -158,7 +186,7 @@ func AnalyzeVideo(c *gin.Context) {
 				return
 			}
 		}
-		result, err = service.AnalyzeRhythm(text, duration)
+		result, err = service.AnalyzeRhythm(originalText, duration)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, APIResponse{
 				Code:    500,
@@ -185,7 +213,7 @@ func AnalyzeVideo(c *gin.Context) {
 			})
 			return
 		}
-		result, err = service.GenerateAnalysisReport(text, duration, nil, nil, nil)
+		result, err = service.GenerateAnalysisReport(originalText, duration, nil, nil, nil)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, APIResponse{
 				Code:    500,

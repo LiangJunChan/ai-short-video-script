@@ -2,6 +2,8 @@ package database
 
 import (
 	"database/sql"
+	"errors"
+	"log"
 	"time"
 )
 
@@ -36,7 +38,8 @@ func GetPublicVideos(page, pageSize int, sortBy string) ([]SquareVideo, int, err
 		LEFT JOIN tags t ON vt.tag_id = t.id
 		WHERE IFNULL(u.allow_public_square, 1) = 1
 		AND v.status = 'done'
-		GROUP BY v.id, v.title, v.thumbnail, u.username, v.collect_count, v.created_at
+		AND original_source_id IS NULL
+		GROUP BY v.id, v.title, v.thumbnail, u.username, v.collect_count, v.created_at, v.original_source_id
 	`
 
 	var orderClause string
@@ -79,6 +82,7 @@ func GetPublicVideos(page, pageSize int, sortBy string) ([]SquareVideo, int, err
 		JOIN users u ON v.user_id = u.id
 		WHERE IFNULL(u.allow_public_square, 1) = 1
 		AND v.status = 'done'
+		AND original_source_id IS NULL
 	`).Scan(&total)
 	if err != nil {
 		return nil, 0, err
@@ -88,65 +92,39 @@ func GetPublicVideos(page, pageSize int, sortBy string) ([]SquareVideo, int, err
 }
 
 // CollectSquareVideo 收藏广场视频到个人素材库
-// 在当前用户下创建一个新的视频副本，只复制公开信息，文案需要重新提取
+// 不创建新视频副本，只确保user_videos存在，添加到收藏夹（如果指定），返回原视频ID
+// 用户提取后会出现在个人列表中
 func CollectSquareVideo(userId int, collectionID *int, originalVideoId int) (int, error) {
-	// 1. 获取原视频信息
-	original, err := GetVideoByID(originalVideoId)
+	// Check if original video is public
+	isPublic, err := CheckVideoIsPublic(originalVideoId)
+	if err != nil {
+		return 0, err
+	}
+	if !isPublic {
+		return 0, errors.New("video is not public")
+	}
+
+	// 2. 确保user_videos记录存在，这样用户首页列表就能看到
+	err = EnsureUserVideoExists(userId, originalVideoId)
 	if err != nil {
 		return 0, err
 	}
 
-	// 2. 在当前用户下创建新视频副本
-	query := `
-		INSERT INTO videos (
-			title,
-			thumbnail,
-			status,
-			user_id,
-			collect_count,
-			created_at
-		) VALUES (?, ?, 'idle', ?, 0, CURRENT_TIMESTAMP)
-	`
-	res, err := DB.Exec(query, original.Title, original.Thumbnail, userId)
-	if err != nil {
-		return 0, err
-	}
-
-	newVideoId, err := res.LastInsertId()
-	if err != nil {
-		return 0, err
-	}
-
-	// 3. 如果指定了收藏夹，添加到收藏夹
+	// 3. 如果指定了收藏夹，添加原视频到收藏夹
 	if collectionID != nil {
-		err := AddVideoToCollection(*collectionID, int(newVideoId), userId)
+		err := AddVideoToCollection(*collectionID, originalVideoId, userId)
 		if err != nil {
 			return 0, err
 		}
 	}
 
 	// 4. 增加原视频收藏计数
-	_ = IncrementCollectCount(originalVideoId)
-
-	// 5. 复制标签（如果原视频有标签）
-	// 查询原视频的所有标签ID
-	tagRows, err := DB.Query(`
-		SELECT tag_id FROM video_tags WHERE video_id = ?
-	`, originalVideoId)
-	if err == nil {
-		defer tagRows.Close()
-		for tagRows.Next() {
-			var tagId int
-			if tagRows.Scan(&tagId) == nil {
-				// 添加到新视频
-				_, _ = DB.Exec(`
-					INSERT OR IGNORE INTO video_tags (video_id, tag_id) VALUES (?, ?)
-				`, int(newVideoId), tagId)
-			}
-		}
+	if err := IncrementCollectCount(originalVideoId); err != nil {
+		log.Printf("warning: failed to increment collect count for video %d: %v", originalVideoId, err)
 	}
 
-	return int(newVideoId), nil
+	// 返回原视频ID，URL保持不变
+	return originalVideoId, nil
 }
 
 // IncrementCollectCount 增加收藏计数

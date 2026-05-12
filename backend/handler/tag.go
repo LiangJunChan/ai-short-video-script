@@ -233,7 +233,9 @@ func GetTagVideos(c *gin.Context) {
 
 	videoResponses := make([]VideoResponse, len(videos))
 	for i, v := range videos {
-		videoResponses[i] = formatVideoResponse(v)
+		isOwner := v.UserID == userId
+		userVideo, _ := database.GetUserVideo(userId, v.ID)
+		videoResponses[i] = formatVideoResponse(v, userVideo, isOwner)
 	}
 
 	c.JSON(http.StatusOK, APIResponse{

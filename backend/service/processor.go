@@ -243,6 +243,68 @@ func ProcessVideoAI(videoID int, videoPath string) {
 	}()
 }
 
+// ProcessVideoAIV2 异步处理视频AI提取（支持多用户独立保存）
+// 如果是所有者：保存结果到 videos 表
+// 如果是非所有者：保存结果到 user_videos 表
+func ProcessVideoAIV2(videoID int, videoPath string, userId int, isOwner bool) {
+	go func() {
+		log.Printf("Starting AI processing V2 for video %d, user %d", videoID, userId)
+
+		// 获取视频信息（包含user_id）
+		video, err := database.GetVideoByID(videoID)
+		if err != nil || video == nil {
+			log.Printf("Failed to get video %d: %v", videoID, err)
+			if isOwner {
+				database.UpdateVideoAIResult(videoID, nil, "failed")
+			}
+			return
+		}
+
+		// 创建音频文件路径
+		ext := filepath.Ext(videoPath)
+		baseName := filepath.Base(videoPath[:len(videoPath)-len(ext)])
+		audioPath := filepath.Join("../audio", baseName+".wav")
+
+		// 提取音频
+		err = ExtractAudio(videoPath, audioPath)
+		if err != nil {
+			log.Printf("Failed to extract audio for video %d: %v", videoID, err)
+			if isOwner {
+				database.UpdateVideoAIResult(videoID, nil, "failed")
+			}
+			return
+		}
+
+		// 语音识别
+		aiText, err := RecognizeSpeech(audioPath)
+		if err != nil || aiText == "" {
+			log.Printf("Failed to recognize speech for video %d: %v", videoID, err)
+			if isOwner {
+				database.UpdateVideoAIResult(videoID, nil, "failed")
+			}
+			return
+		}
+
+		// 后处理
+		aiText = PostProcessText(aiText)
+		aiTextPtr := &aiText
+
+		// 更新数据库
+		if isOwner {
+			err = database.UpdateVideoAIResult(videoID, aiTextPtr, "done")
+		} else {
+			err = database.UpsertUserVideoText(userId, videoID, aiTextPtr)
+		}
+
+		if err != nil {
+			log.Printf("Failed to update AI result for video %d: %v", videoID, err)
+			return
+		}
+
+		log.Printf("AI processing V2 completed for video %d, user %d", videoID, userId)
+	}()
+}
+
 // ValidateVideoFormat 验证视频格式
 func ValidateVideoFormat(filename string) bool {
 	allowedExts := map[string]bool{

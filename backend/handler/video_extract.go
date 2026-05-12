@@ -325,7 +325,9 @@ func ExtractVideoByURL(c *gin.Context) {
 	})
 }
 
-// ReextractVideo 重新提取视频文案
+// ReextractVideo 提取/重新提取视频文案
+// 对于自己上传的视频：重新提取
+// 对于广场公开视频：提取到用户自己的记录中
 func ReextractVideo(c *gin.Context) {
 	userId := middleware.GetUserID(c)
 	idStr := c.Param("id")
@@ -339,7 +341,8 @@ func ReextractVideo(c *gin.Context) {
 		return
 	}
 
-	video, err := database.GetVideoByIDAndUser(id, userId)
+	// 获取视频基础信息（不需要用户校验，公开视频任何人都可以提取）
+	video, err := database.GetVideoByID(id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{
 			Code:    500,
@@ -358,12 +361,14 @@ func ReextractVideo(c *gin.Context) {
 		return
 	}
 
+	isOwner := video.UserID == userId
+
 	// 扣减积分
 	if err := service.DeductExtractCredits(userId, id); err != nil {
 		if errors.Is(err, service.ErrInsufficientCredits) {
 			c.JSON(http.StatusPaymentRequired, APIResponse{
 				Code:    402,
-				Message: "积分不足，重新提取需要5积分，请充值后再试",
+				Message: "积分不足，提取需要5积分，请签到后再试",
 			})
 			return
 		}
@@ -374,24 +379,46 @@ func ReextractVideo(c *gin.Context) {
 		return
 	}
 
-	// 重置状态为 processing
-	err = database.UpdateVideoAIResult(id, nil, "processing")
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
-			Message: "重置状态失败",
-			Data:    nil,
-		})
-		return
+	// 如果视频已经处理完成，并且不是所有者，直接复制文案到用户记录
+	if video.Status == "done" && !isOwner {
+		// 获取ASR结果 - 我们需要从原作者哪里获取文本
+		// 注意：ai_text 现在还在 videos 表，对于已经处理好的视频
+		var originalText *string
+		err := database.DB.QueryRow(`SELECT ai_text FROM videos WHERE id = ?`, id).Scan(&originalText)
+		if err == nil && originalText != nil {
+			// 保存到 user_videos
+			database.UpsertUserVideoText(userId, id, originalText)
+			c.JSON(http.StatusOK, APIResponse{
+				Code:    200,
+				Message: "提取完成",
+				Data:    nil,
+			})
+			return
+		}
+		// 如果原文本不存在，继续走处理流程
 	}
 
-	// 重新触发 AI 处理
+	// 所有者重新提取，或者原视频未处理完成，继续处理
+	if isOwner {
+		// 重置状态为 processing
+		err = database.UpdateVideoAIResult(id, nil, "processing")
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, APIResponse{
+				Code:    500,
+				Message: "重置状态失败",
+				Data:    nil,
+			})
+			return
+		}
+	}
+
+	// 触发 AI 处理，处理完成后会保存
 	videoPath := "../uploads/" + video.Filename
-	go service.ProcessVideoAI(id, videoPath)
+	go service.ProcessVideoAIV2(id, videoPath, userId, isOwner)
 
 	c.JSON(http.StatusOK, APIResponse{
 		Code:    200,
-		Message: "已开始重新提取文案",
+		Message: "已开始提取文案",
 		Data:    nil,
 	})
 }

@@ -34,22 +34,37 @@ func WithTransaction(fn func(*sql.Tx) error) error {
 }
 
 // Video 视频模型
+// 基础信息都在这里，所有者的AI结果也存在这里
 type Video struct {
-	ID            int       `json:"id"`
-	Title         string    `json:"title"`
-	Filename      string    `json:"filename"`
-	Originalname  string    `json:"originalname"`
-	Thumbnail     *string   `json:"thumbnail"`
-	Duration      float64   `json:"duration"`
-	Size          int64     `json:"size"`
-	Mimetype      string    `json:"mimetype"`
-	AIText        *string   `json:"aiText"`
-	RewrittenText *string   `json:"rewrittenText"`
-	RewriteStatus string    `json:"rewriteStatus"` // idle, rewriting, done, failed
-	Uploader      string    `json:"uploader"`
-	CreatedAt     time.Time `json:"createdAt"`
-	Status        string    `json:"status"` // processing, done, failed
-	UserID        int       `json:"userId"`
+	ID               int       `json:"id"`
+	Title            string    `json:"title"`
+	Filename         string    `json:"filename"`
+	Originalname     string    `json:"originalname"`
+	Thumbnail        *string   `json:"thumbnail"`
+	Duration         float64   `json:"duration"`
+	Size             int64     `json:"size"`
+	Mimetype         string    `json:"mimetype"`
+	AIText           *string   `json:"aiText"`
+	RewrittenText    *string   `json:"rewrittenText"`
+	RewriteStatus    string    `json:"rewriteStatus"` // idle, rewriting, done, failed
+	OriginalSourceID *int      `json:"originalSourceId"`
+	Uploader         string    `json:"uploader"`
+	CreatedAt        time.Time `json:"createdAt"`
+	Status           string    `json:"status"` // processing, done, failed
+	UserID           int       `json:"userId"`
+}
+
+// UserVideo stores per-user extracted state for a video
+type UserVideo struct {
+	ID             int       `json:"id"`
+	UserID         int       `json:"userId"`
+	VideoID        int       `json:"videoId"`
+	Extracted      bool      `json:"extracted"`
+	Text           *string   `json:"aiText"`
+	RewrittenText  *string   `json:"rewrittenText"`
+	RewriteStatus  string    `json:"rewriteStatus"` // idle, rewriting, done, failed
+	CreatedAt      time.Time `json:"createdAt"`
+	UpdatedAt      time.Time `json:"updatedAt"`
 }
 
 func InitDB() {
@@ -142,7 +157,7 @@ func InitDB() {
 		analysis_type TEXT NOT NULL,
 		result TEXT,
 		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-		UNIQUE(video_id, analysis_type)
+		UNIQUE(user_id, video_id, analysis_type)
 	);
 	`)
 
@@ -218,29 +233,98 @@ func InitDB() {
 	);
 	`)
 
+	// 创建 user_videos 表（每个用户对视频的提取状态，支持广场视频多人独立提取）
+	DB.Exec(`
+	CREATE TABLE IF NOT EXISTS user_videos (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		user_id INTEGER NOT NULL,
+		video_id INTEGER NOT NULL,
+		extracted INTEGER DEFAULT 0,
+		text TEXT,
+		rewritten_text TEXT,
+		rewrite_status TEXT DEFAULT 'idle',
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		UNIQUE(user_id, video_id)
+	);
+	`)
+
+	// 添加 original_source_id 字段到 videos 表（兼容旧数据）
+	DB.Exec(`ALTER TABLE videos ADD COLUMN original_source_id INTEGER;`)
+
 	log.Println("Database initialized successfully")
 
 	// Run migrations for new features
 	RunSquareMigrations()
+	FixAnalysisResultsUniqueConstraint()
+}
+
+// FixAnalysisResultsUniqueConstraint 修复 analysis_results 唯一约束
+// 将 UNIQUE(video_id, analysis_type) 改为 UNIQUE(user_id, video_id, analysis_type)
+func FixAnalysisResultsUniqueConstraint() {
+	// 检查表是否已经有正确的约束
+	var count int
+	err := DB.QueryRow(`
+		SELECT COUNT(*) FROM sqlite_master 
+		WHERE type='index' AND name='sqlite_autoindex_analysis_results_1'
+	`).Scan(&count)
+	if err != nil || count == 0 {
+		return
+	}
+
+	// 创建新表并迁移数据
+	_, err = DB.Exec(`
+		CREATE TABLE IF NOT EXISTS analysis_results_new (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			video_id INTEGER NOT NULL,
+			user_id INTEGER NOT NULL,
+			analysis_type TEXT NOT NULL,
+			result TEXT,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			UNIQUE(user_id, video_id, analysis_type)
+		);
+
+		INSERT OR IGNORE INTO analysis_results_new 
+			(id, video_id, user_id, analysis_type, result, created_at)
+		SELECT id, video_id, user_id, analysis_type, result, created_at 
+		FROM analysis_results;
+
+		DROP TABLE analysis_results;
+
+		ALTER TABLE analysis_results_new RENAME TO analysis_results;
+	`)
+
+	if err != nil {
+		log.Printf("Warning: failed to migrate analysis_results unique constraint: %v", err)
+	} else {
+		log.Println("Fixed analysis_results unique constraint: added user_id to unique key")
+	}
 }
 
 // GetAllVideos 获取分页视频列表（按用户隔离）
+// 包含：用户自己上传的视频 + 用户提取过的广场公开视频
 func GetAllVideos(page, pageSize, userId int) ([]Video, int, error) {
 	offset := (page - 1) * pageSize
 
 	var total int
-	err := DB.QueryRow("SELECT COUNT(*) FROM videos WHERE user_id = ?", userId).Scan(&total)
+	err := DB.QueryRow(`
+		SELECT COUNT(DISTINCT v.id)
+		FROM videos v
+		LEFT JOIN user_videos uv ON v.id = uv.video_id
+		WHERE v.user_id = ? OR (uv.user_id = ? AND uv.extracted = 1)
+	`, userId, userId).Scan(&total)
 	if err != nil {
 		return nil, 0, err
 	}
 
 	rows, err := DB.Query(`
-		SELECT id, title, filename, originalname, thumbnail, duration, size, mimetype, ai_text, rewritten_text, rewrite_status, uploader, created_at, status, user_id
-		FROM videos
-		WHERE user_id = ?
-		ORDER BY created_at DESC
+		SELECT DISTINCT v.id, v.title, v.filename, v.originalname, v.thumbnail, v.duration, v.size, v.mimetype, v.ai_text, v.rewritten_text, v.rewrite_status, v.original_source_id, v.uploader, v.created_at, v.status, v.user_id
+		FROM videos v
+		LEFT JOIN user_videos uv ON v.id = uv.video_id
+		WHERE v.user_id = ? OR (uv.user_id = ? AND uv.extracted = 1)
+		ORDER BY v.created_at DESC
 		LIMIT ? OFFSET ?
-	`, userId, pageSize, offset)
+	`, userId, userId, pageSize, offset)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -261,6 +345,7 @@ func GetAllVideos(page, pageSize, userId int) ([]Video, int, error) {
 			&v.AIText,
 			&v.RewrittenText,
 			&v.RewriteStatus,
+			&v.OriginalSourceID,
 			&v.Uploader,
 			&v.CreatedAt,
 			&v.Status,
@@ -279,7 +364,7 @@ func GetAllVideos(page, pageSize, userId int) ([]Video, int, error) {
 func GetVideoByID(id int) (*Video, error) {
 	var v Video
 	err := DB.QueryRow(`
-		SELECT id, title, filename, originalname, thumbnail, duration, size, mimetype, ai_text, rewritten_text, rewrite_status, uploader, created_at, status, user_id
+		SELECT id, title, filename, originalname, thumbnail, duration, size, mimetype, ai_text, rewritten_text, rewrite_status, original_source_id, uploader, created_at, status, user_id
 		FROM videos WHERE id = ?
 	`, id).Scan(
 		&v.ID,
@@ -293,6 +378,7 @@ func GetVideoByID(id int) (*Video, error) {
 		&v.AIText,
 		&v.RewrittenText,
 		&v.RewriteStatus,
+		&v.OriginalSourceID,
 		&v.Uploader,
 		&v.CreatedAt,
 		&v.Status,
@@ -307,11 +393,11 @@ func GetVideoByID(id int) (*Video, error) {
 	return &v, nil
 }
 
-// GetVideoByIDAndUser 根据ID和用户ID获取视频（用户隔离）
+// GetVideoByIDAndUser 根据ID和用户ID获取视频（用户隔离，用于删除等操作）
 func GetVideoByIDAndUser(id, userId int) (*Video, error) {
 	var v Video
 	err := DB.QueryRow(`
-		SELECT id, title, filename, originalname, thumbnail, duration, size, mimetype, ai_text, rewritten_text, rewrite_status, uploader, created_at, status, user_id
+		SELECT id, title, filename, originalname, thumbnail, duration, size, mimetype, ai_text, rewritten_text, rewrite_status, original_source_id, uploader, created_at, status, user_id
 		FROM videos WHERE id = ? AND user_id = ?
 	`, id, userId).Scan(
 		&v.ID,
@@ -325,6 +411,7 @@ func GetVideoByIDAndUser(id, userId int) (*Video, error) {
 		&v.AIText,
 		&v.RewrittenText,
 		&v.RewriteStatus,
+		&v.OriginalSourceID,
 		&v.Uploader,
 		&v.CreatedAt,
 		&v.Status,
@@ -337,6 +424,80 @@ func GetVideoByIDAndUser(id, userId int) (*Video, error) {
 		return nil, err
 	}
 	return &v, nil
+}
+
+// GetUserVideo 获取用户对视频的提取状态
+func GetUserVideo(userId, videoId int) (*UserVideo, error) {
+	var uv UserVideo
+	var extractedInt int
+	err := DB.QueryRow(`
+		SELECT id, user_id, video_id, extracted, text, rewritten_text, rewrite_status, created_at, updated_at
+		FROM user_videos WHERE user_id = ? AND video_id = ?
+	`, userId, videoId).Scan(
+		&uv.ID,
+		&uv.UserID,
+		&uv.VideoID,
+		&extractedInt,
+		&uv.Text,
+		&uv.RewrittenText,
+		&uv.RewriteStatus,
+		&uv.CreatedAt,
+		&uv.UpdatedAt,
+	)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+	uv.Extracted = extractedInt == 1
+	return &uv, nil
+}
+
+// UpsertUserVideoText 更新或插入用户提取文案
+// 使用 ON CONFLICT DO UPDATE 只更新提取相关列，保留原有改写内容
+func UpsertUserVideoText(userId, videoId int, text *string) error {
+	_, err := DB.Exec(`
+		INSERT INTO user_videos (user_id, video_id, extracted, text, updated_at)
+		VALUES (?, ?, 1, ?, CURRENT_TIMESTAMP)
+		ON CONFLICT(user_id, video_id) DO UPDATE SET
+			extracted = excluded.extracted,
+			text = excluded.text,
+			updated_at = excluded.updated_at
+	`, userId, videoId, text)
+	return err
+}
+
+// UpsertUserVideoRewritten 更新或插入用户改写文案
+// 使用 ON CONFLICT DO UPDATE 只更新改写相关列，保留原有 extracted 和 text
+func UpsertUserVideoRewritten(userId, videoId int, rewrittenText *string) error {
+	_, err := DB.Exec(`
+		INSERT INTO user_videos (user_id, video_id, rewritten_text, rewrite_status, updated_at)
+		VALUES (?, ?, ?, 'done', CURRENT_TIMESTAMP)
+		ON CONFLICT(user_id, video_id) DO UPDATE SET
+			rewritten_text = excluded.rewritten_text,
+			rewrite_status = excluded.rewrite_status,
+			updated_at = excluded.updated_at
+	`, userId, videoId, rewrittenText)
+	return err
+}
+
+// UpdateUserVideoRewriteStatus 更新用户改写状态
+func UpdateUserVideoRewriteStatus(userId, videoId int, status string) error {
+	_, err := DB.Exec(`
+		UPDATE user_videos SET rewrite_status = ?, updated_at = CURRENT_TIMESTAMP
+		WHERE user_id = ? AND video_id = ?
+	`, status, userId, videoId)
+	return err
+}
+
+// EnsureUserVideoExists 确保user_videos记录存在
+func EnsureUserVideoExists(userId, videoId int) error {
+	_, err := DB.Exec(`
+		INSERT OR IGNORE INTO user_videos (user_id, video_id)
+		VALUES (?, ?)
+	`, userId, videoId)
+	return err
 }
 
 // CreateVideo 创建视频记录（带用户ID）

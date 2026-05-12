@@ -51,28 +51,11 @@ func GetPublicVideos(c *gin.Context) {
 func CollectSquareVideo(c *gin.Context) {
 	userId := middleware.GetUserID(c)
 	videoIdStr := c.Param("id")
-	videoId, err := strconv.Atoi(videoIdStr)
+	originalVideoId, err := strconv.Atoi(videoIdStr)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, APIResponse{
 			Code:    400,
 			Message: "视频ID错误",
-		})
-		return
-	}
-
-	// 检查视频是否公开
-	allow, err := database.CheckVideoIsPublic(videoId)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, APIResponse{
-			Code:    500,
-			Message: "检查失败",
-		})
-		return
-	}
-	if !allow {
-		c.JSON(http.StatusForbidden, APIResponse{
-			Code:    403,
-			Message: "该视频不公开",
 		})
 		return
 	}
@@ -88,23 +71,28 @@ func CollectSquareVideo(c *gin.Context) {
 		return
 	}
 
-	// 添加到收藏夹
-	if req.CollectionID != nil {
-		err := database.AddVideoToCollection(*req.CollectionID, videoId, userId)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, APIResponse{
-				Code:    500,
-				Message: "收藏失败",
+	// 创建视频副本（核心改动）
+	newVideoId, err := database.CollectSquareVideo(userId, req.CollectionID, originalVideoId)
+	if err != nil {
+		if err.Error() == "video is not public" {
+			c.JSON(http.StatusForbidden, APIResponse{
+				Code:    403,
+				Message: "该视频不公开",
 			})
 			return
 		}
+		c.JSON(http.StatusInternalServerError, APIResponse{
+			Code:    500,
+			Message: "收藏失败",
+		})
+		return
 	}
-
-	// 增加收藏计数
-	_ = database.IncrementCollectCount(videoId)
 
 	c.JSON(http.StatusOK, APIResponse{
 		Code:    200,
 		Message: "收藏成功",
+		Data: gin.H{
+			"newVideoId": newVideoId,
+		},
 	})
 }

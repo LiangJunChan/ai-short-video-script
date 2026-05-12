@@ -9,6 +9,8 @@ export interface Video {
   rewriteStatus?: 'idle' | 'rewriting' | 'done' | 'failed'
   rewrittenText?: string | null
   createdAt: string
+  isOwner: boolean
+  hasExtracted: boolean
 }
 
 export interface Pagination {
@@ -196,5 +198,14 @@ export interface PublicVideosResponse {
   data: {
     videos: SquareVideo[]
     pagination: Pagination
+  }
+}
+
+// V1.7 短视频广场收藏响应
+export interface CollectSquareVideoResponse {
+  code: number
+  message: string
+  data: {
+    newVideoId: number
   }
 }

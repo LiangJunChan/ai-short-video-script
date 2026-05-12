@@ -207,3 +207,8 @@ JWT_SECRET=your_jwt_secret_here
 - 前端静态文件：`/path/to/ai-short-video-script/frontend/dist`
 - API代理：`/api` → `http://127.0.0.1:3000`
 - 详细配置见 `nginx.conf`
+
+使用write file写入文件时记住:
+1. 内容精简，只保留核心要点，删除冗余描述
+2. 分模块生成，确保单次输出完整不截断
+3. 格式符合Markdown规范

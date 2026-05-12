@@ -14,6 +14,7 @@ import (
 )
 
 // RewriteVideoText AI 改写视频文案
+// 支持自己上传视频和广场公开视频，每个用户独立保存改写结果
 func RewriteVideoText(c *gin.Context) {
 	userId := middleware.GetUserID(c)
 	idStr := c.Param("id")
@@ -39,7 +40,8 @@ func RewriteVideoText(c *gin.Context) {
 		return
 	}
 
-	video, err := database.GetVideoByIDAndUser(id, userId)
+	// 获取视频基础信息
+	video, err := database.GetVideoByID(id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, APIResponse{
 			Code:    500,
@@ -58,10 +60,39 @@ func RewriteVideoText(c *gin.Context) {
 		return
 	}
 
-	if video.AIText == nil || *video.AIText == "" {
+	// 获取用户提取状态
+	userVideo, err := database.GetUserVideo(userId, id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, APIResponse{
+			Code:    500,
+			Message: "获取用户状态失败",
+			Data:    nil,
+		})
+		return
+	}
+
+	// 获取原文案 - 如果是所有者从videos获取，否则从user_videos获取
+	var originalText string
+	var hasOriginalText bool
+
+	isOwner := video.UserID == userId
+
+	if isOwner {
+		if video.AIText != nil && *video.AIText != "" {
+			originalText = *video.AIText
+			hasOriginalText = true
+		}
+	} else {
+		if userVideo != nil && userVideo.Extracted && userVideo.Text != nil && *userVideo.Text != "" {
+			originalText = *userVideo.Text
+			hasOriginalText = true
+		}
+	}
+
+	if !hasOriginalText {
 		c.JSON(http.StatusBadRequest, APIResponse{
 			Code:    400,
-			Message: "没有可改写的原文案",
+			Message: "请先提取文案，再进行AI改写",
 			Data:    nil,
 		})
 		return
@@ -72,7 +103,7 @@ func RewriteVideoText(c *gin.Context) {
 		if errors.Is(err, service.ErrInsufficientCredits) {
 			c.JSON(http.StatusPaymentRequired, APIResponse{
 				Code:    402,
-				Message: "积分不足，AI改写需要10积分，请充值后再试",
+				Message: "积分不足，AI改写需要10积分，请签到后再试",
 			})
 			return
 		}
@@ -84,11 +115,19 @@ func RewriteVideoText(c *gin.Context) {
 	}
 
 	// 设置改写状态为进行中
-	database.UpdateRewriteStatus(id, "rewriting")
+	if isOwner {
+		database.UpdateRewriteStatus(id, "rewriting")
+	} else {
+		database.UpdateUserVideoRewriteStatus(userId, id, "rewriting")
+	}
 
-	rewrittenText, err := service.RewriteText(*video.AIText, reqBody.Prompt)
+	rewrittenText, err := service.RewriteText(originalText, reqBody.Prompt)
 	if err != nil {
-		database.UpdateRewriteStatus(id, "failed")
+		if isOwner {
+			database.UpdateRewriteStatus(id, "failed")
+		} else {
+			database.UpdateUserVideoRewriteStatus(userId, id, "failed")
+		}
 		c.JSON(http.StatusInternalServerError, APIResponse{
 			Code:    500,
 			Message: fmt.Sprintf("改写失败: %v", err),
@@ -99,8 +138,14 @@ func RewriteVideoText(c *gin.Context) {
 
 	// 保存改写结果到数据库
 	rewrittenTextPtr := &rewrittenText
-	if err := database.UpdateVideoRewrittenText(id, rewrittenTextPtr); err != nil {
-		log.Printf("Failed to save rewritten text for video %d: %v", id, err)
+	if isOwner {
+		if err := database.UpdateVideoRewrittenText(id, rewrittenTextPtr); err != nil {
+			log.Printf("Failed to save rewritten text for video %d: %v", id, err)
+		}
+	} else {
+		if err := database.UpsertUserVideoRewritten(userId, id, rewrittenTextPtr); err != nil {
+			log.Printf("Failed to save rewritten text for video %d user %d: %v", id, userId, err)
+		}
 	}
 
 	c.JSON(http.StatusOK, APIResponse{

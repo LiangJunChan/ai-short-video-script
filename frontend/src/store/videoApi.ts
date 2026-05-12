@@ -17,6 +17,7 @@ import type {
   SearchHistory,
   SearchVideosParams,
   PublicVideosResponse,
+  CollectSquareVideoResponse,
 } from '../types'
 
 const API_BASE_URL = '/api'
@@ -321,11 +322,11 @@ export const videoApi = createApi({
       providesTags: ['VideoList'],
     }),
 
-    collectSquareVideo: builder.mutation<{ code: number; message: string }, { videoId: number; collectionId?: number }>({
-      query: ({ videoId, collectionId }) => ({
-        url: `/square/collect/${videoId}`,
+    collectSquareVideo: builder.mutation<CollectSquareVideoResponse, { id: number; collectionId?: number }>({
+      query: ({ id, collectionId }) => ({
+        url: `/square/collect/${id}`,
         method: 'POST',
-        body: { collectionId },
+        body: collectionId !== undefined ? { collectionId } : {},
       }),
       invalidatesTags: ['Collection'],
     }),

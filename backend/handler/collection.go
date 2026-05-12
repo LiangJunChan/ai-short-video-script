@@ -143,10 +143,12 @@ func GetCollectionDetail(c *gin.Context) {
 
 	totalPages := (total + pageSize - 1) / pageSize
 
-	// 转换视频格式
+	// 转换视频格式 - 收藏夹里都是用户自己的视频，isOwner=true
 	videoResponses := make([]VideoResponse, len(videos))
 	for i, v := range videos {
-		videoResponses[i] = formatVideoResponse(v)
+		isOwner := v.UserID == userId
+		userVideo, _ := database.GetUserVideo(userId, v.ID)
+		videoResponses[i] = formatVideoResponse(v, userVideo, isOwner)
 	}
 
 	c.JSON(http.StatusOK, APIResponse{

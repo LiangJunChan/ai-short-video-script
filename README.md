@@ -54,133 +54,124 @@
 
 ### 环境要求
 
-- Go 1.21+
-- Node.js 18+
-- FFmpeg
-- Python 3.8+（Fun-ASR）
-- Playwright（`pip install playwright && playwright install chromium`）
+| 依赖 | 版本 | 用途 |
+|------|------|------|
+| Go | 1.21+ | 后端服务 |
+| Node.js | 18+ | 前端开发 |
+| pnpm | 最新 | 前端包管理 |
+| Python | 3.13+ | ASR 语音识别服务 |
+| FFmpeg | 最新 | 音视频处理 |
+| Playwright | 最新 | 抖音链接提取 |
 
-### 1. 部署 Fun-ASR 服务
+> **首次使用需安装 Playwright 浏览器**：`pip install playwright && playwright install chromium`
 
-推荐使用 [fun-asr-deploy](https://github.com/LiangJunChan/fun-asr-deploy) 项目部署 Fun-ASR 服务（基于阿里巴巴 Fun-ASR 框架，支持 ASR + 标点恢复，开箱即用）。
+### 方式一：一键启动（推荐）
 
-#### 功能特性
+项目提供了 `Makefile`，可以一条命令启动所有服务：
+
+```bash
+# 1. 克隆项目
+git clone git@github.com:LiangJunChan/ai-short-video-script.git
+cd ai-short-video-script
+
+# 2. 首次运行：初始化 ASR 虚拟环境
+cd asr
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+deactivate
+cd ..
+
+# 3. 首次运行：初始化前端依赖
+cd frontend && pnpm install && cd ..
+
+# 4. 首次运行：配置后端环境变量
+cd backend
+cp .env.example .env
+# 编辑 .env 填入你的 API Key（MiniMax 或火山方舟）
+cd ..
+
+# 5. 一键启动所有服务 🎉
+make dev
+```
+
+启动后将同时运行三个服务：
+
+| 服务 | 地址 | 说明 |
+|------|------|------|
+| 前端 | http://localhost:5173 | React 开发服务器，自动代理 API |
+| 后端 | http://localhost:3000 | Go API 服务 |
+| ASR | http://localhost:8000 | Fun-ASR 语音识别服务 |
+
+> **注意**：ASR 服务首次启动时会自动从 [ModelScope](https://www.modelscope.cn) 下载模型（约 1.9GB），请耐心等待。后续启动将直接使用缓存模型，无需重复下载。
+
+### 方式二：Docker Compose 一键部署
+
+适合生产环境或不想本地安装依赖的场景：
+
+```bash
+# 构建并启动所有服务
+docker compose up --build
+
+# 后台运行
+docker compose up --build -d
+
+# 停止所有服务
+docker compose down
+```
+
+或使用 Make 命令：
+
+```bash
+make up     # 构建并启动
+make stop   # 停止所有服务
+```
+
+### 方式三：逐个启动
+
+如需单独启动某个服务，可使用以下命令：
+
+```bash
+# 启动 ASR 语音识别服务
+make dev-asr
+
+# 启动后端 API 服务
+make dev-backend
+
+# 启动前端开发服务器
+make dev-frontend
+```
+
+### ASR 服务说明
+
+ASR 服务位于 `asr/` 目录，基于阿里巴巴 Fun-ASR 框架，提供以下能力：
 
 - **语音识别（ASR）**：基于 Paraformer-large 模型，中文识别精度高
 - **标点恢复**：自动添加句号、逗号、问号等标点
 - **多格式支持**：支持 wav / mp3 / m4a
 - **本地部署**：模型在本地，无需联网调用 API
-- **RESTful API**：HTTP 接口，方便集成
 
-#### 环境要求
-
-| 项目 | 要求 |
-|------|------|
-| 操作系统 | macOS (Apple Silicon) / Linux |
-| Python | 3.13+ |
-| 内存 | 推荐 8GB+ |
-| 磁盘 | 预留 2GB+（模型约 1.9GB） |
-
-#### 快速开始
-
-```bash
-# 克隆项目
-git clone git@github.com:LiangJunChan/fun-asr-deploy.git /opt/fun-asr
-cd /opt/fun-asr
-
-# 创建虚拟环境
-python3 -m venv .venv
-source .venv/bin/activate
-
-# 安装依赖
-pip install -r requirements.txt
-
-# 启动服务
-python app.py
-```
-
-首次启动时，模型会自动从 [ModelScope](https://www.modelscope.cn) 下载（约 1.9GB），请耐心等待。
-
-```
-INFO:     Uvicorn running on http://127.0.0.1:8000
-模型加载完成，服务已就绪
-```
-
-#### API 接口
-
-启动后可通过浏览器访问交互式文档：
+启动后可通过浏览器访问交互式 API 文档：
 
 | 文档类型 | 地址 |
 |---------|------|
 | Swagger UI | http://localhost:8000/docs |
 | ReDoc | http://localhost:8000/redoc |
 
-**语音识别** `POST /asr`
-
-```bash
-# 识别 wav 文件
-curl -X POST "http://localhost:8000/asr" \
-  -F "file=@./audio.wav"
-```
-
-**响应示例**：
-
-```json
-{
-  "success": true,
-  "text": "今天天气很好，我们下午去逛街吧，然后去看电影，怎么样？",
-  "filename": "audio.wav",
-  "punctuation": true
-}
-```
-
-**健康检查** `GET /health`
+**健康检查**：
 
 ```bash
 curl http://localhost:8000/health
+# {"status":"ok","model":"paraformer","punctuation":true}
 ```
 
-> **注意**：Fun-ASR 服务需要与后端部署在同一服务器或网络可达的后端服务器上。后端默认调用地址为 `http://localhost:8000/asr`。
-
-### 2. 部署后端
-
-```bash
-cd backend
-
-# 配置环境变量
-cp .env.example .env
-# 编辑 .env 填入你的 API Key
-
-# 安装依赖并启动
-go mod tidy
-go build -o server
-./server
-```
-
-服务启动后访问 `http://localhost:3000`
-
-### 3. 部署前端
-
-```bash
-cd frontend
-
-# 安装依赖（推荐 pnpm）
-pnpm install
-
-# 开发模式
-pnpm dev
-
-# 生产构建
-pnpm build
-```
-
-前端开发模式 `http://localhost:5173`，会自动代理 API 到后端。
+> 后端默认调用地址为 `http://localhost:8000/asr`，如需修改请编辑 `backend/service/processor.go` 中的 `RecognizeSpeech` 函数。
 
 ## 📁 项目结构
 
 ```
 ai-short-video-script/
-├── backend/
+├── backend/                    # Go 后端服务
 │   ├── main.go                 # 入口 · 路由 · 中间件
 │   ├── .env.example            # 环境变量模板
 │   ├── extract_douyin.py       # 抖音链接提取脚本（Playwright）
@@ -192,7 +183,7 @@ ai-short-video-script/
 │       ├── processor.go        # FFmpeg · Fun-ASR 调用
 │       ├── douyin.go           # 抖音提取服务
 │       └── llm.go              # MiniMax / 火山方舟
-├── frontend/
+├── frontend/                   # React 前端
 │   ├── src/
 │   │   ├── store/
 │   │   │   └── videoApi.ts     # RTK Query API
@@ -200,6 +191,12 @@ ai-short-video-script/
 │   │   └── pages/
 │   │       └── DetailPage.tsx  # 详情页（左右布局）
 │   └── tailwind.config.js
+├── asr/                        # ASR 语音识别服务（Python + FastAPI）
+│   ├── app.py                  # 服务主程序
+│   ├── requirements.txt        # Python 依赖
+│   └── Dockerfile              # Docker 构建文件
+├── docker-compose.yml          # 三服务统一编排
+├── Makefile                    # 开发快捷命令
 ├── uploads/                    # 原始视频
 ├── thumbnails/                 # 缩略图
 ├── audio/                      # 临时音频

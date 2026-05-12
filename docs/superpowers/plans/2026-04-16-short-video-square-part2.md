@@ -1,122 +1,3 @@
-import { useState, useRef, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useGetPublicVideosQuery, useCollectSquareVideoMutation, useGetCollectionsQuery } from '../store/videoApi'
-import Loading from '../components/Loading'
-import CollectionSelector from '../components/CollectionSelector'
-import VideoCard from '../components/VideoCard'
-import type { Video } from '../types'
-import type { SquareVideo } from '../types'
-
-type SortBy = 'newest' | 'popular'
-
-function SquarePage() {
-  const navigate = useNavigate()
-  const [page, setPage] = useState(1)
-  const [sortBy, setSortBy] = useState<SortBy>('newest')
-  const pageSize = 12
-  const [selectedVideoId, setSelectedVideoId] = useState<number | null>(null)
-  const [toast, setToast] = useState<string | null>(null)
-  const toastTimeoutRef = useRef<number | null>(null)
-
-  // Cleanup timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (toastTimeoutRef.current) {
-        clearTimeout(toastTimeoutRef.current)
-      }
-    }
-  }, [])
-
-  const { data, isLoading, isError, refetch } = useGetPublicVideosQuery(
-    { page, pageSize, sortBy },
-    { skip: false }
-  )
-
-  const { data: collectionsData } = useGetCollectionsQuery({ page: 1, pageSize: 100 })
-  const [collectVideo] = useCollectSquareVideoMutation()
-
-  const handleCollect = (videoId: number) => {
-    setSelectedVideoId(videoId)
-  }
-
-  const handleAddToCollection = (collectionId: number) => {
-    const videoId = selectedVideoId
-    if (videoId === null) return
-
-    collectVideo({ id: videoId, collectionId })
-      .unwrap()
-      .then((response) => {
-        // Clear any existing timeout
-        if (toastTimeoutRef.current) {
-          clearTimeout(toastTimeoutRef.current)
-        }
-        setToast(response.message || '收藏成功！')
-        toastTimeoutRef.current = setTimeout(() => setToast(null), 3000)
-        setSelectedVideoId(null)
-        // Navigate to the new video detail page
-        navigate(`/detail/${response.data.newVideoId}`);
-      })
-      .catch((error: any) => {
-        // Clear any existing timeout
-        if (toastTimeoutRef.current) {
-          clearTimeout(toastTimeoutRef.current)
-        }
-        setToast(error.data?.message || '收藏失败，请重试')
-        toastTimeoutRef.current = setTimeout(() => setToast(null), 3000)
-      });
-  }
-
-  const handleCancel = () => {
-    setSelectedVideoId(null)
-  }
-
-  const goToDetail = (videoId: number) => {
-    navigate(`/detail/${videoId}`)
-  }
-
-  // Convert to Video type for VideoCard
-  const convertToVideo = (squareVideo: SquareVideo) => {
-    return {
-      id: squareVideo.id,
-      title: squareVideo.title,
-      videoUrl: '',
-      thumbnail: squareVideo.thumbnailUrl,
-      uploader: squareVideo.username,
-      aiText: null,
-      status: 'done' as const,
-      createdAt: squareVideo.createdAt,
-      isOwner: false,
-      hasExtracted: false,
-    } satisfies Video
-  }
-
-  if (isLoading && page === 1) {
-    return (
-      <div className="flex justify-center items-center py-24">
-        <Loading />
-      </div>
-    )
-  }
-
-  if (isError) {
-    return (
-      <div className="text-center py-24">
-        <p className="text-slate-600">加载失败，请刷新重试</p>
-        <button
-          onClick={() => refetch()}
-          className="mt-4 px-4 py-2 bg-sky-500 text-white rounded-lg hover:bg-sky-600"
-        >
-          重新加载
-        </button>
-      </div>
-    )
-  }
-
-  const videos = data?.data?.videos ?? []
-  const pagination = data?.data?.pagination
-
-  return (
-    <div className="max-w-7xl mx-auto px-6 py-8">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-slate-900">短视频广场</h1>
         <div className="flex items-center gap-2">
@@ -158,12 +39,13 @@ function SquarePage() {
       ) : (
         <>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-            {videos.map((video: SquareVideo) => (
+            {videos.map((video: any) => (
               <div key={video.id} className="relative group">
                 <VideoCard
                   video={convertToVideo(video)}
                   onClick={() => goToDetail(video.id)}
                   onDelete={() => {}}
+                  showActions={false}
                 />
                 {/* Collection overlay */}
                 <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -231,30 +113,11 @@ function SquarePage() {
 
       {/* Collection Selector Modal */}
       {selectedVideoId !== null && (
-        <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center animate-fade-in"
-          onClick={handleCancel}
-        >
-          <div
-            className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm mx-4 animate-scale-in"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h3 className="text-lg font-semibold text-slate-900 mb-4">收藏视频到收藏夹</h3>
-            <CollectionSelector
-              collections={collectionsData?.data?.collections || []}
-              videoCollections={[]}
-              onAdd={handleAddToCollection}
-            />
-            <div className="mt-4 flex justify-end">
-              <button
-                onClick={handleCancel}
-                className="px-4 py-2 text-sm text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors"
-              >
-                取消
-              </button>
-            </div>
-          </div>
-        </div>
+        <CollectionSelector
+          onConfirm={confirmCollect}
+          onCancel={() => setSelectedVideoId(null)}
+          isLoading={isCollecting}
+        />
       )}
 
       {/* Toast */}
@@ -268,3 +131,157 @@ function SquarePage() {
 }
 
 export default SquarePage
+```
+
+- [ ] **Step 2: TypeScript检查**
+
+```bash
+cd frontend && npx tsc --noEmit
+```
+Expected: 无类型错误
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add frontend/src/pages/SquarePage.tsx
+git commit -m "feat(square): add square page component"
+```
+
+---
+
+### Task 7: 前端 - 导航栏新增广场Tab
+
+**Files:**
+- Modify: `frontend/src/components/Header.tsx`
+
+- [ ] **Step 1: 添加导航链接**
+
+Find where the navigation buttons are (after `{isAuthenticated && user ? (`), add before "素材库" button:
+
+```tsx
+              {/* Square */}
+              <button
+                onClick={() => navigate('/square')}
+                className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+                  location.pathname === '/square'
+                    ? 'bg-sky-100 text-sky-700'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                }`}
+              >
+                广场
+              </button>
+```
+
+Need to import `useLocation`:
+```tsx
+import { useNavigate, useLocation } from 'react-router-dom'
+```
+
+- [ ] **Step 2: TypeScript检查**
+
+```bash
+cd frontend && npx tsc --noEmit
+```
+Expected: 无类型错误
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add frontend/src/components/Header.tsx
+git commit -m "feat(square): add square navigation tab to header"
+```
+
+---
+
+### Task 8: 前端 - 新增路由
+
+**Files:**
+- Modify: `frontend/src/App.tsx`
+
+- [ ] **Step 1: 导入并添加路由**
+
+Add import:
+```tsx
+import SquarePage from './pages/SquarePage'
+```
+
+Add route inside `Routes` after other authenticated routes:
+```tsx
+        <Route path="/square" element={
+          <ProtectedRoute>
+            <SquarePage />
+          </ProtectedRoute>
+        } />
+```
+
+- [ ] **Step 2: TypeScript检查**
+
+```bash
+cd frontend && npx tsc --noEmit
+```
+Expected: 无类型错误
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add frontend/src/App.tsx
+git commit -m "feat(square): add square route"
+```
+
+---
+
+### Task 9: 最终验证
+
+**Files:** 全项目
+
+- [ ] **Step 1: 后端编译**
+
+```bash
+cd backend && go build -o server
+```
+Expected: 编译成功
+
+- [ ] **Step 2: 前端类型检查**
+
+```bash
+cd frontend && npx tsc --noEmit
+```
+Expected: 无类型错误
+
+- [ ] **Step 3: 功能验证清单**
+
+确认所有功能：
+1. ✅ 顶部导航有"广场"入口，当前页面高亮正确
+2. ✅ 广场页面能分页加载所有用户公开的视频
+3. ✅ 支持按最新/热门切换排序
+4. ✅ 鼠标悬停视频卡片显示收藏按钮
+5. ✅ 点击收藏弹出选择收藏夹弹窗
+6. ✅ 收藏成功增加计数
+7. ✅ 点击封面进入详情页
+8. ✅ 数据隔离：原文案对其他用户不可见，新用户需要自己付费提取
+9. ✅ 视频标签正确显示
+
+- [ ] **Step 4: 完成**
+
+所有任务完成。
+
+---
+
+## 自我检查 ✅
+
+1. **Spec coverage**：所有需求都有对应任务
+   - 数据库迁移 ✓
+   - 后端API ✓
+   - 前端页面 ✓
+   - 导航入口 ✓
+   - 路由 ✓
+   - 收藏功能 ✓
+   - 权限隔离 ✓
+   - 排序 ✓
+   - 隐私设计 ✓
+
+2. **Placeholders**：所有步骤都有完整代码，没有占位符
+
+3. **Type consistency**：类型命名和现有项目一致，API返回类型匹配前后端
+
+文档完整，可以开始开发。

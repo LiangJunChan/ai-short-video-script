@@ -1,0 +1,79 @@
+2026/04/16 17:17:48 Database initialized successfully
+2026/04/16 17:17:48 Warning: add allow_public_square column: duplicate column name: allow_public_square
+2026/04/16 17:17:48 Warning: add collect_count column: duplicate column name: collect_count
+2026/04/16 17:17:48 FFmpeg found in PATH
+[GIN-debug] [WARNING] Creating an Engine instance with the Logger and Recovery middleware already attached.
+
+[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
+ - using env:	export GIN_MODE=release
+ - using code:	gin.SetMode(gin.ReleaseMode)
+
+[GIN-debug] GET    /uploads/*filepath        --> github.com/gin-gonic/gin.(*RouterGroup).createStaticHandler.func1 (4 handlers)
+[GIN-debug] HEAD   /uploads/*filepath        --> github.com/gin-gonic/gin.(*RouterGroup).createStaticHandler.func1 (4 handlers)
+[GIN-debug] GET    /thumbnails/*filepath     --> github.com/gin-gonic/gin.(*RouterGroup).createStaticHandler.func1 (4 handlers)
+[GIN-debug] HEAD   /thumbnails/*filepath     --> github.com/gin-gonic/gin.(*RouterGroup).createStaticHandler.func1 (4 handlers)
+[GIN-debug] GET    /video/*filepath          --> github.com/gin-gonic/gin.(*RouterGroup).createStaticHandler.func1 (4 handlers)
+[GIN-debug] HEAD   /video/*filepath          --> github.com/gin-gonic/gin.(*RouterGroup).createStaticHandler.func1 (4 handlers)
+2026/04/16 17:17:48 Admin user 'luka' already exists
+[GIN-debug] POST   /api/auth/register        --> ai-short-video-backend/handler.Register (4 handlers)
+[GIN-debug] POST   /api/auth/login           --> ai-short-video-backend/handler.Login (4 handlers)
+[GIN-debug] GET    /api/auth/me              --> ai-short-video-backend/handler.GetMe (5 handlers)
+[GIN-debug] GET    /api/user/credits         --> ai-short-video-backend/handler.GetCredits (5 handlers)
+[GIN-debug] GET    /api/user/checkin         --> ai-short-video-backend/handler.CheckinStatus (5 handlers)
+[GIN-debug] POST   /api/user/checkin         --> ai-short-video-backend/handler.DoCheckin (5 handlers)
+[GIN-debug] GET    /api/videos               --> ai-short-video-backend/handler.GetVideoList (5 handlers)
+[GIN-debug] GET    /api/videos/:id           --> ai-short-video-backend/handler.GetVideoDetail (5 handlers)
+[GIN-debug] POST   /api/upload               --> ai-short-video-backend/handler.UploadVideo (5 handlers)
+[GIN-debug] GET    /api/videos/:id/copy      --> ai-short-video-backend/handler.GetVideoText (5 handlers)
+[GIN-debug] POST   /api/videos/:id/reextract --> ai-short-video-backend/handler.ReextractVideo (5 handlers)
+[GIN-debug] POST   /api/videos/:id/rewrite   --> ai-short-video-backend/handler.RewriteVideoText (5 handlers)
+[GIN-debug] POST   /api/video/extract-by-url --> ai-short-video-backend/handler.ExtractVideoByURL (5 handlers)
+[GIN-debug] POST   /api/videos/:id/analyze   --> ai-short-video-backend/handler.AnalyzeVideo (5 handlers)
+[GIN-debug] GET    /api/videos/:id/analysis-results --> ai-short-video-backend/handler.GetAnalysisResults (5 handlers)
+[GIN-debug] DELETE /api/videos/:id           --> ai-short-video-backend/handler.DeleteVideo (5 handlers)
+[GIN-debug] POST   /api/collections          --> ai-short-video-backend/handler.CreateCollection (5 handlers)
+[GIN-debug] GET    /api/collections          --> ai-short-video-backend/handler.GetCollections (5 handlers)
+[GIN-debug] GET    /api/collections/:id      --> ai-short-video-backend/handler.GetCollectionDetail (5 handlers)
+[GIN-debug] PUT    /api/collections/:id      --> ai-short-video-backend/handler.UpdateCollection (5 handlers)
+[GIN-debug] DELETE /api/collections/:id      --> ai-short-video-backend/handler.DeleteCollection (5 handlers)
+[GIN-debug] POST   /api/collections/:id/videos --> ai-short-video-backend/handler.AddVideoToCollection (5 handlers)
+[GIN-debug] DELETE /api/collections/:id/videos/:videoId --> ai-short-video-backend/handler.RemoveVideoFromCollection (5 handlers)
+[GIN-debug] GET    /api/videos/:id/collections --> ai-short-video-backend/handler.GetVideoCollections (5 handlers)
+[GIN-debug] POST   /api/videos/:id/tags      --> ai-short-video-backend/handler.AddTagToVideo (5 handlers)
+[GIN-debug] DELETE /api/videos/:id/tags/:tagId --> ai-short-video-backend/handler.RemoveTagFromVideo (5 handlers)
+[GIN-debug] GET    /api/videos/:id/tags      --> ai-short-video-backend/handler.GetVideoTags (5 handlers)
+[GIN-debug] GET    /api/tags                 --> ai-short-video-backend/handler.GetTags (5 handlers)
+[GIN-debug] GET    /api/tags/:id/videos      --> ai-short-video-backend/handler.GetTagVideos (5 handlers)
+[GIN-debug] DELETE /api/tags/:id             --> ai-short-video-backend/handler.DeleteTag (5 handlers)
+[GIN-debug] GET    /api/tags/search          --> ai-short-video-backend/handler.SearchTags (5 handlers)
+[GIN-debug] GET    /api/videos/search        --> ai-short-video-backend/handler.SearchVideos (5 handlers)
+[GIN-debug] GET    /api/search/history       --> ai-short-video-backend/handler.GetSearchHistory (5 handlers)
+[GIN-debug] POST   /api/search/history       --> ai-short-video-backend/handler.ClearSearchHistory (5 handlers)
+[GIN-debug] POST   /api/export/markdown      --> ai-short-video-backend/handler.ExportMarkdown (5 handlers)
+[GIN-debug] GET    /api/square/videos        --> ai-short-video-backend/handler.GetPublicVideos (5 handlers)
+[GIN-debug] POST   /api/square/collect/:id   --> ai-short-video-backend/handler.CollectSquareVideo (5 handlers)
+2026/04/16 17:17:48 后端服务已启动，访问地址: http://localhost:3000
+2026/04/16 17:17:48 API端点:
+2026/04/16 17:17:48   POST /api/auth/register - 用户注册
+2026/04/16 17:17:48   POST /api/auth/login - 用户登录
+2026/04/16 17:17:48   GET  /api/auth/me - 当前用户信息
+2026/04/16 17:17:48   GET  /api/user/credits - 用户积分
+2026/04/16 17:17:48   GET  /api/user/checkin - 获取签到状态
+2026/04/16 17:17:48   POST /api/user/checkin - 执行签到
+2026/04/16 17:17:48   GET  /api/videos - 获取视频列表
+2026/04/16 17:17:48   GET  /api/videos/:id - 获取视频详情
+2026/04/16 17:17:48   POST /api/upload - 上传视频
+2026/04/16 17:17:48   GET  /api/videos/:id/copy - 获取文案用于复制
+2026/04/16 17:17:48   POST /api/videos/:id/reextract - 重新提取文案
+2026/04/16 17:17:48   POST /api/videos/:id/rewrite - AI改写文案
+2026/04/16 17:17:48   POST /api/video/extract-by-url - 链接提取视频文案
+2026/04/16 17:17:48   POST /api/videos/:id/analyze - AI视频分析
+2026/04/16 17:17:48   V1.6 收藏夹: POST/GET /api/collections, GET/PUT/DELETE /api/collections/:id
+2026/04/16 17:17:48   V1.6 标签: POST/GET/DELETE /api/videos/:id/tags, GET /api/tags
+2026/04/16 17:17:48   V1.6 搜索: GET /api/videos/search, GET/POST /api/search/history
+2026/04/16 17:17:48   V1.6 导出: POST /api/export/markdown
+[GIN-debug] [WARNING] You trusted all proxies, this is NOT safe. We recommend you to set a value.
+Please check https://pkg.go.dev/github.com/gin-gonic/gin#readme-don-t-trust-all-proxies for details.
+[GIN-debug] Listening and serving HTTP on :3000
+[GIN] 2026/04/16 - 17:17:50 | 200 |   266.68575ms |             ::1 | POST     "/api/auth/login"
+[GIN] 2026/04/16 - 17:17:50 | 401 |        32.5µs |             ::1 | GET      "/api/videos?page=1&pageSize=12"

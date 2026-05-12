@@ -42,3 +42,8 @@ backend/ai-short-video-backend
 ## Claude
 .claude/*
 .qwen/*
+
+# ASR service
+asr/.venv/
+asr/__pycache__/
+asr/.env
