@@ -5,6 +5,7 @@ import {
   useReextractVideoMutation,
   useDeleteVideoMutation,
   useGetMeQuery,
+  useCreateStoryboardMutation,
 } from '../store/videoApi'
 import Loading from '../components/Loading'
 import Toast from '../components/Toast'
@@ -26,6 +27,7 @@ function DetailPage() {
   const { refetch: refetchMe } = useGetMeQuery()
   const [reextractVideo, { isLoading: isReextracting }] = useReextractVideoMutation()
   const [deleteVideo] = useDeleteVideoMutation()
+  const [createStoryboard] = useCreateStoryboardMutation()
 
   const video = data?.data
 
@@ -83,6 +85,16 @@ function DetailPage() {
       navigate('/')
     } catch {
       showToast('删除失败，请重试')
+    }
+  }
+
+  const handleCreateStoryboard = async () => {
+    if (!video) return
+    try {
+      const result = await createStoryboard({ name: video.title, videoId: video.id }).unwrap()
+      navigate(`/storyboard/${result.data.id}`)
+    } catch (err) {
+      console.error(err)
     }
   }
 
@@ -164,6 +176,14 @@ function DetailPage() {
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-lg font-semibold text-slate-900">AI 提取文案</h2>
                 <div className="flex gap-2">
+                  {video.status === 'done' && video.aiText && (
+                    <button
+                      onClick={handleCreateStoryboard}
+                      className="px-3 py-1.5 text-xs font-medium text-sky-700 bg-sky-50 rounded-lg hover:bg-sky-100 transition-colors"
+                    >
+                      创建分镜脚本
+                    </button>
+                  )}
                   {video.status === 'done' && video.aiText && (
                     <button
                       className="btn-secondary px-3 py-1.5 text-xs"

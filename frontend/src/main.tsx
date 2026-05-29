@@ -13,6 +13,8 @@ import TagFilterPage from './pages/TagFilterPage'
 import SearchPage from './pages/SearchPage'
 import SquarePage from './pages/SquarePage'
 import ProfilePage from './pages/ProfilePage'
+import StoryboardListPage from './pages/StoryboardListPage'
+import StoryboardEditorPage from './pages/StoryboardEditorPage'
 import './index.css'
 
 // 受保护路由组件
@@ -86,6 +88,22 @@ const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <ProfilePage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/storyboards',
+    element: (
+      <ProtectedRoute>
+        <StoryboardListPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/storyboard/:id',
+    element: (
+      <ProtectedRoute>
+        <StoryboardEditorPage />
       </ProtectedRoute>
     ),
   },

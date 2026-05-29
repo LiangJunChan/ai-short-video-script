@@ -118,6 +118,18 @@ function Header({ user, isAuthenticated, onOpenUpload, onOpenUrlExtract, onShowT
                 素材库
               </button>
 
+              {/* Storyboard */}
+              <button
+                onClick={() => navigate('/storyboards')}
+                className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+                  location.pathname === '/storyboards'
+                    ? 'bg-sky-100 text-sky-700'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                }`}
+              >
+                脚本
+              </button>
+
               {/* Profile */}
               <button
                 onClick={() => navigate('/profile')}
