@@ -269,6 +269,77 @@ func InitDB() {
 	// 添加 original_source_id 字段到 videos 表（兼容旧数据）
 	DB.Exec(`ALTER TABLE videos ADD COLUMN original_source_id INTEGER;`)
 
+	// 创建 storyboards 表（画布）
+	DB.Exec(`
+		CREATE TABLE IF NOT EXISTS storyboards (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			user_id INTEGER NOT NULL,
+			video_id INTEGER,
+			name TEXT NOT NULL,
+			status TEXT DEFAULT 'draft',
+			viewport_json TEXT,
+			version INTEGER DEFAULT 1,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			FOREIGN KEY (user_id) REFERENCES users(id)
+		);
+	`)
+
+	// 创建 storyboard_nodes 表（分镜节点）
+	DB.Exec(`
+		CREATE TABLE IF NOT EXISTS storyboard_nodes (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			storyboard_id INTEGER NOT NULL,
+			node_type TEXT NOT NULL DEFAULT 'scene',
+			position_x REAL NOT NULL DEFAULT 0,
+			position_y REAL NOT NULL DEFAULT 0,
+			width REAL DEFAULT 300,
+			height REAL DEFAULT 200,
+			config_json TEXT,
+			state TEXT DEFAULT 'idle',
+			result_json TEXT,
+			order_index INTEGER,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			FOREIGN KEY (storyboard_id) REFERENCES storyboards(id) ON DELETE CASCADE
+		);
+	`)
+
+	// 创建 storyboard_edges 表（节点连线）
+	DB.Exec(`
+		CREATE TABLE IF NOT EXISTS storyboard_edges (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			storyboard_id INTEGER NOT NULL,
+			source_node_id INTEGER NOT NULL,
+			target_node_id INTEGER NOT NULL,
+			source_handle TEXT,
+			target_handle TEXT,
+			label TEXT,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			FOREIGN KEY (storyboard_id) REFERENCES storyboards(id) ON DELETE CASCADE,
+			FOREIGN KEY (source_node_id) REFERENCES storyboard_nodes(id) ON DELETE CASCADE,
+			FOREIGN KEY (target_node_id) REFERENCES storyboard_nodes(id) ON DELETE CASCADE
+		);
+	`)
+
+	// 创建 storyboard_templates 表（模板）
+	DB.Exec(`
+		CREATE TABLE IF NOT EXISTS storyboard_templates (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			user_id INTEGER,
+			name TEXT NOT NULL,
+			category TEXT,
+			description TEXT,
+			thumbnail TEXT,
+			nodes_json TEXT NOT NULL,
+			edges_json TEXT NOT NULL,
+			is_system INTEGER DEFAULT 0,
+			use_count INTEGER DEFAULT 0,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			FOREIGN KEY (user_id) REFERENCES users(id)
+		);
+	`)
+
 	log.Println("Database initialized successfully")
 
 	// Run migrations for new features
