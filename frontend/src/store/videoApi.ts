@@ -21,6 +21,8 @@ import type {
   ModelConfigsResponse,
   ChangePasswordRequest,
   UpdateModelConfigRequest,
+  StoryboardListResponse,
+  StoryboardDetailResponse,
 } from '../types'
 
 const API_BASE_URL = '/api'
@@ -364,6 +366,53 @@ export const videoApi = createApi({
       }),
       invalidatesTags: ['Collection'],
     }),
+
+    // Storyboard
+    getStoryboardList: builder.query<StoryboardListResponse, { page: number; pageSize: number }>({
+      query: ({ page, pageSize }) => `/storyboards?page=${page}&pageSize=${pageSize}`,
+      providesTags: ['Video'],
+    }),
+    getStoryboard: builder.query<StoryboardDetailResponse, number>({
+      query: (id) => `/storyboards/${id}`,
+      providesTags: ['Video'],
+    }),
+    createStoryboard: builder.mutation<{ code: number; data: { id: number } }, { name: string; videoId?: number }>({
+      query: (body) => ({ url: '/storyboards', method: 'POST', body }),
+      invalidatesTags: ['Video'],
+    }),
+    updateStoryboard: builder.mutation<{ code: number }, { id: number; name?: string; viewportJson?: string }>({
+      query: ({ id, ...body }) => ({ url: `/storyboards/${id}`, method: 'PUT', body }),
+    }),
+    deleteStoryboard: builder.mutation<{ code: number }, number>({
+      query: (id) => ({ url: `/storyboards/${id}`, method: 'DELETE' }),
+      invalidatesTags: ['Video'],
+    }),
+    batchUpdateStoryboard: builder.mutation<{ code: number }, { id: number; viewportJson?: string; nodes: any[]; edges: any[] }>({
+      query: ({ id, ...body }) => ({ url: `/storyboards/${id}/batch`, method: 'PUT', body }),
+    }),
+    autoSplitStoryboard: builder.mutation<{ code: number; data: { scenes: any[] } }, { id: number; text: string }>({
+      query: ({ id, ...body }) => ({ url: `/storyboards/${id}/auto-split`, method: 'POST', body }),
+    }),
+    getTemplates: builder.query<{ code: number; data: { templates: any[] } }, void>({
+      query: () => '/storyboard-templates',
+    }),
+    getTemplate: builder.query<{ code: number; data: any }, number>({
+      query: (id) => `/storyboard-templates/${id}`,
+    }),
+    applyTemplate: builder.mutation<{ code: number }, { storyboardId: number; templateId: number }>({
+      query: ({ storyboardId, templateId }) => ({
+        url: `/storyboards/${storyboardId}/apply-template/${templateId}`,
+        method: 'POST',
+      }),
+      invalidatesTags: ['Video'],
+    }),
+    saveAsTemplate: builder.mutation<{ code: number }, { storyboardId: number; name: string; category?: string }>({
+      query: ({ storyboardId, ...body }) => ({
+        url: `/storyboards/${storyboardId}/save-as-template`,
+        method: 'POST',
+        body,
+      }),
+    }),
   }),
 })
 
@@ -414,4 +463,16 @@ export const {
   useGetModelConfigsQuery,
   useUpdateModelConfigMutation,
   useDeleteModelConfigMutation,
+  // Storyboard
+  useGetStoryboardListQuery,
+  useGetStoryboardQuery,
+  useCreateStoryboardMutation,
+  useUpdateStoryboardMutation,
+  useDeleteStoryboardMutation,
+  useBatchUpdateStoryboardMutation,
+  useAutoSplitStoryboardMutation,
+  useGetTemplatesQuery,
+  useGetTemplateQuery,
+  useApplyTemplateMutation,
+  useSaveAsTemplateMutation,
 } = videoApi

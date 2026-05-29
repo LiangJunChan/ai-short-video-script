@@ -250,3 +250,72 @@ export interface UpdateModelConfigRequest {
   api_base: string
   model: string
 }
+
+// V2.0 画布类型
+export interface Storyboard {
+  id: number
+  userId: number
+  videoId?: number
+  name: string
+  status: string
+  viewportJson?: string
+  version: number
+  createdAt: string
+  updatedAt: string
+}
+
+export interface StoryboardNode {
+  id: number
+  storyboardId: number
+  nodeType: string
+  positionX: number
+  positionY: number
+  width: number
+  height: number
+  configJson?: string
+  state: string
+  resultJson?: string
+  orderIndex?: number
+  createdAt: string
+  updatedAt: string
+}
+
+export interface StoryboardEdge {
+  id: number
+  storyboardId: number
+  sourceNodeId: number
+  targetNodeId: number
+  sourceHandle?: string
+  targetHandle?: string
+  label?: string
+  createdAt: string
+}
+
+export interface StoryboardDetailResponse {
+  code: number
+  data: {
+    storyboard: Storyboard
+    nodes: StoryboardNode[]
+    edges: StoryboardEdge[]
+  }
+}
+
+export interface StoryboardListResponse {
+  code: number
+  data: {
+    storyboards: Storyboard[]
+    pagination: { page: number; pageSize: number; total: number }
+  }
+}
+
+export interface SceneConfig {
+  script?: string
+  description?: string
+  duration?: string
+  imageUrl?: string
+  shot_type?: string
+  camera_move?: string
+  notes?: string
+  tags?: string[]
+  label?: string
+}
