@@ -209,3 +209,44 @@ export interface CollectSquareVideoResponse {
     newVideoId: number
   }
 }
+
+// 模型配置类型
+export interface ModelConfig {
+  provider: string
+  api_key: string
+  api_base: string
+  model: string
+}
+
+export interface ModelConfigsData {
+  configs: {
+    llm: ModelConfig | null
+    image: ModelConfig | null
+    tts: ModelConfig | null
+    video: ModelConfig | null
+  }
+  global_defaults: {
+    llm: Omit<ModelConfig, 'api_key'> | null
+    image: Omit<ModelConfig, 'api_key'> | null
+    tts: Omit<ModelConfig, 'api_key'> | null
+    video: Omit<ModelConfig, 'api_key'> | null
+  }
+}
+
+export interface ModelConfigsResponse {
+  code: number
+  message: string
+  data: ModelConfigsData
+}
+
+export interface ChangePasswordRequest {
+  old_password: string
+  new_password: string
+}
+
+export interface UpdateModelConfigRequest {
+  provider: string
+  api_key: string
+  api_base: string
+  model: string
+}

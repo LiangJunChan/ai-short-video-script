@@ -18,6 +18,9 @@ import type {
   SearchVideosParams,
   PublicVideosResponse,
   CollectSquareVideoResponse,
+  ModelConfigsResponse,
+  ChangePasswordRequest,
+  UpdateModelConfigRequest,
 } from '../types'
 
 const API_BASE_URL = '/api'
@@ -73,6 +76,37 @@ export const videoApi = createApi({
         method: 'POST',
       }),
       invalidatesTags: ['Checkin', 'User'],
+    }),
+
+    // User Profile
+    changePassword: builder.mutation<{ code: number; message: string }, ChangePasswordRequest>({
+      query: (body) => ({
+        url: '/user/password',
+        method: 'PUT',
+        body,
+      }),
+    }),
+    getModelConfigs: builder.query<ModelConfigsResponse, void>({
+      query: () => '/user/model-configs',
+      providesTags: ['User'],
+    }),
+    updateModelConfig: builder.mutation<
+      { code: number; message: string },
+      { type: string } & UpdateModelConfigRequest
+    >({
+      query: ({ type, ...body }) => ({
+        url: `/user/model-configs/${type}`,
+        method: 'PUT',
+        body,
+      }),
+      invalidatesTags: ['User'],
+    }),
+    deleteModelConfig: builder.mutation<{ code: number; message: string }, string>({
+      query: (type) => ({
+        url: `/user/model-configs/${type}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['User'],
     }),
 
     // Videos
@@ -375,4 +409,9 @@ export const {
   // V1.7 Square
   useGetPublicVideosQuery,
   useCollectSquareVideoMutation,
+  // User Profile
+  useChangePasswordMutation,
+  useGetModelConfigsQuery,
+  useUpdateModelConfigMutation,
+  useDeleteModelConfigMutation,
 } = videoApi
