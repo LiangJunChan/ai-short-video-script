@@ -12,7 +12,7 @@ type Storyboard struct {
 	VideoID      *int       `json:"videoId,omitempty"`
 	Name         string     `json:"name"`
 	Status       string     `json:"status"`
-	ViewportJSON string     `json:"viewportJson,omitempty"`
+	ViewportJSON *string    `json:"viewportJson,omitempty"`
 	Version      int        `json:"version"`
 	CreatedAt    time.Time  `json:"createdAt"`
 	UpdatedAt    time.Time  `json:"updatedAt"`
