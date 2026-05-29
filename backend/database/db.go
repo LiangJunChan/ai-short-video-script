@@ -249,6 +249,23 @@ func InitDB() {
 	);
 	`)
 
+	// 创建 user_model_configs 表（用户级模型配置）
+	DB.Exec(`
+	CREATE TABLE IF NOT EXISTS user_model_configs (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		user_id INTEGER NOT NULL,
+		config_type TEXT NOT NULL,
+		provider TEXT,
+		api_key TEXT,
+		api_base TEXT,
+		model TEXT,
+		extra_json TEXT,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		UNIQUE(user_id, config_type)
+	);
+	`)
+
 	// 添加 original_source_id 字段到 videos 表（兼容旧数据）
 	DB.Exec(`ALTER TABLE videos ADD COLUMN original_source_id INTEGER;`)
 
