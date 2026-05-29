@@ -62,6 +62,11 @@ func main() {
 		auth.GET("/user/credits", handler.GetCredits)
 		auth.GET("/user/checkin", handler.CheckinStatus)
 		auth.POST("/user/checkin", handler.DoCheckin)
+		// 用户中心
+		auth.PUT("/user/password", handler.ChangePassword)
+		auth.GET("/user/model-configs", handler.GetModelConfigs)
+		auth.PUT("/user/model-configs/:type", handler.UpdateModelConfig)
+		auth.DELETE("/user/model-configs/:type", handler.DeleteModelConfig)
 		auth.GET("/videos", handler.GetVideoList)
 		auth.GET("/videos/:id", handler.GetVideoDetail)
 		auth.POST("/upload", handler.UploadVideo)
