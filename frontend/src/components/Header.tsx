@@ -118,8 +118,17 @@ function Header({ user, isAuthenticated, onOpenUpload, onOpenUrlExtract, onShowT
                 素材库
               </button>
 
-              {/* User */}
-              <span className="text-sm text-slate-500 px-2">{user.username}</span>
+              {/* Profile */}
+              <button
+                onClick={() => navigate('/profile')}
+                className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+                  location.pathname === '/profile'
+                    ? 'bg-sky-100 text-sky-700'
+                    : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
+                }`}
+              >
+                {user.username}
+              </button>
 
               {/* Action Buttons */}
               <button
