@@ -11,7 +11,7 @@ type UserModelConfig struct {
 	UserID     int       `json:"userId"`
 	ConfigType string    `json:"configType"`
 	Provider   string    `json:"provider"`
-	ApiKey     string    `json:"apiKey"`
+	ApiKey     string    `json:"-"`  // never serialize to JSON, handler masks separately
 	ApiBase    string    `json:"apiBase"`
 	Model      string    `json:"model"`
 	ExtraJSON  string    `json:"extraJson,omitempty"`
@@ -63,21 +63,25 @@ func GetAllUserModelConfigs(userID int) (map[string]*UserModelConfig, error) {
 		}
 		configs[c.ConfigType] = &c
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return configs, nil
 }
 
 // UpsertUserModelConfig 创建或更新用户模型配置
-func UpsertUserModelConfig(userID int, configType, provider, apiKey, apiBase, model string) error {
+func UpsertUserModelConfig(userID int, configType, provider, apiKey, apiBase, model, extraJson string) error {
 	_, err := DB.Exec(`
-		INSERT INTO user_model_configs (user_id, config_type, provider, api_key, api_base, model, updated_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?)
+		INSERT INTO user_model_configs (user_id, config_type, provider, api_key, api_base, model, extra_json, updated_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 		ON CONFLICT(user_id, config_type) DO UPDATE SET
 			provider = excluded.provider,
 			api_key = excluded.api_key,
 			api_base = excluded.api_base,
 			model = excluded.model,
+			extra_json = excluded.extra_json,
 			updated_at = excluded.updated_at
-	`, userID, configType, provider, apiKey, apiBase, model, time.Now())
+	`, userID, configType, provider, apiKey, apiBase, model, extraJson, time.Now())
 	return err
 }
 
