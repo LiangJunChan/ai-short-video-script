@@ -123,7 +123,7 @@ func AnalyzeVideo(c *gin.Context) {
 				return
 			}
 		}
-		result, err = service.AnalyzeVideoStructure(originalText, duration)
+		result, err = service.AnalyzeVideoStructure(userId, originalText, duration)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, APIResponse{
 				Code:    500,
@@ -144,7 +144,7 @@ func AnalyzeVideo(c *gin.Context) {
 				return
 			}
 		}
-		result, err = service.AnalyzeViralPoints(originalText)
+		result, err = service.AnalyzeViralPoints(userId, originalText)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, APIResponse{
 				Code:    500,
@@ -165,7 +165,7 @@ func AnalyzeVideo(c *gin.Context) {
 				return
 			}
 		}
-		result, err = service.ExtractTags(originalText)
+		result, err = service.ExtractTags(userId, originalText)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, APIResponse{
 				Code:    500,
@@ -186,7 +186,7 @@ func AnalyzeVideo(c *gin.Context) {
 				return
 			}
 		}
-		result, err = service.AnalyzeRhythm(originalText, duration)
+		result, err = service.AnalyzeRhythm(userId, originalText, duration)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, APIResponse{
 				Code:    500,
@@ -213,7 +213,7 @@ func AnalyzeVideo(c *gin.Context) {
 			})
 			return
 		}
-		result, err = service.GenerateAnalysisReport(originalText, duration, nil, nil, nil)
+		result, err = service.GenerateAnalysisReport(userId, originalText, duration, nil, nil, nil)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, APIResponse{
 				Code:    500,

@@ -250,8 +250,8 @@ func getSystemPrompt() string {
 }
 
 // RewriteText 调用 LLM 对文案进行改写
-func RewriteText(originalText, userPrompt string) (string, error) {
-	provider := getCurrentProvider()
+func RewriteText(userID int, originalText, userPrompt string) (string, error) {
+	provider := GetProviderForUser(userID)
 
 	if originalText == "" {
 		return "", fmt.Errorf("原文案为空，无法进行改写")

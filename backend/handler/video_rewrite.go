@@ -121,7 +121,7 @@ func RewriteVideoText(c *gin.Context) {
 		database.UpdateUserVideoRewriteStatus(userId, id, "rewriting")
 	}
 
-	rewrittenText, err := service.RewriteText(originalText, reqBody.Prompt)
+	rewrittenText, err := service.RewriteText(userId, originalText, reqBody.Prompt)
 	if err != nil {
 		if isOwner {
 			database.UpdateRewriteStatus(id, "failed")
