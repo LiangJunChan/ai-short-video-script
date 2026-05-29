@@ -6,6 +6,7 @@ import (
 
 	"ai-short-video-backend/database"
 	"ai-short-video-backend/middleware"
+	"ai-short-video-backend/service"
 
 	"github.com/gin-gonic/gin"
 )
@@ -118,4 +119,35 @@ func DeleteStoryboard(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, APIResponse{Code: 200, Message: "删除成功"})
+}
+
+// AutoSplitStoryboard AI 自动拆分分镜
+func AutoSplitStoryboard(c *gin.Context) {
+	userId := middleware.GetUserID(c)
+	storyboardID, _ := strconv.Atoi(c.Param("id"))
+
+	sb, _ := database.GetStoryboard(storyboardID, userId)
+	if sb == nil {
+		c.JSON(http.StatusNotFound, APIResponse{Code: 404, Message: "画布不存在"})
+		return
+	}
+
+	var req struct {
+		Text string `json:"text" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, APIResponse{Code: 400, Message: "请输入文案内容"})
+		return
+	}
+
+	scenes, err := service.AutoSplitStoryboard(userId, storyboardID, req.Text)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, APIResponse{Code: 500, Message: err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, APIResponse{
+		Code: 200, Message: "拆分成功",
+		Data: gin.H{"scenes": scenes, "count": len(scenes)},
+	})
 }

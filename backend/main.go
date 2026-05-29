@@ -105,6 +105,39 @@ func main() {
 		// V1.6 导出功能
 		auth.POST("/export/markdown", handler.ExportMarkdown)
 
+		// 画布
+		auth.POST("/storyboards", handler.CreateStoryboard)
+		auth.GET("/storyboards", handler.GetStoryboards)
+		auth.GET("/storyboards/:id", handler.GetStoryboard)
+		auth.PUT("/storyboards/:id", handler.UpdateStoryboard)
+		auth.DELETE("/storyboards/:id", handler.DeleteStoryboard)
+
+		// 画布节点
+		auth.POST("/storyboards/:id/nodes", handler.CreateNode)
+		auth.PUT("/storyboards/:id/nodes/:nodeId", handler.UpdateNode)
+		auth.DELETE("/storyboards/:id/nodes/:nodeId", handler.DeleteNode)
+
+		// 画布连线
+		auth.POST("/storyboards/:id/edges", handler.CreateEdge)
+		auth.DELETE("/storyboards/:id/edges/:edgeId", handler.DeleteEdge)
+
+		// 批量更新
+		auth.PUT("/storyboards/:id/batch", handler.BatchUpdate)
+
+		// AI 分镜
+		auth.POST("/storyboards/:id/auto-split", handler.AutoSplitStoryboard)
+
+		// 模板
+		auth.GET("/storyboard-templates", handler.GetTemplates)
+		auth.GET("/storyboard-templates/:id", handler.GetTemplate)
+		auth.POST("/storyboards/:id/save-as-template", handler.SaveAsTemplate)
+		auth.POST("/storyboards/:id/apply-template/:templateId", handler.ApplyTemplate)
+		auth.DELETE("/storyboard-templates/:id", handler.DeleteTemplate)
+
+		// 导出
+		auth.GET("/storyboards/:id/export/md", handler.ExportStoryboardMarkdown)
+		auth.GET("/storyboards/:id/export/text", handler.ExportStoryboardText)
+
 		// Square routes
 		squareGroup := auth.Group("/square")
 		{
