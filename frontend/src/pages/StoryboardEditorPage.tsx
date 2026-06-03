@@ -35,6 +35,8 @@ export default function StoryboardEditorPage() {
   const [isSplitting, setIsSplitting] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
   const [fitViewKey, setFitViewKey] = useState(0)
+  const [showNodeMenu, setShowNodeMenu] = useState(false)
+  const [nodeMenuPosition, setNodeMenuPosition] = useState({ x: 0, y: 0 })
 
   useEffect(() => {
     if (sbData?.data) {
@@ -93,12 +95,33 @@ export default function StoryboardEditorPage() {
   }, [storyboardId, nodes, edges, batchUpdate, refetch])
 
   const handlePaneDoubleClick = useCallback((position: { x: number; y: number }) => {
+    setNodeMenuPosition(position)
+    setShowNodeMenu(true)
+  }, [])
+
+  const handleCreateNode = useCallback((nodeType: string) => {
+    const configs: Record<string, any> = {
+      scene: { script: '', description: '', duration: '' },
+      ai_text: { prompt: '', style: '亲切', word_count: 200 },
+      ai_image: { prompt: '' },
+      ai_split: { structure: 'hook-content-ending', split_count: 6 },
+      tts: { voice: 'female_warm', speed: 1.0 },
+    }
+
     const newNode: Node = {
-      id: `temp-${Date.now()}`, type: 'scene', position,
-      data: { nodeType: 'scene', config: { script: '', description: '', duration: '' } },
+      id: `temp-${Date.now()}`,
+      type: nodeType,
+      position: nodeMenuPosition,
+      data: {
+        nodeType,
+        config: configs[nodeType] || {},
+        state: 'idle',
+        result: null,
+      },
     }
     setNodes((nds) => [...nds, newNode])
-  }, [])
+    setShowNodeMenu(false)
+  }, [nodeMenuPosition])
 
   const handleNodeClick = useCallback((nodeId: string) => {
     setSelectedNodeId(nodeId)
@@ -198,6 +221,35 @@ export default function StoryboardEditorPage() {
       {showExport && <ExportMenu storyboardId={storyboardId} onClose={() => setShowExport(false)} />}
       {showExecute && <ExecutePanel storyboardId={storyboardId} onClose={() => setShowExecute(false)}
         onSuccess={showToast} onError={showToast} />}
+      {showNodeMenu && (
+        <div className="fixed inset-0 z-50" onClick={() => setShowNodeMenu(false)}>
+          <div className="absolute bg-white rounded-xl shadow-lg border border-slate-200 p-2 w-[200px]"
+            style={{ left: Math.min(nodeMenuPosition.x, window.innerWidth - 220), top: Math.min(nodeMenuPosition.y, window.innerHeight - 300) }}
+            onClick={(e) => e.stopPropagation()}>
+            <p className="text-xs text-slate-400 px-2 py-1 mb-1">选择节点类型</p>
+            <button onClick={() => handleCreateNode('scene')}
+              className="w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-slate-50 flex items-center gap-2">
+              <span className="w-3 h-3 rounded-full bg-sky-400"></span> 分镜节点
+            </button>
+            <button onClick={() => handleCreateNode('ai_text')}
+              className="w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-slate-50 flex items-center gap-2">
+              <span className="w-3 h-3 rounded-full bg-violet-400"></span> AI 文案
+            </button>
+            <button onClick={() => handleCreateNode('ai_image')}
+              className="w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-slate-50 flex items-center gap-2">
+              <span className="w-3 h-3 rounded-full bg-pink-400"></span> AI 图片
+            </button>
+            <button onClick={() => handleCreateNode('ai_split')}
+              className="w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-slate-50 flex items-center gap-2">
+              <span className="w-3 h-3 rounded-full bg-indigo-400"></span> AI 分镜
+            </button>
+            <button onClick={() => handleCreateNode('tts')}
+              className="w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-slate-50 flex items-center gap-2">
+              <span className="w-3 h-3 rounded-full bg-teal-400"></span> TTS 配音
+            </button>
+          </div>
+        </div>
+      )}
       {toast && <div className="fixed bottom-6 left-1/2 -translate-x-1/2 px-4 py-2 bg-slate-900 text-white text-sm rounded-lg shadow-lg">{toast}</div>}
     </div>
   )
