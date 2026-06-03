@@ -1,4 +1,4 @@
-import { useCallback, useRef, useEffect } from 'react'
+import { useCallback, useRef, useEffect, useMemo } from 'react'
 import ReactFlow, {
   addEdge,
   useNodesState,
@@ -16,8 +16,6 @@ import ReactFlow, {
 import 'reactflow/dist/style.css'
 
 import SceneNode from './SceneNode'
-
-const nodeTypes = { scene: SceneNode, start: SceneNode, end: SceneNode }
 
 interface CanvasProps {
   initialNodes: Node[]
@@ -43,10 +41,15 @@ export default function Canvas({
   const [edges, setEdges, handleEdgesChange] = useEdgesState(initialEdges)
   const reactFlowInstance = useRef<ReactFlowInstance | null>(null)
 
+  const nodeTypes = useMemo(() => ({
+    scene: SceneNode,
+    start: SceneNode,
+    end: SceneNode,
+  }), [])
+
   // Sync initial data when it changes
   useEffect(() => {
     setNodes(initialNodes)
-    // Fit view after nodes update (e.g., after AI split)
     if (fitViewKey && initialNodes.length > 0 && reactFlowInstance.current) {
       setTimeout(() => reactFlowInstance.current?.fitView({ padding: 0.2 }), 200)
     }
@@ -102,7 +105,6 @@ export default function Canvas({
     (event: React.MouseEvent) => {
       const now = Date.now()
       if (now - lastPaneClickTime.current < 300) {
-        // Double click detected
         if (reactFlowInstance.current) {
           const position = reactFlowInstance.current.screenToFlowPosition({
             x: event.clientX,

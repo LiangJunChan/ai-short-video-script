@@ -146,6 +146,9 @@ export default function StoryboardEditorPage() {
 
   if (isLoading) return <div className="flex items-center justify-center h-screen text-slate-400">加载中...</div>
 
+  const sceneNodes = nodes.filter((n) => n.data?.nodeType === 'scene')
+  const showEmptyHint = sceneNodes.length === 0
+
   return (
     <div className="h-screen flex flex-col">
       <CanvasToolbar name={name} onNameChange={setName} onSave={handleSave}
@@ -153,11 +156,29 @@ export default function StoryboardEditorPage() {
         onExport={() => setShowExport(true)} onBack={() => navigate('/storyboards')}
         isSaving={isSaving} />
       <div className="flex-1 flex">
-        <div className="flex-1">
+        <div className="flex-1 relative">
           <Canvas initialNodes={nodes} initialEdges={edges}
             onNodesChange={setNodes} onEdgesChange={setEdges}
             onNodeClick={handleNodeClick} onPaneDoubleClick={handlePaneDoubleClick}
             fitViewKey={fitViewKey} />
+          {showEmptyHint && (
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="bg-white/90 rounded-xl p-6 text-center shadow-sm border border-slate-200 pointer-events-auto">
+                <p className="text-slate-500 text-sm mb-3">画布为空，开始创作吧</p>
+                <div className="flex gap-2 justify-center">
+                  <button onClick={() => setShowAISplit(true)}
+                    className="px-3 py-1.5 text-xs font-medium text-purple-700 bg-purple-50 rounded-lg hover:bg-purple-100">
+                    AI 智能分镜
+                  </button>
+                  <button onClick={() => setShowTemplate(true)}
+                    className="px-3 py-1.5 text-xs font-medium text-amber-700 bg-amber-50 rounded-lg hover:bg-amber-100">
+                    从模板创建
+                  </button>
+                </div>
+                <p className="text-slate-400 text-xs mt-2">或双击画布空白处添加分镜节点</p>
+              </div>
+            </div>
+          )}
         </div>
         {selectedNode && selectedNode.data?.nodeType === 'scene' && (
           <NodeEditorPanel nodeId={selectedNodeId!} config={selectedNode.data.config || {}}
