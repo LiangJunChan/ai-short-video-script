@@ -80,6 +80,24 @@ func DeleteNode(id int) error {
 	return err
 }
 
+// GetNodeByID 根据ID获取节点
+func GetNodeByID(id int) (*StoryboardNode, error) {
+	var n StoryboardNode
+	err := DB.QueryRow(`
+		SELECT id, storyboard_id, node_type, position_x, position_y, width, height,
+		       config_json, state, result_json, order_index, created_at, updated_at
+		FROM storyboard_nodes WHERE id = ?
+	`, id).Scan(
+		&n.ID, &n.StoryboardID, &n.NodeType, &n.PositionX, &n.PositionY,
+		&n.Width, &n.Height, &n.ConfigJSON, &n.State, &n.ResultJSON,
+		&n.OrderIndex, &n.CreatedAt, &n.UpdatedAt,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &n, nil
+}
+
 // BatchCreateNodes 批量创建节点
 func BatchCreateNodes(storyboardID int, nodes []StoryboardNode) error {
 	tx, err := DB.Begin()

@@ -103,6 +103,27 @@ func (e *WorkflowEngine) Execute() (*RunResult, error) {
 	}, nil
 }
 
+// ExecuteNode 执行单个节点
+func (e *WorkflowEngine) ExecuteNode(nodeID int) (*NodeExecutionResult, error) {
+	node, err := database.GetNodeByID(nodeID)
+	if err != nil {
+		return nil, err
+	}
+
+	database.DB.Exec("UPDATE storyboard_nodes SET state = 'running' WHERE id = ?", nodeID)
+
+	nodeOutputs := make(map[int]string)
+	result := e.executeNode(*node, nodeOutputs)
+
+	if result.Status == "done" {
+		database.DB.Exec("UPDATE storyboard_nodes SET state = 'done', result_json = ? WHERE id = ?", result.Output, nodeID)
+	} else {
+		database.DB.Exec("UPDATE storyboard_nodes SET state = 'error', result_json = ? WHERE id = ?", result.Error, nodeID)
+	}
+
+	return &result, nil
+}
+
 // executeNode 执行单个节点
 func (e *WorkflowEngine) executeNode(node database.StoryboardNode, nodeOutputs map[int]string) NodeExecutionResult {
 	// 解析节点配置

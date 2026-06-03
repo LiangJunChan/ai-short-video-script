@@ -124,6 +124,11 @@ func main() {
 		// 批量更新
 		auth.PUT("/storyboards/:id/batch", handler.BatchUpdate)
 
+		// 工作流执行
+		auth.POST("/storyboards/:id/execute", handler.ExecuteStoryboard)
+		auth.POST("/storyboards/:id/nodes/:nodeId/execute", handler.ExecuteNode)
+		auth.GET("/storyboards/:id/runs", handler.GetExecutionHistory)
+
 		// AI 分镜
 		auth.POST("/storyboards/:id/auto-split", handler.AutoSplitStoryboard)
 
