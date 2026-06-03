@@ -413,6 +413,22 @@ export const videoApi = createApi({
         body,
       }),
     }),
+
+    // Workflow execution
+    executeStoryboard: builder.mutation<{ code: number; data: any }, number>({
+      query: (id) => ({ url: `/storyboards/${id}/execute`, method: 'POST' }),
+      invalidatesTags: ['Video'],
+    }),
+    executeNode: builder.mutation<{ code: number; data: any }, { storyboardId: number; nodeId: number }>({
+      query: ({ storyboardId, nodeId }) => ({
+        url: `/storyboards/${storyboardId}/nodes/${nodeId}/execute`,
+        method: 'POST',
+      }),
+      invalidatesTags: ['Video'],
+    }),
+    getExecutionHistory: builder.query<{ code: number; data: { runs: any[] } }, number>({
+      query: (id) => `/storyboards/${id}/runs`,
+    }),
   }),
 })
 
@@ -475,4 +491,8 @@ export const {
   useGetTemplateQuery,
   useApplyTemplateMutation,
   useSaveAsTemplateMutation,
+  // Workflow execution
+  useExecuteStoryboardMutation,
+  useExecuteNodeMutation,
+  useGetExecutionHistoryQuery,
 } = videoApi

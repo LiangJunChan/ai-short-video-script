@@ -16,6 +16,10 @@ import ReactFlow, {
 import 'reactflow/dist/style.css'
 
 import SceneNode from './SceneNode'
+import AITextNode from './nodes/AITextNode'
+import AIImageNode from './nodes/AIImageNode'
+import AISplitNode from './nodes/AISplitNode'
+import TTSNode from './nodes/TTSNode'
 
 interface CanvasProps {
   initialNodes: Node[]
@@ -45,6 +49,10 @@ export default function Canvas({
     scene: SceneNode,
     start: SceneNode,
     end: SceneNode,
+    ai_text: AITextNode,
+    ai_image: AIImageNode,
+    ai_split: AISplitNode,
+    tts: TTSNode,
   }), [])
 
   // Sync initial data when it changes

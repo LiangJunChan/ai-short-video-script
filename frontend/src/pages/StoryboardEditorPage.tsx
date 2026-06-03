@@ -42,7 +42,12 @@ export default function StoryboardEditorPage() {
         id: String(n.id),
         type: n.nodeType,
         position: { x: n.positionX, y: n.positionY },
-        data: { nodeType: n.nodeType, config: n.configJson ? JSON.parse(n.configJson) : {} },
+        data: {
+          nodeType: n.nodeType,
+          config: n.configJson ? JSON.parse(n.configJson) : {},
+          state: n.state || 'idle',
+          result: n.resultJson ? JSON.parse(n.resultJson) : null,
+        },
       }))
       setNodes(flowNodes)
       const flowEdges: Edge[] = (dbEdges || []).map((e) => ({
