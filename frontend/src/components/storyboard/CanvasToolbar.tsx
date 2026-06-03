@@ -5,12 +5,13 @@ interface CanvasToolbarProps {
   onAISplit: () => void
   onTemplate: () => void
   onExport: () => void
+  onExecute: () => void
   onBack: () => void
   isSaving: boolean
 }
 
 export default function CanvasToolbar({
-  name, onNameChange, onSave, onAISplit, onTemplate, onExport, onBack, isSaving,
+  name, onNameChange, onSave, onAISplit, onTemplate, onExport, onExecute, onBack, isSaving,
 }: CanvasToolbarProps) {
   return (
     <div className="h-12 bg-white border-b border-slate-200 flex items-center justify-between px-4">
@@ -31,6 +32,9 @@ export default function CanvasToolbar({
         />
       </div>
       <div className="flex items-center gap-2">
+        <button onClick={onExecute} className="px-3 py-1.5 text-xs font-medium text-green-700 bg-green-50 rounded-lg hover:bg-green-100">
+          ▶ 执行
+        </button>
         <button onClick={onAISplit} className="px-3 py-1.5 text-xs font-medium text-purple-700 bg-purple-50 rounded-lg hover:bg-purple-100">
           AI 分镜
         </button>

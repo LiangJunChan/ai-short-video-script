@@ -9,6 +9,7 @@ import NodeEditorPanel from '../components/storyboard/NodeEditorPanel'
 import AISplitPanel from '../components/storyboard/AISplitPanel'
 import TemplatePanel from '../components/storyboard/TemplatePanel'
 import ExportMenu from '../components/storyboard/ExportMenu'
+import ExecutePanel from '../components/storyboard/ExecutePanel'
 
 export default function StoryboardEditorPage() {
   const { id } = useParams<{ id: string }>()
@@ -30,6 +31,7 @@ export default function StoryboardEditorPage() {
   const [showAISplit, setShowAISplit] = useState(false)
   const [showTemplate, setShowTemplate] = useState(false)
   const [showExport, setShowExport] = useState(false)
+  const [showExecute, setShowExecute] = useState(false)
   const [isSplitting, setIsSplitting] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
   const [fitViewKey, setFitViewKey] = useState(0)
@@ -158,7 +160,7 @@ export default function StoryboardEditorPage() {
     <div className="h-screen flex flex-col">
       <CanvasToolbar name={name} onNameChange={setName} onSave={handleSave}
         onAISplit={() => setShowAISplit(true)} onTemplate={() => setShowTemplate(true)}
-        onExport={() => setShowExport(true)} onBack={() => navigate('/storyboards')}
+        onExport={() => setShowExport(true)} onExecute={() => setShowExecute(true)} onBack={() => navigate('/storyboards')}
         isSaving={isSaving} />
       <div className="flex-1 flex">
         <div className="flex-1 relative">
@@ -194,6 +196,8 @@ export default function StoryboardEditorPage() {
       {showTemplate && <TemplatePanel templates={templatesData?.data?.templates || []}
         onApply={handleApplyTemplate} onSaveAs={handleSaveAsTemplate} onClose={() => setShowTemplate(false)} />}
       {showExport && <ExportMenu storyboardId={storyboardId} onClose={() => setShowExport(false)} />}
+      {showExecute && <ExecutePanel storyboardId={storyboardId} onClose={() => setShowExecute(false)}
+        onSuccess={showToast} onError={showToast} />}
       {toast && <div className="fixed bottom-6 left-1/2 -translate-x-1/2 px-4 py-2 bg-slate-900 text-white text-sm rounded-lg shadow-lg">{toast}</div>}
     </div>
   )
