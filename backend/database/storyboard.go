@@ -96,8 +96,13 @@ func UpdateStoryboard(id int, userID int, name string, viewportJSON string) erro
 	return err
 }
 
-// DeleteStoryboard 删除画布
+// DeleteStoryboard 删除画布（级联删除节点和连线）
 func DeleteStoryboard(id int, userID int) error {
+	// 先删除连线（因为外键引用节点）
+	DB.Exec("DELETE FROM storyboard_edges WHERE storyboard_id = ?", id)
+	// 再删除节点
+	DB.Exec("DELETE FROM storyboard_nodes WHERE storyboard_id = ?", id)
+	// 最后删除画布
 	_, err := DB.Exec("DELETE FROM storyboards WHERE id = ? AND user_id = ?", id, userID)
 	return err
 }

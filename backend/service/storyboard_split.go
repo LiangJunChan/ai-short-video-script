@@ -61,6 +61,7 @@ func AutoSplitStoryboard(userID int, storyboardID int, text string) ([]SplitScen
 		return nil, fmt.Errorf("解析 AI 响应失败: %v", err)
 	}
 
+	// 创建分镜节点
 	for i, scene := range scenes {
 		configJSON, _ := json.Marshal(map[string]interface{}{
 			"script":      scene.Script,
@@ -69,7 +70,18 @@ func AutoSplitStoryboard(userID int, storyboardID int, text string) ([]SplitScen
 			"shot_type":   scene.ShotType,
 			"camera_move": scene.CameraMove,
 		})
-		database.CreateNode(storyboardID, "scene", float64(100+i*350), 200, string(configJSON))
+		database.CreateNode(storyboardID, "scene", float64(200+i*350), 200, string(configJSON))
+	}
+
+	// 调整 start/end 节点位置，避免与 scene 节点重叠
+	existingNodes, _ := database.GetNodesByStoryboard(storyboardID)
+	endX := float64(200 + len(scenes)*350)
+	for _, n := range existingNodes {
+		if n.NodeType == "start" {
+			database.DB.Exec("UPDATE storyboard_nodes SET position_x = 50, position_y = 50 WHERE id = ?", n.ID)
+		} else if n.NodeType == "end" {
+			database.DB.Exec("UPDATE storyboard_nodes SET position_x = ?, position_y = 50 WHERE id = ?", endX, n.ID)
+		}
 	}
 
 	return scenes, nil

@@ -69,7 +69,7 @@ type UserVideo struct {
 
 func InitDB() {
 	var err error
-	DB, err = sql.Open("sqlite3", "./videos.db")
+	DB, err = sql.Open("sqlite3", "./videos.db?_foreign_keys=ON")
 	if err != nil {
 		log.Fatalf("Failed to open database: %v", err)
 	}
