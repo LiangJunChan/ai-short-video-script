@@ -345,6 +345,7 @@ func InitDB() {
 	// Run migrations for new features
 	RunSquareMigrations()
 	FixAnalysisResultsUniqueConstraint()
+	RunStoryboardRunMigrations()
 }
 
 // FixAnalysisResultsUniqueConstraint 修复 analysis_results 唯一约束

@@ -4,6 +4,27 @@ import (
 	"log"
 )
 
+// RunStoryboardRunMigrations 执行工作流运行记录数据库迁移
+func RunStoryboardRunMigrations() {
+	_, err := DB.Exec(`
+		CREATE TABLE IF NOT EXISTS storyboard_runs (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			storyboard_id INTEGER NOT NULL,
+			user_id INTEGER NOT NULL,
+			status TEXT NOT NULL DEFAULT 'running',
+			total_credits INTEGER DEFAULT 0,
+			started_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			finished_at DATETIME,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			FOREIGN KEY (storyboard_id) REFERENCES storyboards(id) ON DELETE CASCADE,
+			FOREIGN KEY (user_id) REFERENCES users(id)
+		);
+	`)
+	if err != nil {
+		log.Printf("Warning: create storyboard_runs table: %v", err)
+	}
+}
+
 // RunSquareMigrations 执行短视频广场功能数据库迁移
 func RunSquareMigrations() {
 	// 1. users表新增 allow_public_square 字段
