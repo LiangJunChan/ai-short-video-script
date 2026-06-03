@@ -13,9 +13,9 @@ type StoryboardNode struct {
 	PositionY    float64    `json:"positionY"`
 	Width        float64    `json:"width"`
 	Height       float64    `json:"height"`
-	ConfigJSON   string     `json:"configJson,omitempty"`
+	ConfigJSON   *string    `json:"configJson,omitempty"`
 	State        string     `json:"state"`
-	ResultJSON   string     `json:"resultJson,omitempty"`
+	ResultJSON   *string    `json:"resultJson,omitempty"`
 	OrderIndex   *int       `json:"orderIndex,omitempty"`
 	CreatedAt    time.Time  `json:"createdAt"`
 	UpdatedAt    time.Time  `json:"updatedAt"`

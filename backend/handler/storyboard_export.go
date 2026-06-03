@@ -34,12 +34,12 @@ func ExportStoryboardMarkdown(c *gin.Context) {
 
 	sceneIndex := 1
 	for _, n := range nodes {
-		if n.NodeType != "scene" || n.ConfigJSON == "" {
+		if n.NodeType != "scene" || n.ConfigJSON == nil || *n.ConfigJSON == "" {
 			continue
 		}
 
 		var config map[string]interface{}
-		json.Unmarshal([]byte(n.ConfigJSON), &config)
+		json.Unmarshal([]byte(*n.ConfigJSON), &config)
 
 		md.WriteString(fmt.Sprintf("## 分镜%d\n", sceneIndex))
 		if v, ok := config["script"].(string); ok && v != "" {
@@ -84,11 +84,11 @@ func ExportStoryboardText(c *gin.Context) {
 
 	var texts []string
 	for _, n := range nodes {
-		if n.NodeType != "scene" || n.ConfigJSON == "" {
+		if n.NodeType != "scene" || n.ConfigJSON == nil || *n.ConfigJSON == "" {
 			continue
 		}
 		var config map[string]interface{}
-		json.Unmarshal([]byte(n.ConfigJSON), &config)
+		json.Unmarshal([]byte(*n.ConfigJSON), &config)
 		if script, ok := config["script"].(string); ok && script != "" {
 			texts = append(texts, script)
 		}
