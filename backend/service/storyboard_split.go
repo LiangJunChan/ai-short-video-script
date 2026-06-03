@@ -44,6 +44,12 @@ func AutoSplitStoryboard(userID int, storyboardID int, text string) ([]SplitScen
 	}
 
 	response = strings.TrimSpace(response)
+
+	// 去掉 LLM 思考标签
+	if idx := strings.LastIndex(response, "</think>"); idx != -1 {
+		response = response[idx+len("</think>"):]
+	}
+
 	response = strings.TrimPrefix(response, "```json")
 	response = strings.TrimPrefix(response, "```")
 	response = strings.TrimSuffix(response, "```")
