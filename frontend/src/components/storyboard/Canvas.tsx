@@ -46,14 +46,11 @@ export default function Canvas({
   // Sync initial data when it changes
   useEffect(() => {
     setNodes(initialNodes)
-  }, [initialNodes, setNodes])
-
-  // Fit view when fitViewKey changes (e.g., after AI split)
-  useEffect(() => {
-    if (fitViewKey && reactFlowInstance.current) {
-      setTimeout(() => reactFlowInstance.current?.fitView({ padding: 0.2 }), 100)
+    // Fit view after nodes update (e.g., after AI split)
+    if (fitViewKey && initialNodes.length > 0 && reactFlowInstance.current) {
+      setTimeout(() => reactFlowInstance.current?.fitView({ padding: 0.2 }), 200)
     }
-  }, [fitViewKey])
+  }, [initialNodes, setNodes, fitViewKey])
 
   useEffect(() => {
     setEdges(initialEdges)
