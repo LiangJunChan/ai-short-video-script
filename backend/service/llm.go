@@ -56,8 +56,9 @@ func (p *MinimaxProvider) Chat(messages []ChatMessage) (string, error) {
 			}
 			return result
 		}(),
-		"max_tokens": 2000,
-		"temperature": 0.7,
+		"max_tokens":      16000,
+		"temperature":     0.7,
+		"reasoning_split": true,
 	}
 
 	jsonData, err := json.Marshal(reqBody)
@@ -143,7 +144,7 @@ func (p *VolcanoEngineProvider) Chat(messages []ChatMessage) (string, error) {
 			}
 			return result
 		}(),
-		"max_tokens": 2000,
+		"max_tokens":  4000,
 		"temperature": 0.7,
 	}
 

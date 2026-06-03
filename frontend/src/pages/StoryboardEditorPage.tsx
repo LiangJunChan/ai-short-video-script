@@ -31,6 +31,7 @@ export default function StoryboardEditorPage() {
   const [showExport, setShowExport] = useState(false)
   const [isSplitting, setIsSplitting] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
+  const [fitViewKey, setFitViewKey] = useState(0)
 
   useEffect(() => {
     if (sbData?.data) {
@@ -108,7 +109,8 @@ export default function StoryboardEditorPage() {
     try {
       const result = await autoSplit({ id: storyboardId, text }).unwrap()
       showToast(`拆分成功，生成 ${result.data.scenes.length} 个分镜`)
-      refetch()
+      await refetch()
+      setFitViewKey((k) => k + 1)
       setShowAISplit(false)
     } catch (err: any) {
       showToast(err.data?.message || '拆分失败')
@@ -120,7 +122,8 @@ export default function StoryboardEditorPage() {
     try {
       await applyTemplate({ storyboardId, templateId }).unwrap()
       showToast('应用成功')
-      refetch()
+      await refetch()
+      setFitViewKey((k) => k + 1)
       setShowTemplate(false)
     } catch {
       showToast('应用失败')
@@ -151,7 +154,8 @@ export default function StoryboardEditorPage() {
         <div className="flex-1">
           <Canvas initialNodes={nodes} initialEdges={edges}
             onNodesChange={setNodes} onEdgesChange={setEdges}
-            onNodeClick={handleNodeClick} onPaneDoubleClick={handlePaneDoubleClick} />
+            onNodeClick={handleNodeClick} onPaneDoubleClick={handlePaneDoubleClick}
+            fitViewKey={fitViewKey} />
         </div>
         {selectedNode && selectedNode.data?.nodeType === 'scene' && (
           <NodeEditorPanel nodeId={selectedNodeId!} config={selectedNode.data.config || {}}

@@ -37,6 +37,7 @@ func AutoSplitStoryboard(userID int, storyboardID int, text string) ([]SplitScen
 
 	provider := GetProviderForUser(userID)
 	response, err := provider.Chat([]ChatMessage{
+		{Role: "system", Content: "你是JSON生成器。只输出JSON数组，不要输出任何其他文字、解释、思考过程。直接输出以[开头的JSON数组。"},
 		{Role: "user", Content: prompt},
 	})
 	if err != nil {

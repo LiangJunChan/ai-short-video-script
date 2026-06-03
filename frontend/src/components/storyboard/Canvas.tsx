@@ -26,6 +26,7 @@ interface CanvasProps {
   onEdgesChange: (edges: Edge[]) => void
   onNodeClick: (nodeId: string) => void
   onPaneDoubleClick: (position: { x: number; y: number }) => void
+  fitViewKey?: number
 }
 
 export default function Canvas({
@@ -35,6 +36,7 @@ export default function Canvas({
   onEdgesChange,
   onNodeClick,
   onPaneDoubleClick,
+  fitViewKey,
 }: CanvasProps) {
   const reactFlowWrapper = useRef<HTMLDivElement>(null)
   const [nodes, setNodes, handleNodesChange] = useNodesState(initialNodes)
@@ -45,6 +47,13 @@ export default function Canvas({
   useEffect(() => {
     setNodes(initialNodes)
   }, [initialNodes, setNodes])
+
+  // Fit view when fitViewKey changes (e.g., after AI split)
+  useEffect(() => {
+    if (fitViewKey && reactFlowInstance.current) {
+      setTimeout(() => reactFlowInstance.current?.fitView({ padding: 0.2 }), 100)
+    }
+  }, [fitViewKey])
 
   useEffect(() => {
     setEdges(initialEdges)
