@@ -5,15 +5,23 @@ interface CanvasToolbarProps {
   onAISplit: () => void
   onTemplate: () => void
   onExport: () => void
+  onBack: () => void
   isSaving: boolean
 }
 
 export default function CanvasToolbar({
-  name, onNameChange, onSave, onAISplit, onTemplate, onExport, isSaving,
+  name, onNameChange, onSave, onAISplit, onTemplate, onExport, onBack, isSaving,
 }: CanvasToolbarProps) {
   return (
     <div className="h-12 bg-white border-b border-slate-200 flex items-center justify-between px-4">
       <div className="flex items-center gap-3">
+        <button
+          onClick={onBack}
+          className="text-sm text-slate-500 hover:text-slate-900 transition-colors"
+        >
+          ← 返回
+        </button>
+        <span className="text-slate-300">|</span>
         <input
           type="text"
           value={name}

@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { Node, Edge } from 'reactflow'
 import { videoApi } from '../store/videoApi'
 import { SceneConfig } from '../types'
@@ -12,6 +12,7 @@ import ExportMenu from '../components/storyboard/ExportMenu'
 
 export default function StoryboardEditorPage() {
   const { id } = useParams<{ id: string }>()
+  const navigate = useNavigate()
   const storyboardId = Number(id)
 
   const { data: sbData, isLoading, refetch } = videoApi.useGetStoryboardQuery(storyboardId)
@@ -149,7 +150,8 @@ export default function StoryboardEditorPage() {
     <div className="h-screen flex flex-col">
       <CanvasToolbar name={name} onNameChange={setName} onSave={handleSave}
         onAISplit={() => setShowAISplit(true)} onTemplate={() => setShowTemplate(true)}
-        onExport={() => setShowExport(true)} isSaving={isSaving} />
+        onExport={() => setShowExport(true)} onBack={() => navigate('/storyboards')}
+        isSaving={isSaving} />
       <div className="flex-1 flex">
         <div className="flex-1">
           <Canvas initialNodes={nodes} initialEdges={edges}
