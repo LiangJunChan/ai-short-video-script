@@ -249,6 +249,7 @@ export default function StoryboardEditorPage() {
             nodeId={selectedNodeId!}
             nodeType={selectedNode.data.nodeType}
             config={selectedNode.data.config || {}}
+            result={selectedNode.data.result}
             onSave={handleNodeConfigSave}
             onClose={() => setSelectedNodeId(null)} />
         )}

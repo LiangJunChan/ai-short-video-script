@@ -1,14 +1,16 @@
 import { useState, useEffect } from 'react'
+import ResultViewer from './ResultViewer'
 
 interface NodeConfigPanelProps {
   nodeId: string
   nodeType: string
   config: Record<string, any>
+  result?: any
   onSave: (config: Record<string, any>) => void
   onClose: () => void
 }
 
-export default function NodeConfigPanel({ nodeId, nodeType, config, onSave, onClose }: NodeConfigPanelProps) {
+export default function NodeConfigPanel({ nodeId, nodeType, config, result, onSave, onClose }: NodeConfigPanelProps) {
   const [formData, setFormData] = useState<Record<string, any>>(config || {})
 
   useEffect(() => {
@@ -170,6 +172,13 @@ export default function NodeConfigPanel({ nodeId, nodeType, config, onSave, onCl
                 onChange={(e) => handleChange('label', e.target.value)}
                 className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500" />
             </div>
+          </div>
+        )}
+
+        {result && (
+          <div className="mt-4 pt-4 border-t border-slate-200">
+            <h4 className="text-xs font-semibold text-slate-700 mb-2">执行结果</h4>
+            <ResultViewer nodeType={nodeType} result={result} />
           </div>
         )}
 
