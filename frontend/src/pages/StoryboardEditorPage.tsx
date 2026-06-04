@@ -2,10 +2,9 @@ import { useState, useCallback, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Node, Edge } from 'reactflow'
 import { videoApi } from '../store/videoApi'
-import { SceneConfig } from '../types'
 import Canvas from '../components/storyboard/Canvas'
 import CanvasToolbar from '../components/storyboard/CanvasToolbar'
-import NodeEditorPanel from '../components/storyboard/NodeEditorPanel'
+import NodeConfigPanel from '../components/storyboard/NodeConfigPanel'
 import AISplitPanel from '../components/storyboard/AISplitPanel'
 import TemplatePanel from '../components/storyboard/TemplatePanel'
 import ExportMenu from '../components/storyboard/ExportMenu'
@@ -127,7 +126,7 @@ export default function StoryboardEditorPage() {
     setSelectedNodeId(nodeId)
   }, [])
 
-  const handleNodeConfigSave = useCallback((config: SceneConfig) => {
+  const handleNodeConfigSave = useCallback((config: Record<string, any>) => {
     if (!selectedNodeId) return
     setNodes((nds) => nds.map((n) =>
       n.id === selectedNodeId ? { ...n, data: { ...n.data, config } } : n
@@ -210,9 +209,13 @@ export default function StoryboardEditorPage() {
             </div>
           )}
         </div>
-        {selectedNode && selectedNode.data?.nodeType === 'scene' && (
-          <NodeEditorPanel nodeId={selectedNodeId!} config={selectedNode.data.config || {}}
-            onSave={handleNodeConfigSave} onClose={() => setSelectedNodeId(null)} />
+        {selectedNode && selectedNode.data?.nodeType && (
+          <NodeConfigPanel
+            nodeId={selectedNodeId!}
+            nodeType={selectedNode.data.nodeType}
+            config={selectedNode.data.config || {}}
+            onSave={handleNodeConfigSave}
+            onClose={() => setSelectedNodeId(null)} />
         )}
       </div>
       {showAISplit && <AISplitPanel onSplit={handleAISplit} onClose={() => setShowAISplit(false)} isLoading={isSplitting} />}
