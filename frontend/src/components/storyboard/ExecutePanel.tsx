@@ -5,9 +5,10 @@ interface ExecutePanelProps {
   onClose: () => void
   onSuccess: (msg: string) => void
   onError: (msg: string) => void
+  onExecuted: () => void
 }
 
-export default function ExecutePanel({ storyboardId, onClose, onSuccess, onError }: ExecutePanelProps) {
+export default function ExecutePanel({ storyboardId, onClose, onSuccess, onError, onExecuted }: ExecutePanelProps) {
   const [execute, { isLoading }] = videoApi.useExecuteStoryboardMutation()
   const { data: historyData } = videoApi.useGetExecutionHistoryQuery(storyboardId)
   const runs = historyData?.data?.runs || []
@@ -16,6 +17,7 @@ export default function ExecutePanel({ storyboardId, onClose, onSuccess, onError
     try {
       const result = await execute(storyboardId).unwrap()
       const cost = result.data?.totalCost || 0
+      onExecuted() // 刷新画布数据
       onSuccess(`执行完成，消耗 ${cost} 积分`)
       onClose()
     } catch (err: any) {

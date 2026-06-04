@@ -220,7 +220,7 @@ export default function StoryboardEditorPage() {
         onApply={handleApplyTemplate} onSaveAs={handleSaveAsTemplate} onClose={() => setShowTemplate(false)} />}
       {showExport && <ExportMenu storyboardId={storyboardId} onClose={() => setShowExport(false)} />}
       {showExecute && <ExecutePanel storyboardId={storyboardId} onClose={() => setShowExecute(false)}
-        onSuccess={showToast} onError={showToast} />}
+        onSuccess={showToast} onError={showToast} onExecuted={() => refetch()} />}
       {showNodeMenu && (
         <div className="fixed inset-0 z-50" onClick={() => setShowNodeMenu(false)}>
           <div className="absolute bg-white rounded-xl shadow-lg border border-slate-200 p-2 w-[200px]"
