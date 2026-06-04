@@ -129,7 +129,7 @@ func DeleteEdge(c *gin.Context) {
 	c.JSON(http.StatusOK, APIResponse{Code: 200, Message: "删除成功"})
 }
 
-// BatchUpdate 批量更新画布（保存整个画布状态）
+// BatchUpdate 批量更新画布（支持混合新增和更新）
 func BatchUpdate(c *gin.Context) {
 	userId := middleware.GetUserID(c)
 	storyboardID, _ := strconv.Atoi(c.Param("id"))
@@ -143,14 +143,14 @@ func BatchUpdate(c *gin.Context) {
 	var req struct {
 		ViewportJSON string `json:"viewportJson"`
 		Nodes        []struct {
-			ID         int     `json:"id"`
+			ID         int     `json:"id"` // 正数 = 已有节点ID, 1-based index = 新节点
 			NodeType   string  `json:"nodeType"`
 			PositionX  float64 `json:"positionX"`
 			PositionY  float64 `json:"positionY"`
 			ConfigJSON string  `json:"configJson"`
 		} `json:"nodes"`
 		Edges []struct {
-			SourceNodeID int    `json:"sourceNodeId"`
+			SourceNodeID int    `json:"sourceNodeId"` // 正数 = 已有节点ID, 1-based index = 新节点
 			TargetNodeID int    `json:"targetNodeId"`
 			SourceHandle string `json:"sourceHandle"`
 			TargetHandle string `json:"targetHandle"`
@@ -165,26 +165,45 @@ func BatchUpdate(c *gin.Context) {
 	// 更新视口
 	database.UpdateStoryboard(storyboardID, userId, sb.Name, req.ViewportJSON)
 
-	// 删除旧的节点和连线
-	database.DeleteEdgesByStoryboard(storyboardID)
-	oldNodes, _ := database.GetNodesByStoryboard(storyboardID)
-	for _, n := range oldNodes {
-		database.DeleteNode(n.ID)
-	}
-
-	// 创建新节点
-	nodeIDMap := make(map[int]int)
-	for _, n := range req.Nodes {
-		newID, err := database.CreateNode(storyboardID, n.NodeType, n.PositionX, n.PositionY, n.ConfigJSON)
-		if err == nil {
-			nodeIDMap[n.ID] = newID
+	// Step 1: 创建新节点（ID <= 0 的节点，使用数组索引作为ID）
+	// newNodeIDMap: 请求中的数组索引 (1-based) -> 数据库真实ID
+	newNodeIDMap := make(map[int]int)
+	for i, n := range req.Nodes {
+		if n.ID <= 0 {
+			newID, err := database.CreateNode(storyboardID, n.NodeType, n.PositionX, n.PositionY, n.ConfigJSON)
+			if err == nil {
+				newNodeIDMap[i+1] = newID // 1-based index
+			}
 		}
 	}
 
-	// 创建新连线
+	// Step 2: 更新已有节点
+	for _, n := range req.Nodes {
+		if n.ID > 0 {
+			database.UpdateNode(n.ID, n.ConfigJSON, n.PositionX, n.PositionY)
+		}
+	}
+
+	// Step 3: 处理连线
+	// Edges中的source/target可能是已有节点ID（正数）或新节点索引（1-based）
+	// 优先从newNodeIDMap查找，找不到则认为是已有节点ID
+	getRealID := func(idOrIndex int) int {
+		if idOrIndex <= 0 {
+			return 0
+		}
+		// 先检查是否是新建节点的索引
+		if realID, ok := newNodeIDMap[idOrIndex]; ok {
+			return realID
+		}
+		// 否则是已有节点ID
+		return idOrIndex
+	}
+
+	// 删除所有旧连线并重建
+	database.DeleteEdgesByStoryboard(storyboardID)
 	for _, e := range req.Edges {
-		sourceID := nodeIDMap[e.SourceNodeID]
-		targetID := nodeIDMap[e.TargetNodeID]
+		sourceID := getRealID(e.SourceNodeID)
+		targetID := getRealID(e.TargetNodeID)
 		if sourceID > 0 && targetID > 0 {
 			database.CreateEdge(storyboardID, sourceID, targetID, e.SourceHandle, e.TargetHandle, e.Label)
 		}

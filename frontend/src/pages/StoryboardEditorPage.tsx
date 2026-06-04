@@ -73,18 +73,52 @@ export default function StoryboardEditorPage() {
   const handleSave = useCallback(async () => {
     setIsSaving(true)
     try {
+      // Build new node index map: temp ID -> array index (1-based)
+      const newNodeIndexMap = new Map<string, number>()
+      const saveNodes = nodes.map((n, idx) => {
+        const isNew = n.data?.isNew === true
+        if (isNew) {
+          newNodeIndexMap.set(String(n.id), idx + 1)
+          return {
+            id: idx + 1,
+            nodeType: n.data?.nodeType || 'scene',
+            positionX: n.position.x,
+            positionY: n.position.y,
+            configJson: JSON.stringify(n.data?.config || {}),
+          }
+        }
+        return {
+          id: Number(n.id),
+          nodeType: n.data?.nodeType || 'scene',
+          positionX: n.position.x,
+          positionY: n.position.y,
+          configJson: JSON.stringify(n.data?.config || {}),
+        }
+      })
+
+      const saveEdges = edges.map((e) => {
+        const sourceNode = nodes.find(n => n.id === e.source)
+        const targetNode = nodes.find(n => n.id === e.target)
+        const sourceIsNew = sourceNode?.data?.isNew === true
+        const targetIsNew = targetNode?.data?.isNew === true
+
+        return {
+          sourceNodeId: sourceIsNew ? (newNodeIndexMap.get(String(e.source)) || 0) : Number(e.source),
+          targetNodeId: targetIsNew ? (newNodeIndexMap.get(String(e.target)) || 0) : Number(e.target),
+          sourceHandle: e.sourceHandle || '',
+          targetHandle: e.targetHandle || '',
+        }
+      })
+
       await batchUpdate({
         id: storyboardId,
-        nodes: nodes.map((n) => ({
-          id: Number(n.id), nodeType: n.data?.nodeType || 'scene',
-          positionX: n.position.x, positionY: n.position.y,
-          configJson: JSON.stringify(n.data?.config || {}),
-        })),
-        edges: edges.map((e) => ({
-          sourceNodeId: Number(e.source), targetNodeId: Number(e.target),
-          sourceHandle: e.sourceHandle || '', targetHandle: e.targetHandle || '',
-        })),
+        nodes: saveNodes,
+        edges: saveEdges,
       }).unwrap()
+
+      // Clear isNew flags after save
+      setNodes((nds) => nds.map(n => ({ ...n, data: { ...n.data, isNew: false } })))
+
       showToast('保存成功')
       refetch()
     } catch {
@@ -116,6 +150,7 @@ export default function StoryboardEditorPage() {
         config: configs[nodeType] || {},
         state: 'idle',
         result: null,
+        isNew: true,
       },
     }
     setNodes((nds) => [...nds, newNode])
