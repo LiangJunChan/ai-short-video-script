@@ -59,9 +59,20 @@ export default function StoryboardEditorPage() {
         target: String(e.targetNodeId),
         sourceHandle: e.sourceHandle,
         targetHandle: e.targetHandle,
-        animated: true,
+        style: { stroke: '#94a3b8', strokeWidth: 2 },
       }))
       setEdges(flowEdges)
+
+      // Calculate connection state for each node
+      const edgeTargetIds = new Set((dbEdges || []).map((e: any) => String(e.targetNodeId)))
+      const flowNodesWithState: Node[] = flowNodes.map(n => ({
+        ...n,
+        data: {
+          ...n.data,
+          hasIncomingEdge: edgeTargetIds.has(n.id),
+        }
+      }))
+      setNodes(flowNodesWithState)
     }
   }, [sbData])
 

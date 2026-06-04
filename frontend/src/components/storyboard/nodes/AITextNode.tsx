@@ -10,6 +10,9 @@ const AITextNode = memo(({ data, selected }: NodeProps) => {
       selected ? 'border-violet-500' : 'border-slate-200'
     }`}>
       <Handle type="target" position={Position.Left} className="w-3 h-3 bg-violet-500" />
+      {data.hasIncomingEdge === false && (
+        <div className="absolute -top-2 -left-2 w-4 h-4 bg-amber-400 rounded-full border-2 border-white" title="需要上游输入" />
+      )}
 
       <div className="px-3 py-2 bg-violet-50 border-b border-slate-100 rounded-t-lg flex items-center justify-between">
         <span className="text-xs font-medium text-violet-700">✨ AI 文案</span>

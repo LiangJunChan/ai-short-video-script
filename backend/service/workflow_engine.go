@@ -126,6 +126,16 @@ func (e *WorkflowEngine) ExecuteNode(nodeID int) (*NodeExecutionResult, error) {
 
 // executeNode 执行单个节点
 func (e *WorkflowEngine) executeNode(node database.StoryboardNode, nodeOutputs map[int]string) NodeExecutionResult {
+	// Check if node needs input but has none
+	if e.nodeNeedsInput(node) && !e.nodeHasInput(node, nodeOutputs) {
+		return NodeExecutionResult{
+			NodeID:  node.ID,
+			Status:  "error",
+			Error:   "需要上游节点输入或配置提示词",
+			Credits: 0,
+		}
+	}
+
 	// 解析节点配置
 	var config map[string]interface{}
 	if node.ConfigJSON != nil && *node.ConfigJSON != "" {
@@ -271,6 +281,37 @@ func (e *WorkflowEngine) executeTTS(nodeID int) NodeExecutionResult {
 		Error:   "语音合成功能暂未实现",
 		Credits: 0,
 	}
+}
+
+// nodeNeedsInput 判断节点类型是否需要上游输入
+func (e *WorkflowEngine) nodeNeedsInput(node database.StoryboardNode) bool {
+	return node.NodeType == "ai_text" || node.NodeType == "ai_image" ||
+		node.NodeType == "ai_split" || node.NodeType == "tts"
+}
+
+// nodeHasInput 判断节点是否有有效输入（上游边输出或配置提示词）
+func (e *WorkflowEngine) nodeHasInput(node database.StoryboardNode, nodeOutputs map[int]string) bool {
+	// 检查是否有上游边提供了输出
+	edges, _ := database.GetEdgesByStoryboard(e.StoryboardID)
+	for _, edge := range edges {
+		if edge.TargetNodeID == node.ID {
+			if _, ok := nodeOutputs[edge.SourceNodeID]; ok {
+				return true
+			}
+		}
+	}
+	// 检查配置是否有 prompt/input_text
+	if node.ConfigJSON != nil {
+		var config map[string]interface{}
+		json.Unmarshal([]byte(*node.ConfigJSON), &config)
+		if p, ok := config["prompt"].(string); ok && p != "" {
+			return true
+		}
+		if t, ok := config["input_text"].(string); ok && t != "" {
+			return true
+		}
+	}
+	return false
 }
 
 // getInputText 获取节点的输入文本（从上游节点的输出）

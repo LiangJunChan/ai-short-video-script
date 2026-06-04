@@ -95,7 +95,7 @@ export default function Canvas({
 
   const onConnect = useCallback(
     (connection: Connection) => {
-      setEdges((eds) => addEdge({ ...connection, animated: true }, eds))
+      setEdges((eds) => addEdge({ ...connection, style: { stroke: '#94a3b8', strokeWidth: 2 } }, eds))
     },
     [setEdges]
   )
@@ -130,7 +130,7 @@ export default function Canvas({
         fitView
         snapToGrid
         snapGrid={[15, 15]}
-        defaultEdgeOptions={{ animated: true }}
+        defaultEdgeOptions={{ style: { stroke: '#94a3b8', strokeWidth: 2 } }}
         deleteKeyCode={['Backspace', 'Delete']}
       >
         <Controls />
