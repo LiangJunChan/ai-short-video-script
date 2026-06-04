@@ -17,8 +17,14 @@ export default function ExecutePanel({ storyboardId, onClose, onSuccess, onError
     try {
       const result = await execute(storyboardId).unwrap()
       const cost = result.data?.totalCost || 0
-      onExecuted() // 刷新画布数据
-      onSuccess(`执行完成，消耗 ${cost} 积分`)
+      const executedCount = result.data?.results?.length || 0
+      if (executedCount === 0) {
+        onError('工作流中没有可执行的 AI 节点（ai_text/ai_image/ai_split/tts）')
+        onClose()
+        return
+      }
+      onExecuted()
+      onSuccess(`执行完成，处理了 ${executedCount} 个节点，消耗 ${cost} 积分`)
       onClose()
     } catch (err: any) {
       onError(err.data?.message || '执行失败')
@@ -29,8 +35,11 @@ export default function ExecutePanel({ storyboardId, onClose, onSuccess, onError
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>
       <div className="bg-white rounded-xl p-6 w-[400px]" onClick={(e) => e.stopPropagation()}>
         <h2 className="text-lg font-semibold mb-2">执行工作流</h2>
-        <p className="text-xs text-slate-400 mb-4">
-          按节点连线顺序依次执行所有 AI 节点，每个节点消耗对应积分。
+        <p className="text-xs text-slate-400 mb-1">
+          按节点连线顺序依次执行所有 AI 节点（ai_text / ai_image / ai_split / tts），每个节点消耗对应积分。
+        </p>
+        <p className="text-xs text-amber-600 mb-4">
+          注意：分镜（scene）节点是数据容器，不会被执行。
         </p>
 
         <button
