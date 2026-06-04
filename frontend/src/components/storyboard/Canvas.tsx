@@ -27,7 +27,7 @@ interface CanvasProps {
   onNodesChange: (nodes: Node[]) => void
   onEdgesChange: (edges: Edge[]) => void
   onNodeClick: (nodeId: string) => void
-  onPaneDoubleClick: (position: { x: number; y: number }) => void
+  onPaneContextMenu: (position: { x: number; y: number }) => void
   fitViewKey?: number
 }
 
@@ -37,7 +37,7 @@ export default function Canvas({
   onNodesChange,
   onEdgesChange,
   onNodeClick,
-  onPaneDoubleClick,
+  onPaneContextMenu,
   fitViewKey,
 }: CanvasProps) {
   const reactFlowWrapper = useRef<HTMLDivElement>(null)
@@ -107,25 +107,12 @@ export default function Canvas({
     [onNodeClick]
   )
 
-  const lastPaneClickTime = useRef<number>(0)
-
-  const onPaneClickWrapper = useCallback(
+  const onPaneContextMenuWrapper = useCallback(
     (event: React.MouseEvent) => {
-      const now = Date.now()
-      if (now - lastPaneClickTime.current < 300) {
-        if (reactFlowInstance.current) {
-          const position = reactFlowInstance.current.screenToFlowPosition({
-            x: event.clientX,
-            y: event.clientY,
-          })
-          onPaneDoubleClick(position)
-        }
-        lastPaneClickTime.current = 0
-      } else {
-        lastPaneClickTime.current = now
-      }
+      event.preventDefault()
+      onPaneContextMenu({ x: event.clientX, y: event.clientY })
     },
-    [onPaneDoubleClick]
+    [onPaneContextMenu]
   )
 
   return (
@@ -137,7 +124,7 @@ export default function Canvas({
         onEdgesChange={onEdgesChangeWrapper}
         onConnect={onConnect}
         onNodeClick={onNodeClickWrapper}
-        onPaneClick={onPaneClickWrapper}
+        onPaneContextMenu={onPaneContextMenuWrapper}
         onInit={(instance) => (reactFlowInstance.current = instance)}
         nodeTypes={nodeTypes}
         fitView

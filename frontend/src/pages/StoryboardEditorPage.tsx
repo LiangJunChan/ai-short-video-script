@@ -93,7 +93,7 @@ export default function StoryboardEditorPage() {
     setIsSaving(false)
   }, [storyboardId, nodes, edges, batchUpdate, refetch])
 
-  const handlePaneDoubleClick = useCallback((position: { x: number; y: number }) => {
+  const handlePaneContextMenu = useCallback((position: { x: number; y: number }) => {
     setNodeMenuPosition(position)
     setShowNodeMenu(true)
   }, [])
@@ -188,7 +188,7 @@ export default function StoryboardEditorPage() {
         <div className="flex-1 relative">
           <Canvas initialNodes={nodes} initialEdges={edges}
             onNodesChange={setNodes} onEdgesChange={setEdges}
-            onNodeClick={handleNodeClick} onPaneDoubleClick={handlePaneDoubleClick}
+            onNodeClick={handleNodeClick} onPaneContextMenu={handlePaneContextMenu}
             fitViewKey={fitViewKey} />
           {showEmptyHint && (
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
