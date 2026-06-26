@@ -37,59 +37,65 @@ export default function StoryboardListPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-lg border-b border-slate-100">
-        <div className="flex items-center justify-between h-16 px-6">
+    <div className="min-h-screen bg-av-bg-primary">
+      <header className="sticky top-0 z-av-sticky glass border-b border-av-border-subtle">
+        <div className="flex items-center justify-between h-16 px-6 max-w-5xl mx-auto">
           <div className="flex items-center gap-3">
-            <button onClick={() => navigate('/')} className="text-sm text-slate-500 hover:text-slate-900">
+            <button onClick={() => navigate('/')} className="text-sm text-av-text-secondary hover:text-av-text-primary transition-colors">
               ← 返回首页
             </button>
-            <h1 className="text-lg font-semibold text-slate-900">我的脚本</h1>
+            <h1 className="text-lg font-semibold text-av-text-primary">我的脚本</h1>
           </div>
           <button
             onClick={() => setShowCreate(true)}
-            className="px-4 py-2 bg-sky-500 text-white text-sm font-medium rounded-lg hover:bg-sky-600 transition-colors"
+            className="btn-primary px-4 py-2 text-sm font-medium"
           >
             新建画布
           </button>
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-6 py-8">
+      <main className="max-w-5xl mx-auto px-6 py-10">
         {isLoading ? (
-          <p className="text-sm text-slate-400">加载中...</p>
+          <p className="text-sm text-av-text-tertiary">加载中...</p>
         ) : storyboards.length === 0 ? (
           <div className="text-center py-20">
-            <p className="text-slate-400 mb-4">还没有脚本</p>
+            <p className="text-av-text-tertiary mb-4">还没有脚本</p>
             <button
               onClick={() => setShowCreate(true)}
-              className="px-4 py-2 bg-sky-500 text-white text-sm rounded-lg hover:bg-sky-600"
+              className="btn-primary px-4 py-2 text-sm"
             >
               创建第一个画布
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="flex flex-col gap-4">
             {storyboards.map((sb) => (
               <div
                 key={sb.id}
                 onClick={() => navigate(`/storyboard/${sb.id}`)}
-                className="bg-white rounded-xl border border-slate-200 p-4 cursor-pointer hover:shadow-md transition-shadow group"
+                className="storyboard-card surface rounded-xl p-5 flex items-center justify-between cursor-pointer group"
               >
-                <div className="flex items-start justify-between">
-                  <h3 className="text-sm font-semibold text-slate-900 mb-1">{sb.name}</h3>
-                  <button
-                    onClick={(e) => handleDelete(e, sb.id)}
-                    className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-red-500 transition-all"
-                  >
-                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  </button>
+                <div className="flex items-center gap-4 min-w-0">
+                  <div className="w-3 h-3 rounded-full flex-shrink-0 status-glow" style={{ backgroundColor: 'var(--state-success)' }} />
+                  <div className="min-w-0">
+                    <h3 className="text-sm font-semibold truncate text-av-text-primary">{sb.name}</h3>
+                    <p className="text-sm truncate mt-0.5 text-av-text-secondary">
+                      更新于 {new Date(sb.updatedAt).toLocaleDateString('zh-CN')}
+                    </p>
+                  </div>
                 </div>
-                <p className="text-xs text-slate-400">
-                  更新于 {new Date(sb.updatedAt).toLocaleDateString('zh-CN')}
-                </p>
+                <div className="flex items-center gap-3 flex-shrink-0 ml-4">
+                  <div className="card-actions flex items-center gap-1" style={{ opacity: 0 }}>
+                    <button
+                      onClick={(e) => handleDelete(e, sb.id)}
+                      className="ghost-btn px-3 py-1.5 rounded-lg text-xs font-medium"
+                      style={{ color: 'var(--state-error)', border: '1px solid var(--color-border-subtle)' }}
+                    >
+                      删除
+                    </button>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
@@ -97,26 +103,26 @@ export default function StoryboardListPage() {
       </main>
 
       {showCreate && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white rounded-xl p-6 w-96">
-            <h2 className="text-lg font-semibold mb-4">新建画布</h2>
+        <div className="fixed inset-0 z-av-modal flex items-center justify-center bg-[rgba(8,9,13,0.7)] backdrop-blur-sm animate-fade-in">
+          <div className="surface neon-border rounded-xl p-6 w-96 animate-scale-in">
+            <h2 className="text-lg font-semibold mb-4 text-av-text-primary">新建画布</h2>
             <input
               type="text"
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
               placeholder="输入画布名称"
-              className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-sky-500"
+              className="input-field w-full px-3 py-2 text-sm mb-4"
               autoFocus
               onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
             />
             <div className="flex gap-2 justify-end">
-              <button onClick={() => setShowCreate(false)} className="px-4 py-2 text-sm text-slate-500">
+              <button onClick={() => setShowCreate(false)} className="btn-secondary px-4 py-2 text-sm">
                 取消
               </button>
               <button
                 onClick={handleCreate}
                 disabled={!newName.trim()}
-                className="px-4 py-2 bg-sky-500 text-white text-sm rounded-lg hover:bg-sky-600 disabled:opacity-50"
+                className="btn-primary px-4 py-2 text-sm disabled:opacity-50"
               >
                 创建
               </button>

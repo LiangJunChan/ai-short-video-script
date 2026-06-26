@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"os"
 	"time"
 
 	"ai-short-video-backend/database"
@@ -15,6 +16,15 @@ const dailyLoginBonus = 30
 
 // Register 注册
 func Register(c *gin.Context) {
+	// 注册开关：默认开启，SIGN_UP=false 时关闭
+	if os.Getenv("SIGN_UP") == "false" {
+		c.JSON(http.StatusForbidden, APIResponse{
+			Code:    403,
+			Message: "注册功能已关闭",
+		})
+		return
+	}
+
 	var req struct {
 		Username string `json:"username" binding:"required,min=3,max=20"`
 		Password string `json:"password" binding:"required,min=6,max=50"`

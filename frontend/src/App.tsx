@@ -32,7 +32,7 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-av-bg-primary">
       <div className="max-w-7xl mx-auto">
         <Header
           user={user}

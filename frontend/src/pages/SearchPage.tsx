@@ -156,17 +156,17 @@ function SearchPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-av-bg-primary">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="border-b border-slate-100">
+        <div className="border-b border-av-border-subtle">
           <div className="h-16 px-6 flex items-center gap-4">
-            <button onClick={() => navigate('/library')} className="text-slate-600 hover:text-slate-900 transition-colors">
+            <button onClick={() => navigate('/library')} className="text-av-text-secondary hover:text-av-text-primary transition-colors">
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M19 12H5M12 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </button>
-            <h1 className="text-xl font-semibold text-slate-900">搜索素材库</h1>
+            <h1 className="text-xl font-semibold text-av-text-primary">搜索素材库</h1>
           </div>
         </div>
 
@@ -185,7 +185,7 @@ function SearchPage() {
               />
               <button
                 type="submit"
-                className="absolute right-2 top-1/2 -translate-y-1/2 btn-primary px-6 py-2.5 text-sm shadow-sm"
+                className="absolute right-2 top-1/2 -translate-y-1/2 btn-primary px-6 py-2.5 text-sm shadow-av-sm"
               >
                 搜索
               </button>
@@ -193,12 +193,12 @@ function SearchPage() {
 
             {/* Search History Dropdown */}
             {showHistory && historyData?.data && historyData.data.length > 0 && (
-              <div className="absolute mt-2 bg-white border border-slate-100 rounded-xl shadow-lg p-4 z-20 max-w-2xl animate-slide-down">
+              <div className="absolute mt-2 bg-av-bg-elevated border border-av-border-subtle rounded-xl shadow-av-lg p-4 z-av-dropdown max-w-2xl animate-slide-down">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-sm font-medium text-slate-700">搜索历史</span>
+                  <span className="text-sm font-medium text-av-text-secondary">搜索历史</span>
                   <button
                     onClick={() => setShowClearHistoryConfirm(true)}
-                    className="text-sm text-red-500 hover:text-red-600"
+                    className="text-sm text-av-state-error hover:text-av-state-error/90"
                   >
                     清空
                   </button>
@@ -208,7 +208,7 @@ function SearchPage() {
                     <button
                       key={h.id}
                       onClick={() => handleHistoryClick(h.keyword)}
-                      className="badge hover:bg-slate-100 transition-colors"
+                      className="badge hover:bg-av-bg-hover transition-colors"
                     >
                       {h.keyword}
                     </button>
@@ -222,7 +222,7 @@ function SearchPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
             {/* Collection Filter */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">收藏夹</label>
+              <label className="block text-sm font-medium text-av-text-secondary mb-2">收藏夹</label>
               <select
                 value={selectedCollectionId || ''}
                 onChange={(e) => handleFilterChange('collection', e.target.value ? parseInt(e.target.value) : null)}
@@ -237,7 +237,7 @@ function SearchPage() {
 
             {/* Tag Filter */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">标签</label>
+              <label className="block text-sm font-medium text-av-text-secondary mb-2">标签</label>
               <select
                 value={selectedTagId || ''}
                 onChange={(e) => handleFilterChange('tag', e.target.value ? parseInt(e.target.value) : null)}
@@ -252,7 +252,7 @@ function SearchPage() {
 
             {/* Sort */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">排序</label>
+              <label className="block text-sm font-medium text-av-text-secondary mb-2">排序</label>
               <select
                 value={sortBy}
                 onChange={(e) => {
@@ -288,7 +288,7 @@ function SearchPage() {
 
           {/* Batch Action Bar */}
           {hasFilters && doneVideos.length > 0 && (
-            <div className="flex items-center justify-between mb-6 p-4 bg-sky-50 border border-sky-100 rounded-xl">
+            <div className="flex items-center justify-between mb-6 p-4 bg-primary/10 border border-av-border-subtle rounded-xl">
               <div className="flex items-center gap-4">
                 {!selectMode ? (
                   <button
@@ -299,18 +299,18 @@ function SearchPage() {
                   </button>
                 ) : (
                   <>
-                    <span className="text-sm text-slate-600">
+                    <span className="text-sm text-av-text-secondary">
                       已选择 {selectedIds.size} 个视频
                     </span>
                     <button
                       onClick={selectAll}
-                      className="px-3 py-1.5 text-sm text-sky-600 hover:bg-sky-100 rounded-lg transition-colors"
+                      className="px-3 py-1.5 text-sm text-primary hover:bg-av-bg-hover rounded-lg transition-colors"
                     >
                       全选本页
                     </button>
                     <button
                       onClick={clearSelection}
-                      className="px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                      className="px-3 py-1.5 text-sm text-av-text-secondary hover:bg-av-bg-hover rounded-lg transition-colors"
                     >
                       取消
                     </button>
@@ -323,14 +323,14 @@ function SearchPage() {
                   <button
                     onClick={() => setShowBatchDeleteConfirm(true)}
                     disabled={isDeleting}
-                    className="px-4 py-2 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors disabled:opacity-50"
+                    className="px-4 py-2 text-sm font-medium text-av-state-error bg-av-state-error/10 hover:bg-av-state-error/20 rounded-lg transition-colors disabled:opacity-50"
                   >
                     {isDeleting ? '删除中...' : `删除选中 (${selectedIds.size}个)`}
                   </button>
                   <button
                     onClick={handleExport}
                     disabled={isExporting || !hasSelectedDone}
-                    className="btn-primary px-4 py-2 text-sm shadow-sm disabled:opacity-50"
+                    className="btn-primary px-4 py-2 text-sm shadow-av-sm disabled:opacity-50"
                   >
                     {isExporting ? '导出中...' : `导出Markdown (${selectedIds.size}个)`}
                   </button>
@@ -346,12 +346,12 @@ function SearchPage() {
             </div>
           ) : hasFilters && searchResult?.data?.videos ? (
             <>
-              <p className="text-sm text-slate-500 mb-6">
-                找到 <span className="font-medium text-slate-700">{searchResult.data.pagination.total}</span> 个结果
+              <p className="text-sm text-av-text-secondary mb-6">
+                找到 <span className="font-medium text-av-text-secondary">{searchResult.data.pagination.total}</span> 个结果
               </p>
               {searchResult.data.videos.length === 0 ? (
                 <div className="card p-12 text-center">
-                  <p className="text-slate-600">没有找到匹配的视频</p>
+                  <p className="text-av-text-secondary">没有找到匹配的视频</p>
                 </div>
               ) : (
                 <>
@@ -377,7 +377,7 @@ function SearchPage() {
                       >
                         上一页
                       </button>
-                      <span className="text-sm text-slate-500">
+                      <span className="text-sm text-av-text-secondary">
                         {page} / {searchResult.data.pagination.totalPages}
                       </span>
                       <button
@@ -394,19 +394,19 @@ function SearchPage() {
             </>
           ) : (
             <div className="card p-16 text-center">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-slate-50 flex items-center justify-center">
-                <svg className="w-8 h-8 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-av-bg-secondary flex items-center justify-center">
+                <svg className="w-8 h-8 text-av-text-tertiary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                   <circle cx="11" cy="11" r="8"/>
                   <path d="M21 21l-4.35-4.35" strokeLinecap="round"/>
                 </svg>
               </div>
-              <p className="text-slate-600">输入关键词或选择筛选条件开始搜索</p>
+              <p className="text-av-text-secondary">输入关键词或选择筛选条件开始搜索</p>
             </div>
           )}
 
           {/* Toast */}
           {showToast && (
-            <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-6 py-3 rounded-xl shadow-lg z-50 animate-fade-in">
+            <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-av-bg-elevated text-white px-6 py-3 rounded-xl shadow-av-lg z-av-toast animate-fade-in">
               {showToast}
             </div>
           )}

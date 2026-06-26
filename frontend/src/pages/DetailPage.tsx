@@ -100,7 +100,7 @@ function DetailPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-av-bg-primary">
         <div className="max-w-7xl mx-auto">
           <div className="flex justify-center items-center py-32">
             <Loading />
@@ -112,16 +112,16 @@ function DetailPage() {
 
   if (!video) {
     return (
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-av-bg-primary">
         <div className="max-w-7xl mx-auto">
           <div className="text-center py-32">
-            <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-slate-50 flex items-center justify-center">
-              <svg className="w-10 h-10 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-av-bg-tertiary flex items-center justify-center">
+              <svg className="w-10 h-10 text-av-text-tertiary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                 <circle cx="12" cy="12" r="10"/>
                 <path d="M12 8v4M12 16h.01" strokeLinecap="round"/>
               </svg>
             </div>
-            <p className="text-slate-600 mb-6">视频不存在或加载失败</p>
+            <p className="text-av-text-secondary mb-6">视频不存在或加载失败</p>
             <button
               className="btn-secondary px-6 py-2.5 text-sm"
               onClick={() => navigate('/')}
@@ -135,12 +135,12 @@ function DetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-av-bg-primary">
       <div className="max-w-7xl mx-auto">
         {/* Top Bar - Back and Delete */}
         <div className="flex justify-between items-center h-14 px-6 pt-4">
           <button
-            className="flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900 transition-colors"
+            className="flex items-center gap-2 text-sm text-av-text-secondary hover:text-av-text-primary transition-colors"
             onClick={() => navigate('/')}
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -149,7 +149,7 @@ function DetailPage() {
             返回列表
           </button>
           <button
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-av-state-error hover:bg-av-state-error/10 rounded-lg transition-colors"
             onClick={() => setShowDeleteModal(true)}
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -174,12 +174,12 @@ function DetailPage() {
             {/* AI Extracted Text */}
             <div className="card p-6">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-semibold text-slate-900">AI 提取文案</h2>
+                <h2 className="text-lg font-semibold text-av-text-primary">AI 提取文案</h2>
                 <div className="flex gap-2">
                   {video.status === 'done' && video.aiText && (
                     <button
                       onClick={handleCreateStoryboard}
-                      className="px-3 py-1.5 text-xs font-medium text-sky-700 bg-sky-50 rounded-lg hover:bg-sky-100 transition-colors"
+                      className="px-3 py-1.5 text-xs font-medium text-primary bg-primary/10 rounded-lg hover:bg-av-bg-hover transition-colors"
                     >
                       创建分镜脚本
                     </button>
@@ -203,7 +203,7 @@ function DetailPage() {
               </div>
 
               {video.status !== 'done' ? (
-                <div className="text-center py-12 text-sm text-slate-500">
+                <div className="text-center py-12 text-sm text-av-text-secondary">
                   {(() => {
                     switch (video.status) {
                       case 'processing':
@@ -216,8 +216,8 @@ function DetailPage() {
                   })()}
                 </div>
               ) : video.aiText ? (
-                <div className="p-4 bg-sky-50 rounded-xl border border-sky-100">
-                  <div className="text-sm leading-relaxed text-slate-700 whitespace-pre-wrap max-h-64 overflow-y-auto">
+                <div className="p-4 bg-av-bg-tertiary rounded-xl border border-av-border-subtle">
+                  <div className="text-sm leading-relaxed text-av-text-secondary whitespace-pre-wrap max-h-64 overflow-y-auto">
                     {video.aiText}
                   </div>
                 </div>
@@ -263,7 +263,7 @@ function DetailPage() {
       {showBackTop && (
         <button
           onClick={scrollToTop}
-          className="fixed bottom-8 right-8 w-12 h-12 bg-slate-900 hover:bg-slate-800 text-white rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-105 z-50"
+          className="fixed bottom-8 right-8 w-12 h-12 bg-av-bg-elevated hover:bg-av-bg-active text-av-text-primary rounded-full shadow-av-lg flex items-center justify-center transition-all hover:scale-105 z-av-tooltip"
           title="返回顶部"
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

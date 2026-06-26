@@ -101,7 +101,7 @@ function VideoBasicInfo({ video, videoId, onToast }: VideoBasicInfoProps) {
   return (
     <div className="sticky top-32 space-y-6">
       {/* Video */}
-      <div className="rounded-2xl overflow-hidden bg-slate-50 border border-slate-100 shadow-sm">
+      <div className="rounded-2xl overflow-hidden bg-av-bg-secondary border border-av-border-subtle shadow-av-sm">
         <video
           className="w-full"
           style={{ aspectRatio: '9/16' }}
@@ -113,10 +113,10 @@ function VideoBasicInfo({ video, videoId, onToast }: VideoBasicInfoProps) {
 
       {/* Info */}
       <div>
-        <h1 className="text-xl font-semibold text-slate-900 mb-2">{video.title}</h1>
-        <div className="flex items-center gap-3 text-sm text-slate-500">
+        <h1 className="text-xl font-semibold text-av-text-primary mb-2">{video.title}</h1>
+        <div className="flex items-center gap-3 text-sm text-av-text-secondary">
           <span>{formatDate(video.createdAt)}</span>
-          <span className="w-1 h-1 rounded-full bg-slate-300"/>
+          <span className="w-1 h-1 rounded-full bg-av-border-strong"/>
           <span>{video.uploader}</span>
         </div>
       </div>
@@ -125,8 +125,8 @@ function VideoBasicInfo({ video, videoId, onToast }: VideoBasicInfoProps) {
       {video.status !== 'done' && (
         <div className={`p-4 rounded-xl border ${
           video.status === 'processing'
-            ? 'bg-sky-50 border-sky-100 text-sky-700'
-            : 'bg-red-50 border-red-100 text-red-700'
+            ? 'bg-primary/10 border-av-border-subtle text-primary'
+            : 'bg-av-state-error/10 border-av-border-subtle text-av-state-error'
         }`}>
           <p className="text-sm">{getStatusText()}</p>
         </div>
@@ -134,16 +134,16 @@ function VideoBasicInfo({ video, videoId, onToast }: VideoBasicInfoProps) {
 
       {/* Material Management */}
       <div className="card p-5">
-        <h2 className="text-base font-semibold text-slate-900 mb-4">素材管理</h2>
+        <h2 className="text-base font-semibold text-av-text-primary mb-4">素材管理</h2>
 
         <div className="space-y-4">
           {/* Collections */}
           <div>
             <div className="flex items-center justify-between mb-3">
-              <span className="text-sm font-medium text-slate-700">收藏夹</span>
+              <span className="text-sm font-medium text-av-text-secondary">收藏夹</span>
               <button
                 onClick={() => setShowCollectionSelector(!showCollectionSelector)}
-                className="text-sm text-sky-600 hover:text-sky-700 font-medium"
+                className="text-sm text-primary hover:text-primary-hover font-medium"
               >
                 {showCollectionSelector ? '取消' : '+ 添加'}
               </button>
@@ -152,7 +152,7 @@ function VideoBasicInfo({ video, videoId, onToast }: VideoBasicInfoProps) {
             {videoCollectionsData?.data && (
               <div className="flex flex-wrap gap-2 mb-3">
                 {videoCollectionsData.data.length === 0 ? (
-                  <span className="text-sm text-slate-400">未添加到任何收藏夹</span>
+                  <span className="text-sm text-av-text-tertiary">未添加到任何收藏夹</span>
                 ) : (
                   videoCollectionsData.data.map((col: Collection) => (
                     <div key={col.id} className="group inline-flex items-center gap-1.5">
@@ -161,7 +161,7 @@ function VideoBasicInfo({ video, videoId, onToast }: VideoBasicInfoProps) {
                       </span>
                       <button
                         onClick={() => handleRemoveFromCollection(col.id)}
-                        className="text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="text-av-text-tertiary hover:text-av-state-error opacity-0 group-hover:opacity-100 transition-opacity"
                       >
                         <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                           <path d="M18 6L6 18M6 6l12 12" strokeLinecap="round"/>

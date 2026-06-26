@@ -47,3 +47,19 @@ backend/ai-short-video-backend
 asr/.venv/
 asr/__pycache__/
 asr/.env
+
+# FRP tooling (binaries, do not commit)
+frp_*/
+frp_*.tar.gz
+
+# Competition materials (unrelated to this project)
+trae-ai-creativity-competition/
+
+# CodeGraph MCP index (runtime artifact)
+.codegraph/
+
+# Background service pid files (runtime artifact)
+*.pids
+
+# Stray design spec duplicate (canonical copy lives in design-system/)
+/DESIGN_SPEC.md

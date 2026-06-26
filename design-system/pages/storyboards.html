@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>脚本工作台 - AI短视频脚本平台</title>
+    <style id="theme-vars">
+/* ========================================
+   AI短视频脚本平台 — 科技感暗色主题
+   Retro-futuristic / AI Creative Tool
+   ======================================== */
+
+:root {
+  /* ── Color System ── */
+  --color-bg-primary: #08090d;
+  --color-bg-secondary: #0f1117;
+  --color-bg-tertiary: #161822;
+  --color-bg-elevated: #1c1f2e;
+  --color-bg-hover: #232738;
+  --color-bg-active: #2a2f42;
+
+  --color-border-default: #1e2233;
+  --color-border-subtle: #181b28;
+  --color-border-strong: #2a2f45;
+  --color-border-focus: #06d6a0;
+
+  --color-text-primary: #e8ecf4;
+  --color-text-secondary: #8892a8;
+  --color-text-tertiary: #5a6478;
+  --color-text-inverse: #08090d;
+
+  /* Brand Primary — Cyan/Mint */
+  --color-primary: #06d6a0;
+  --color-primary-hover: #34e0b5;
+  --color-primary-muted: rgba(6, 214, 160, 0.10);
+  --color-primary-subtle: rgba(6, 214, 160, 0.05);
+
+  /* Secondary Accent — Electric Blue */
+  --color-accent: #4cc9f0;
+  --color-accent-muted: rgba(76, 201, 240, 0.10);
+
+  /* State Colors */
+  --state-success: #06d6a0;
+  --state-warning: #ffd166;
+  --state-error: #ef476f;
+  --state-info: #4cc9f0;
+
+  /* ── Typography ── */
+  --font-display: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.8125rem;
+  --text-base: 0.875rem;
+  --text-lg: 1rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 2rem;
+
+  --leading-tight: 1.25;
+  --leading-normal: 1.5;
+
+  --tracking-tight: -0.02em;
+  --tracking-normal: 0;
+
+  --weight-normal: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  /* ── Spacing ── */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  /* ── Radius ── */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
+  --radius-full: 9999px;
+
+  /* ── Shadows (border-first for static; deeper for floating) ── */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.05);
+  --shadow-floating: 0 12px 40px rgba(0, 0, 0, 0.4);
+
+  /* Brand glow (not a standard shadow — for primary emphasis only) */
+  --shadow-glow: 0 0 20px rgba(6, 214, 160, 0.15);
+  --shadow-glow-strong: 0 0 40px rgba(6, 214, 160, 0.25);
+  --shadow-glow-accent: 0 0 20px rgba(76, 201, 240, 0.15);
+
+  /* ── Transitions ── */
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --duration: 200ms;
+  --duration-slow: 300ms;
+
+  /* ── Z-index ── */
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-modal: 300;
+  --z-toast: 400;
+}
+
+/* ── Dark mode defaults ── */
+html.dark {
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-primary);
+}
+
+body {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  letter-spacing: var(--tracking-normal);
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Typography ── */
+.heading-xl { font-family: var(--font-display); font-size: var(--text-3xl); font-weight: var(--weight-bold); line-height: var(--leading-tight); letter-spacing: var(--tracking-tight); }
+.heading-lg { font-family: var(--font-display); font-size: var(--text-2xl); font-weight: var(--weight-semibold); line-height: var(--leading-tight); letter-spacing: var(--tracking-tight); }
+.heading-md { font-family: var(--font-display); font-size: var(--text-xl); font-weight: var(--weight-semibold); line-height: var(--leading-tight); }
+.heading-sm { font-family: var(--font-display); font-size: var(--text-lg); font-weight: var(--weight-medium); line-height: var(--leading-tight); }
+.mono { font-family: var(--font-mono); font-size: var(--text-sm); }
+
+/* ── Surface & Card ── */
+.surface { background-color: var(--color-bg-secondary); border: 1px solid var(--color-border-subtle); border-radius: var(--radius-lg); }
+.surface-elevated { background-color: var(--color-bg-tertiary); border: 1px solid var(--color-border-default); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); }
+
+/* ── Gradient accents ── */
+.gradient-primary { background: linear-gradient(135deg, var(--color-primary), var(--color-accent)); }
+.gradient-text { background: linear-gradient(135deg, var(--color-primary), var(--color-accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+/* ── Glow effects ── */
+.glow-primary { box-shadow: var(--shadow-glow); }
+.glow-strong { box-shadow: var(--shadow-glow-strong); }
+.glow-accent { box-shadow: var(--shadow-glow-accent); }
+
+/* ── Neon border effect ── */
+.neon-border { border: 1px solid rgba(6, 214, 160, 0.2); box-shadow: inset 0 0 20px rgba(6, 214, 160, 0.03); }
+.neon-border-accent { border: 1px solid rgba(76, 201, 240, 0.2); box-shadow: inset 0 0 20px rgba(76, 201, 240, 0.03); }
+
+/* ── Grid background pattern ── */
+.grid-bg {
+  background-image:
+    linear-gradient(rgba(6, 214, 160, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(6, 214, 160, 0.03) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--color-border-strong); border-radius: var(--radius-full); }
+::-webkit-scrollbar-thumb:hover { background: var(--color-text-tertiary); }
+
+/* ── Animations ── */
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes scaleIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+@keyframes glowPulse { 0%, 100% { box-shadow: 0 0 15px rgba(6, 214, 160, 0.1); } 50% { box-shadow: 0 0 30px rgba(6, 214, 160, 0.2); } }
+@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+@keyframes gridMove { 0% { background-position: 0 0; } 100% { background-position: 60px 60px; } }
+@keyframes scanline { 0% { transform: translateY(-100%); } 100% { transform: translateY(100vh); } }
+
+.animate-fade-in { animation: fadeIn var(--duration) var(--ease); }
+.animate-slide-up { animation: slideUp var(--duration-slow) var(--ease); }
+.animate-scale-in { animation: scaleIn var(--duration-slow) var(--ease); }
+.animate-glow-pulse { animation: glowPulse 3s ease-in-out infinite; }
+.animate-float { animation: float 4s ease-in-out infinite; }
+.animate-grid-move { animation: gridMove 20s linear infinite; }
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-primary: var(--color-primary);
+    --color-accent: var(--color-accent);
+  }
+  @layer base {
+    body { background: var(--color-bg-primary); color: var(--color-text-primary); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased" style="font-family: var(--font-body);">
+
+  <!-- ═══ Top Navbar ═══ -->
+  <nav class="sticky top-0 z-40 flex items-center justify-between px-8 h-16"
+       style="background-color: rgba(15, 17, 23, 0.8); backdrop-filter: blur(20px); border-bottom: 1px solid var(--color-border-subtle);">
+    <!-- Left: Logo + Nav -->
+    <div class="flex items-center gap-8">
+      <!-- Logo -->
+      <a href="#" class="flex items-center gap-2" style="text-decoration: none;">
+        <div class="w-8 h-8 rounded-lg flex items-center justify-center gradient-primary glow-primary">
+          <i data-lucide="play" class="w-4 h-4" style="color: var(--color-text-inverse);"></i>
+        </div>
+        <span class="heading-sm gradient-text" style="font-size: var(--text-lg);">AI脚本</span>
+      </a>
+      <!-- Nav Pills -->
+      <div class="flex items-center gap-1 p-1 rounded-full" style="background-color: var(--color-bg-tertiary);">
+        <a href="square.html" data-dom-id="nav-square"
+           class="px-4 py-1.5 rounded-full text-sm font-medium transition-colors duration-200"
+           style="color: var(--color-text-secondary); text-decoration: none;"
+           onmouseover="this.style.color='var(--color-text-primary)';this.style.backgroundColor='var(--color-bg-hover)'"
+           onmouseout="this.style.color='var(--color-text-secondary)';this.style.backgroundColor='transparent'">
+          广场
+        </a>
+        <a href="library.html"
+           class="px-4 py-1.5 rounded-full text-sm font-medium transition-colors duration-200"
+           style="color: var(--color-text-secondary); text-decoration: none;"
+           onmouseover="this.style.color='var(--color-text-primary)';this.style.backgroundColor='var(--color-bg-hover)'"
+           onmouseout="this.style.color='var(--color-text-secondary)';this.style.backgroundColor='transparent'">
+          素材库
+        </a>
+        <a href="storyboards.html"
+           class="px-4 py-1.5 rounded-full text-sm font-medium nav-pill-active"
+           style="color: var(--color-text-inverse); background: linear-gradient(135deg, var(--color-primary), var(--color-accent)); text-decoration: none;">
+          脚本
+        </a>
+      </div>
+    </div>
+    <!-- Right: Actions -->
+    <div class="flex items-center gap-4">
+      <!-- Credits Badge -->
+      <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium"
+           style="background-color: var(--color-primary-muted); color: var(--color-primary); border: 1px solid rgba(6, 214, 160, 0.15);">
+        <i data-lucide="zap" class="w-3.5 h-3.5"></i>
+        <span>1,280 积分</span>
+      </div>
+      <!-- Action Button -->
+      <button class="ghost-btn flex items-center justify-center w-9 h-9 rounded-lg"
+              style="color: var(--color-text-secondary); background: transparent; border: none; cursor: pointer;">
+        <i data-lucide="bell" class="w-4.5 h-4.5"></i>
+      </button>
+      <!-- User Avatar -->
+      <button class="flex items-center justify-center w-8 h-8 rounded-full overflow-hidden"
+              style="background: linear-gradient(135deg, var(--color-primary), var(--color-accent)); border: none; cursor: pointer;">
+        <span class="text-xs font-semibold" style="color: var(--color-text-inverse);">U</span>
+      </button>
+      <!-- Logout -->
+      <button class="ghost-btn flex items-center justify-center w-9 h-9 rounded-lg"
+              style="color: var(--color-text-tertiary); background: transparent; border: none; cursor: pointer;"
+              title="退出登录">
+        <i data-lucide="log-out" class="w-4 h-4"></i>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ═══ Main Content ═══ -->
+  <main class="max-w-5xl mx-auto px-8 py-10">
+
+    <!-- Page Header -->
+    <div class="flex items-center justify-between mb-8">
+      <div>
+        <h1 class="heading-lg gradient-text" style="margin-bottom: var(--space-2);">脚本工作台</h1>
+        <p class="text-sm" style="color: var(--color-text-secondary);">管理和编辑你的AI短视频脚本</p>
+      </div>
+      <button class="btn-gradient-primary flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold"
+              style="border: none; cursor: pointer;">
+        <i data-lucide="plus" class="w-4 h-4"></i>
+        <span>新建脚本</span>
+      </button>
+    </div>
+
+    <!-- Storyboard List -->
+    <div class="flex flex-col gap-4">
+
+      <!-- Card 1: 已完成 -->
+      <div class="storyboard-card rounded-xl p-5 flex items-center justify-between"
+           style="background-color: var(--color-bg-secondary); border: 1px solid var(--color-border-subtle);">
+        <div class="flex items-center gap-4 min-w-0">
+          <!-- Status Dot -->
+          <div class="w-3 h-3 rounded-full flex-shrink-0 status-glow"
+               style="background-color: var(--state-success);"></div>
+          <!-- Title + Description -->
+          <div class="min-w-0">
+            <h3 class="text-sm font-semibold truncate" style="color: var(--color-text-primary);">美妆种草脚本 #12</h3>
+            <p class="text-sm truncate mt-0.5" style="color: var(--color-text-secondary);">春季新品口红推荐，主打持久不脱色卖点，适合小红书投放</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-3 flex-shrink-0 ml-4">
+          <!-- Tags -->
+          <div class="flex items-center gap-1.5">
+            <span class="tag-pill px-2 py-0.5 rounded-md text-xs">美妆</span>
+            <span class="tag-pill px-2 py-0.5 rounded-md text-xs">种草</span>
+          </div>
+          <!-- Meta -->
+          <span class="text-xs" style="color: var(--color-text-tertiary);">创建于 3天前</span>
+          <!-- Video Count -->
+          <div class="flex items-center gap-1 text-xs" style="color: var(--color-text-secondary);">
+            <i data-lucide="video" class="w-3.5 h-3.5"></i>
+            <span>3个视频</span>
+          </div>
+          <!-- Actions (hover) -->
+          <div class="card-actions flex items-center gap-1">
+            <button class="ghost-btn px-3 py-1.5 rounded-lg text-xs font-medium"
+                    style="color: var(--color-text-secondary); background: transparent; border: 1px solid var(--color-border-subtle); cursor: pointer;">
+              编辑
+            </button>
+            <button class="ghost-btn px-3 py-1.5 rounded-lg text-xs font-medium"
+                    style="color: var(--state-error); background: transparent; border: 1px solid var(--color-border-subtle); cursor: pointer;">
+              删除
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 2: 处理中 -->
+      <div class="storyboard-card rounded-xl p-5 flex items-center justify-between"
+           style="background-color: var(--color-bg-secondary); border: 1px solid var(--color-border-subtle);">
+        <div class="flex items-center gap-4 min-w-0">
+          <!-- Status Dot (pulsing) -->
+          <div class="w-3 h-3 rounded-full flex-shrink-0 animate-pulse"
+               style="background-color: var(--color-accent); box-shadow: 0 0 8px rgba(76, 201, 240, 0.4);"></div>
+          <!-- Title + Description -->
+          <div class="min-w-0">
+            <h3 class="text-sm font-semibold truncate" style="color: var(--color-text-primary);">数码开箱脚本 #8</h3>
+            <p class="text-sm truncate mt-0.5" style="color: var(--color-text-secondary);">最新旗舰手机开箱评测，涵盖外观、性能、拍照三大维度</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-3 flex-shrink-0 ml-4">
+          <div class="flex items-center gap-1.5">
+            <span class="tag-pill px-2 py-0.5 rounded-md text-xs">数码</span>
+            <span class="tag-pill px-2 py-0.5 rounded-md text-xs">开箱</span>
+            <span class="tag-pill px-2 py-0.5 rounded-md text-xs">评测</span>
+          </div>
+          <span class="text-xs" style="color: var(--color-text-tertiary);">创建于 1天前</span>
+          <div class="flex items-center gap-1 text-xs" style="color: var(--color-text-secondary);">
+            <i data-lucide="video" class="w-3.5 h-3.5"></i>
+            <span>1个视频</span>
+          </div>
+          <div class="card-actions flex items-center gap-1">
+            <button class="ghost-btn px-3 py-1.5 rounded-lg text-xs font-medium"
+                    style="color: var(--color-text-secondary); background: transparent; border: 1px solid var(--color-border-subtle); cursor: pointer;">
+              编辑
+            </button>
+            <button class="ghost-btn px-3 py-1.5 rounded-lg text-xs font-medium"
+                    style="color: var(--state-error); background: transparent; border: 1px solid var(--color-border-subtle); cursor: pointer;">
+              删除
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 3: 已完成 -->
+      <div class="storyboard-card rounded-xl p-5 flex items-center justify-between"
+           style="background-color: var(--color-bg-secondary); border: 1px solid var(--color-border-subtle);">
+        <div class="flex items-center gap-4 min-w-0">
+          <div class="w-3 h-3 rounded-full flex-shrink-0 status-glow"
+               style="background-color: var(--state-success);"></div>
+          <div class="min-w-0">
+            <h3 class="text-sm font-semibold truncate" style="color: var(--color-text-primary);">生活日常脚本 #5</h3>
+            <p class="text-sm truncate mt-0.5" style="color: var(--color-text-secondary);">周末居家vlog模板，记录独居生活的温馨日常片段</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-3 flex-shrink-0 ml-4">
+          <div class="flex items-center gap-1.5">
+            <span class="tag-pill px-2 py-0.5 rounded-md text-xs">日常</span>
+            <span class="tag-pill px-2 py-0.5 rounded-md text-xs">vlog</span>
+          </div>
+          <span class="text-xs" style="color: var(--color-text-tertiary);">创建于 5天前</span>
+          <div class="flex items-center gap-1 text-xs" style="color: var(--color-text-secondary);">
+            <i data-lucide="video" class="w-3.5 h-3.5"></i>
+            <span>2个视频</span>
+          </div>
+          <div class="card-actions flex items-center gap-1">
+            <button class="ghost-btn px-3 py-1.5 rounded-lg text-xs font-medium"
+                    style="color: var(--color-text-secondary); background: transparent; border: 1px solid var(--color-border-subtle); cursor: pointer;">
+              编辑
+            </button>
+            <button class="ghost-btn px-3 py-1.5 rounded-lg text-xs font-medium"
+                    style="color: var(--state-error); background: transparent; border: 1px solid var(--color-border-subtle); cursor: pointer;">
+              删除
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 4: 草稿 -->
+      <div class="storyboard-card rounded-xl p-5 flex items-center justify-between"
+           style="background-color: var(--color-bg-secondary); border: 1px solid var(--color-border-subtle);">
+        <div class="flex items-center gap-4 min-w-0">
+          <div class="w-3 h-3 rounded-full flex-shrink-0"
+               style="background-color: var(--color-text-tertiary);"></div>
+          <div class="min-w-0">
+            <h3 class="text-sm font-semibold truncate" style="color: var(--color-text-primary);">旅行vlog脚本 #3</h3>
+            <p class="text-sm truncate mt-0.5" style="color: var(--color-text-secondary);">云南大理五日行程规划，涵盖景点打卡与美食推荐</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-3 flex-shrink-0 ml-4">
+          <div class="flex items-center gap-1.5">
+            <span class="tag-pill px-2 py-0.5 rounded-md text-xs">旅行</span>
+            <span class="tag-pill px-2 py-0.5 rounded-md text-xs">vlog</span>
+          </div>
+          <span class="text-xs" style="color: var(--color-text-tertiary);">创建于 1周前</span>
+          <div class="flex items-center gap-1 text-xs" style="color: var(--color-text-secondary);">
+            <i data-lucide="video" class="w-3.5 h-3.5"></i>
+            <span>0个视频</span>
+          </div>
+          <div class="card-actions flex items-center gap-1">
+            <button class="ghost-btn px-3 py-1.5 rounded-lg text-xs font-medium"
+                    style="color: var(--color-text-secondary); background: transparent; border: 1px solid var(--color-border-subtle); cursor: pointer;">
+              编辑
+            </button>
+            <button class="ghost-btn px-3 py-1.5 rounded-lg text-xs font-medium"
+                    style="color: var(--state-error); background: transparent; border: 1px solid var(--color-border-subtle); cursor: pointer;">
+              删除
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 5: 处理中 -->
+      <div class="storyboard-card rounded-xl p-5 flex items-center justify-between"
+           style="background-color: var(--color-bg-secondary); border: 1px solid var(--color-border-subtle);">
+        <div class="flex items-center gap-4 min-w-0">
+          <div class="w-3 h-3 rounded-full flex-shrink-0 animate-pulse"
+               style="background-color: var(--color-accent); box-shadow: 0 0 8px rgba(76, 201, 240, 0.4);"></div>
+          <div class="min-w-0">
+            <h3 class="text-sm font-semibold truncate" style="color: var(--color-text-primary);">美食探店脚本 #1</h3>
+            <p class="text-sm truncate mt-0.5" style="color: var(--color-text-secondary);">成都街头小吃探店合集，聚焦火锅、串串和甜品三大品类</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-3 flex-shrink-0 ml-4">
+          <div class="flex items-center gap-1.5">
+            <span class="tag-pill px-2 py-0.5 rounded-md text-xs">美食</span>
+            <span class="tag-pill px-2 py-0.5 rounded-md text-xs">探店</span>
+          </div>
+          <span class="text-xs" style="color: var(--color-text-tertiary);">创建于 2天前</span>
+          <div class="flex items-center gap-1 text-xs" style="color: var(--color-text-secondary);">
+            <i data-lucide="video" class="w-3.5 h-3.5"></i>
+            <span>1个视频</span>
+          </div>
+          <div class="card-actions flex items-center gap-1">
+            <button class="ghost-btn px-3 py-1.5 rounded-lg text-xs font-medium"
+                    style="color: var(--color-text-secondary); background: transparent; border: 1px solid var(--color-border-subtle); cursor: pointer;">
+              编辑
+            </button>
+            <button class="ghost-btn px-3 py-1.5 rounded-lg text-xs font-medium"
+                    style="color: var(--state-error); background: transparent; border: 1px solid var(--color-border-subtle); cursor: pointer;">
+              删除
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Empty State CTA -->
+    <div class="mt-10 rounded-xl p-8 flex flex-col items-center text-center"
+         style="background-color: rgba(22, 24, 34, 0.5); border: 1px solid var(--color-border-subtle);">
+      <div class="w-12 h-12 rounded-xl flex items-center justify-center mb-4"
+           style="background-color: var(--color-primary-muted);">
+        <i data-lucide="file-plus-2" class="w-6 h-6" style="color: var(--color-primary);"></i>
+      </div>
+      <p class="text-sm font-medium mb-1" style="color: var(--color-text-secondary);">还没有脚本？创建你的第一个AI短视频脚本</p>
+      <button class="btn-gradient-primary px-5 py-2 rounded-lg text-sm font-semibold mt-3"
+              style="border: none; cursor: pointer;">
+        开始创建
+      </button>
+    </div>
+
+  </main>
+
+  <script>lucide.createIcons();</script>
+
+    <style>
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    [data-icon] {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      -webkit-mask-size: contain;
+      mask-size: contain;
+      -webkit-mask-repeat: no-repeat;
+      mask-repeat: no-repeat;
+      -webkit-mask-position: center;
+      mask-position: center;
+      background-color: currentColor;
+    }
+
+    /* Status glow pulse for completed items */
+    @keyframes statusGlow {
+      0%, 100% { box-shadow: 0 0 6px rgba(6, 214, 160, 0.3); }
+      50% { box-shadow: 0 0 14px rgba(6, 214, 160, 0.5); }
+    }
+    .status-glow {
+      animation: statusGlow 2.5s ease-in-out infinite;
+    }
+
+    /* Storyboard card hover */
+    .storyboard-card {
+      transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1),
+                  border-color 200ms cubic-bezier(0.4, 0, 0.2, 1),
+                  box-shadow 200ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .storyboard-card:hover {
+      transform: translateY(-1px);
+      border-color: rgba(6, 214, 160, 0.2);
+      box-shadow: inset 0 0 20px rgba(6, 214, 160, 0.03), 0 0 20px rgba(6, 214, 160, 0.06);
+    }
+    .storyboard-card .card-actions {
+      opacity: 0;
+      transition: opacity 160ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .storyboard-card:hover .card-actions {
+      opacity: 1;
+    }
+
+    /* Ghost button */
+    .ghost-btn {
+      transition: color 160ms cubic-bezier(0.4, 0, 0.2, 1),
+                  background-color 160ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .ghost-btn:hover {
+      color: var(--color-text-primary);
+      background-color: var(--color-bg-hover);
+    }
+
+    /* Nav pill active glow */
+    .nav-pill-active {
+      box-shadow: 0 0 12px rgba(6, 214, 160, 0.15);
+    }
+
+    /* Gradient primary button */
+    .btn-gradient-primary {
+      background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+      color: var(--color-text-inverse);
+      transition: box-shadow 200ms cubic-bezier(0.4, 0, 0.2, 1),
+                  transform 200ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .btn-gradient-primary:hover {
+      box-shadow: 0 0 24px rgba(6, 214, 160, 0.25);
+      transform: translateY(-1px);
+    }
+    .btn-gradient-primary:active {
+      transform: translateY(0);
+    }
+
+    /* Tag pill */
+    .tag-pill {
+      background-color: var(--color-bg-tertiary);
+      color: var(--color-text-secondary);
+      border: 1px solid var(--color-border-subtle);
+      transition: background-color 160ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .tag-pill:hover {
+      background-color: var(--color-bg-hover);
+    }
+
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      .status-glow { animation: none; }
+      .storyboard-card { transition: none; }
+      .btn-gradient-primary { transition: none; }
+    }
+  </style>
+</body>
+</html>

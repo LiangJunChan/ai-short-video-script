@@ -87,17 +87,17 @@ function CollectionDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-white flex justify-center items-center py-32">
-        <div className="text-slate-500">加载中...</div>
+      <div className="min-h-screen bg-av-bg-primary flex justify-center items-center py-32">
+        <div className="text-av-text-tertiary">加载中...</div>
       </div>
     )
   }
 
   if (!data?.data?.collection) {
     return (
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-av-bg-primary">
         <div className="max-w-7xl mx-auto text-center py-32">
-          <p className="text-slate-600 mb-6">收藏夹不存在</p>
+          <p className="text-av-text-secondary mb-6">收藏夹不存在</p>
           <button onClick={() => navigate('/library')} className="btn-secondary px-6 py-2.5 text-sm">
             返回素材库
           </button>
@@ -108,7 +108,7 @@ function CollectionDetailPage() {
 
   const { collection, videos, pagination } = data.data
   const doneVideos = videos.filter(v => v.status === 'done')
-  const hasSelectedDone = Array.from(selectedIds).some(id => 
+  const hasSelectedDone = Array.from(selectedIds).some(id =>
     videos.find(v => v.id === id)?.status === 'done'
   )
 
@@ -135,12 +135,12 @@ function CollectionDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-av-bg-primary">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="border-b border-slate-100">
+        <div className="border-b border-av-border-subtle">
           <div className="h-16 px-6 flex items-center gap-4">
-            <button onClick={() => navigate('/library')} className="text-slate-600 hover:text-slate-900 transition-colors">
+            <button onClick={() => navigate('/library')} className="text-av-text-secondary hover:text-av-text-primary transition-colors">
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M19 12H5M12 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
@@ -148,8 +148,8 @@ function CollectionDetailPage() {
             <div className="flex items-center gap-3">
               {collection.icon && <span className="text-2xl">{collection.icon}</span>}
               <div>
-                <h1 className="text-xl font-semibold text-slate-900">{collection.name}</h1>
-                <p className="text-sm text-slate-500">{collection.videoCount} 个视频</p>
+                <h1 className="text-xl font-semibold text-av-text-primary">{collection.name}</h1>
+                <p className="text-sm text-av-text-secondary">{collection.videoCount} 个视频</p>
               </div>
             </div>
           </div>
@@ -157,7 +157,7 @@ function CollectionDetailPage() {
 
         {/* Batch Action Bar */}
         {doneVideos.length > 0 && (
-          <div className="flex items-center justify-between mx-6 my-4 p-4 bg-sky-50 border border-sky-100 rounded-xl">
+          <div className="flex items-center justify-between mx-6 my-4 p-4 bg-primary/10 border border-av-border-subtle rounded-xl">
             <div className="flex items-center gap-4">
               {!selectMode ? (
                 <button
@@ -168,18 +168,18 @@ function CollectionDetailPage() {
                 </button>
               ) : (
                 <>
-                  <span className="text-sm text-slate-600">
+                  <span className="text-sm text-av-text-secondary">
                     已选择 {selectedIds.size} 个视频
                   </span>
                   <button
                     onClick={selectAll}
-                    className="px-3 py-1.5 text-sm text-sky-600 hover:bg-sky-100 rounded-lg transition-colors"
+                    className="px-3 py-1.5 text-sm text-primary hover:bg-av-bg-hover rounded-lg transition-colors"
                   >
                     全选本页
                   </button>
                   <button
                     onClick={clearSelection}
-                    className="px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                    className="px-3 py-1.5 text-sm text-av-text-secondary hover:bg-av-bg-hover rounded-lg transition-colors"
                   >
                     取消
                   </button>
@@ -192,14 +192,14 @@ function CollectionDetailPage() {
                 <button
                   onClick={() => setShowBatchRemoveConfirm(true)}
                   disabled={isLoading}
-                  className="px-4 py-2 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors disabled:opacity-50"
+                  className="px-4 py-2 text-sm font-medium text-av-state-error bg-av-state-error/10 hover:bg-av-state-error/20 rounded-lg transition-colors disabled:opacity-50"
                 >
                   {isLoading ? '移除中...' : `移出收藏夹 (${selectedIds.size}个)`}
                 </button>
                 <button
                   onClick={handleExport}
                   disabled={isExporting || !hasSelectedDone}
-                  className="btn-primary px-4 py-2 text-sm shadow-sm disabled:opacity-50"
+                  className="btn-primary px-4 py-2 text-sm disabled:opacity-50"
                 >
                   {isExporting ? '导出中...' : `导出Markdown (${selectedIds.size}个)`}
                 </button>
@@ -212,7 +212,7 @@ function CollectionDetailPage() {
         <div className="py-4 px-6">
           {videos.length === 0 ? (
             <div className="card p-12 text-center">
-              <p className="text-slate-600">收藏夹还没有视频</p>
+              <p className="text-av-text-secondary">收藏夹还没有视频</p>
             </div>
           ) : (
             <>
@@ -228,7 +228,7 @@ function CollectionDetailPage() {
                     />
                     <button
                       onClick={() => setShowRemoveConfirm({show: true, videoId: video.id})}
-                      className="absolute top-3 right-3 z-10 w-8 h-8 bg-white/90 backdrop-blur-sm hover:bg-red-50 hover:text-red-600 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shadow-sm text-slate-400"
+                      className="absolute top-3 right-3 z-10 w-8 h-8 bg-av-bg-elevated/90 backdrop-blur-sm hover:bg-av-state-error/10 hover:text-av-state-error rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shadow-av-sm text-av-text-tertiary"
                     >
                       <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                         <path d="M18 6L6 18M6 6l12 12" strokeLinecap="round"/>
@@ -247,7 +247,7 @@ function CollectionDetailPage() {
                   >
                     上一页
                   </button>
-                  <span className="text-sm text-slate-500">{page} / {pagination.totalPages}</span>
+                  <span className="text-sm text-av-text-secondary">{page} / {pagination.totalPages}</span>
                   <button
                     onClick={() => setPage(p => Math.min(pagination.totalPages, p + 1))}
                     disabled={page === pagination.totalPages}
@@ -263,7 +263,7 @@ function CollectionDetailPage() {
 
         {/* Toast */}
         {showToast && (
-          <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-6 py-3 rounded-xl shadow-lg z-50 animate-fade-in">
+          <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-av-bg-elevated text-av-text-primary px-6 py-3 rounded-xl shadow-av-lg z-av-toast animate-fade-in">
             {showToast}
           </div>
         )}

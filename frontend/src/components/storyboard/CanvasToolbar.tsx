@@ -14,40 +14,40 @@ export default function CanvasToolbar({
   name, onNameChange, onSave, onAISplit, onTemplate, onExport, onExecute, onBack, isSaving,
 }: CanvasToolbarProps) {
   return (
-    <div className="h-12 bg-white border-b border-slate-200 flex items-center justify-between px-4">
+    <div className="h-12 bg-av-bg-secondary border-b border-av-border-subtle flex items-center justify-between px-4">
       <div className="flex items-center gap-3">
         <button
           onClick={onBack}
-          className="text-sm text-slate-500 hover:text-slate-900 transition-colors"
+          className="text-sm text-av-text-secondary hover:text-av-text-primary transition-colors"
         >
           ← 返回
         </button>
-        <span className="text-slate-300">|</span>
+        <span className="text-av-text-tertiary">|</span>
         <input
           type="text"
           value={name}
           onChange={(e) => onNameChange(e.target.value)}
-          className="text-sm font-medium text-slate-900 bg-transparent border-none outline-none max-w-[200px]"
+          className="text-sm font-medium text-av-text-primary bg-transparent border-none outline-none max-w-[200px]"
           placeholder="画布名称"
         />
       </div>
       <div className="flex items-center gap-2">
-        <button onClick={onExecute} className="px-3 py-1.5 text-xs font-medium text-green-700 bg-green-50 rounded-lg hover:bg-green-100">
+        <button onClick={onExecute} className="px-3 py-1.5 text-xs font-medium text-av-state-success bg-av-state-success/10 rounded-lg hover:bg-av-state-success/20">
           ▶ 执行
         </button>
-        <button onClick={onAISplit} className="px-3 py-1.5 text-xs font-medium text-purple-700 bg-purple-50 rounded-lg hover:bg-purple-100">
+        <button onClick={onAISplit} className="px-3 py-1.5 text-xs font-medium text-purple-400 bg-purple-500/10 rounded-lg hover:bg-purple-500/20">
           AI 分镜
         </button>
-        <button onClick={onTemplate} className="px-3 py-1.5 text-xs font-medium text-amber-700 bg-amber-50 rounded-lg hover:bg-amber-100">
+        <button onClick={onTemplate} className="px-3 py-1.5 text-xs font-medium text-av-state-warning bg-av-state-warning/10 rounded-lg hover:bg-av-state-warning/20">
           模板
         </button>
-        <button onClick={onExport} className="px-3 py-1.5 text-xs font-medium text-slate-700 bg-slate-50 rounded-lg hover:bg-slate-100">
+        <button onClick={onExport} className="px-3 py-1.5 text-xs font-medium text-av-text-secondary bg-av-bg-tertiary rounded-lg hover:bg-av-bg-hover">
           导出
         </button>
         <button
           onClick={onSave}
           disabled={isSaving}
-          className="px-3 py-1.5 text-xs font-medium text-white bg-sky-500 rounded-lg hover:bg-sky-600 disabled:opacity-50"
+          className="btn-primary px-3 py-1.5 text-xs font-medium disabled:opacity-50"
         >
           {isSaving ? '保存中...' : '保存'}
         </button>

@@ -20,6 +20,7 @@ import AITextNode from './nodes/AITextNode'
 import AIImageNode from './nodes/AIImageNode'
 import AISplitNode from './nodes/AISplitNode'
 import TTSNode from './nodes/TTSNode'
+import AIVideoNode from './nodes/AIVideoNode'
 
 interface CanvasProps {
   initialNodes: Node[]
@@ -52,6 +53,7 @@ export default function Canvas({
     ai_text: AITextNode,
     ai_image: AIImageNode,
     ai_split: AISplitNode,
+    ai_video: AIVideoNode,
     tts: TTSNode,
   }), [])
 
@@ -70,12 +72,12 @@ export default function Canvas({
   const onNodesChangeWrapper = useCallback(
     (changes: NodeChange[]) => {
       handleNodesChange(changes)
-      setTimeout(() => {
-        setNodes((nds) => {
-          onNodesChange(nds)
-          return nds
-        })
-      }, 100)
+      // 立即同步给父组件，避免 100ms 延迟导致父组件的 setNodes 还没生效
+      // 就触发了 batchUpdate，把还没同步过来的新节点/边丢失
+      setNodes((nds) => {
+        onNodesChange(nds)
+        return nds
+      })
     },
     [handleNodesChange, onNodesChange, setNodes]
   )
@@ -83,21 +85,26 @@ export default function Canvas({
   const onEdgesChangeWrapper = useCallback(
     (changes: EdgeChange[]) => {
       handleEdgesChange(changes)
-      setTimeout(() => {
-        setEdges((eds) => {
-          onEdgesChange(eds)
-          return eds
-        })
-      }, 100)
+      // 立即同步给父组件，避免延迟导致 batchUpdate 用过期 edges 重建数据库
+      setEdges((eds) => {
+        onEdgesChange(eds)
+        return eds
+      })
     },
     [handleEdgesChange, onEdgesChange, setEdges]
   )
 
   const onConnect = useCallback(
     (connection: Connection) => {
-      setEdges((eds) => addEdge({ ...connection, style: { stroke: '#94a3b8', strokeWidth: 2 } }, eds))
+      // 同步更新 React Flow 内部 state 和父组件 state
+      // 不通知父组件会导致父组件的 edges 还是空的，保存时丢失新连线
+      setEdges((eds) => {
+        const newEdges = addEdge({ ...connection, style: { stroke: '#94a3b8', strokeWidth: 2 } }, eds)
+        onEdgesChange(newEdges)
+        return newEdges
+      })
     },
-    [setEdges]
+    [onEdgesChange, setEdges]
   )
 
   const onNodeClickWrapper = useCallback(

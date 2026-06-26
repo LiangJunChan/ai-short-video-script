@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>短视频广场 - AI短视频脚本平台</title>
+    <style id="theme-vars">
+/* ========================================
+   AI短视频脚本平台 — 科技感暗色主题
+   Retro-futuristic / AI Creative Tool
+   ======================================== */
+
+:root {
+  /* ── Color System ── */
+  --color-bg-primary: #08090d;
+  --color-bg-secondary: #0f1117;
+  --color-bg-tertiary: #161822;
+  --color-bg-elevated: #1c1f2e;
+  --color-bg-hover: #232738;
+  --color-bg-active: #2a2f42;
+
+  --color-border-default: #1e2233;
+  --color-border-subtle: #181b28;
+  --color-border-strong: #2a2f45;
+  --color-border-focus: #06d6a0;
+
+  --color-text-primary: #e8ecf4;
+  --color-text-secondary: #8892a8;
+  --color-text-tertiary: #5a6478;
+  --color-text-inverse: #08090d;
+
+  /* Brand Primary — Cyan/Mint */
+  --color-primary: #06d6a0;
+  --color-primary-hover: #34e0b5;
+  --color-primary-muted: rgba(6, 214, 160, 0.10);
+  --color-primary-subtle: rgba(6, 214, 160, 0.05);
+
+  /* Secondary Accent — Electric Blue */
+  --color-accent: #4cc9f0;
+  --color-accent-muted: rgba(76, 201, 240, 0.10);
+
+  /* State Colors */
+  --state-success: #06d6a0;
+  --state-warning: #ffd166;
+  --state-error: #ef476f;
+  --state-info: #4cc9f0;
+
+  /* ── Typography ── */
+  --font-display: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.8125rem;
+  --text-base: 0.875rem;
+  --text-lg: 1rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 2rem;
+
+  --leading-tight: 1.25;
+  --leading-normal: 1.5;
+
+  --tracking-tight: -0.02em;
+  --tracking-normal: 0;
+
+  --weight-normal: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  /* ── Spacing ── */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  /* ── Radius ── */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
+  --radius-full: 9999px;
+
+  /* ── Shadows (border-first for static; deeper for floating) ── */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.05);
+  --shadow-floating: 0 12px 40px rgba(0, 0, 0, 0.4);
+
+  /* Brand glow (not a standard shadow — for primary emphasis only) */
+  --shadow-glow: 0 0 20px rgba(6, 214, 160, 0.15);
+  --shadow-glow-strong: 0 0 40px rgba(6, 214, 160, 0.25);
+  --shadow-glow-accent: 0 0 20px rgba(76, 201, 240, 0.15);
+
+  /* ── Transitions ── */
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --duration: 200ms;
+  --duration-slow: 300ms;
+
+  /* ── Z-index ── */
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-modal: 300;
+  --z-toast: 400;
+}
+
+/* ── Dark mode defaults ── */
+html.dark {
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-primary);
+}
+
+body {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  letter-spacing: var(--tracking-normal);
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Typography ── */
+.heading-xl { font-family: var(--font-display); font-size: var(--text-3xl); font-weight: var(--weight-bold); line-height: var(--leading-tight); letter-spacing: var(--tracking-tight); }
+.heading-lg { font-family: var(--font-display); font-size: var(--text-2xl); font-weight: var(--weight-semibold); line-height: var(--leading-tight); letter-spacing: var(--tracking-tight); }
+.heading-md { font-family: var(--font-display); font-size: var(--text-xl); font-weight: var(--weight-semibold); line-height: var(--leading-tight); }
+.heading-sm { font-family: var(--font-display); font-size: var(--text-lg); font-weight: var(--weight-medium); line-height: var(--leading-tight); }
+.mono { font-family: var(--font-mono); font-size: var(--text-sm); }
+
+/* ── Surface & Card ── */
+.surface { background-color: var(--color-bg-secondary); border: 1px solid var(--color-border-subtle); border-radius: var(--radius-lg); }
+.surface-elevated { background-color: var(--color-bg-tertiary); border: 1px solid var(--color-border-default); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); }
+
+/* ── Gradient accents ── */
+.gradient-primary { background: linear-gradient(135deg, var(--color-primary), var(--color-accent)); }
+.gradient-text { background: linear-gradient(135deg, var(--color-primary), var(--color-accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+/* ── Glow effects ── */
+.glow-primary { box-shadow: var(--shadow-glow); }
+.glow-strong { box-shadow: var(--shadow-glow-strong); }
+.glow-accent { box-shadow: var(--shadow-glow-accent); }
+
+/* ── Neon border effect ── */
+.neon-border { border: 1px solid rgba(6, 214, 160, 0.2); box-shadow: inset 0 0 20px rgba(6, 214, 160, 0.03); }
+.neon-border-accent { border: 1px solid rgba(76, 201, 240, 0.2); box-shadow: inset 0 0 20px rgba(76, 201, 240, 0.03); }
+
+/* ── Grid background pattern ── */
+.grid-bg {
+  background-image:
+    linear-gradient(rgba(6, 214, 160, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(6, 214, 160, 0.03) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--color-border-strong); border-radius: var(--radius-full); }
+::-webkit-scrollbar-thumb:hover { background: var(--color-text-tertiary); }
+
+/* ── Animations ── */
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes scaleIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+@keyframes glowPulse { 0%, 100% { box-shadow: 0 0 15px rgba(6, 214, 160, 0.1); } 50% { box-shadow: 0 0 30px rgba(6, 214, 160, 0.2); } }
+@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+@keyframes gridMove { 0% { background-position: 0 0; } 100% { background-position: 60px 60px; } }
+@keyframes scanline { 0% { transform: translateY(-100%); } 100% { transform: translateY(100vh); } }
+
+.animate-fade-in { animation: fadeIn var(--duration) var(--ease); }
+.animate-slide-up { animation: slideUp var(--duration-slow) var(--ease); }
+.animate-scale-in { animation: scaleIn var(--duration-slow) var(--ease); }
+.animate-glow-pulse { animation: glowPulse 3s ease-in-out infinite; }
+.animate-float { animation: float 4s ease-in-out infinite; }
+.animate-grid-move { animation: gridMove 20s linear infinite; }
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-primary: var(--color-primary);
+    --color-accent: var(--color-accent);
+  }
+  @layer base {
+    body { background: var(--color-bg-primary); color: var(--color-text-primary); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+    </style>
+</head>
+<body class="min-h-screen bg-bg-primary text-text-primary font-body">
+
+  <!-- Shared Top Navbar -->
+  <nav class="sticky top-0 z-40 h-16 flex items-center justify-between px-8"
+       style="background: rgba(15, 17, 23, 0.8); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border-bottom: 1px solid var(--color-border-subtle);">
+    <!-- Left: Logo -->
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center flex-shrink-0">
+        <svg class="w-5 h-5 text-text-inverse" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+      </div>
+      <span class="text-text-primary font-semibold text-base tracking-tight">AI短视频</span>
+    </div>
+
+    <!-- Center: Nav Pills -->
+    <div class="flex items-center gap-1 rounded-full px-1 py-1" style="background: rgba(22, 24, 34, 0.6);">
+      <a href="#" class="nav-pill-active px-4 py-1.5 rounded-full text-sm font-medium transition-colors duration-200">广场</a>
+      <a href="#" data-dom-id="nav-library" class="px-4 py-1.5 rounded-full text-sm font-medium text-text-secondary hover:text-text-primary transition-colors duration-200">素材库</a>
+      <a href="#" data-dom-id="nav-storyboards" class="px-4 py-1.5 rounded-full text-sm font-medium text-text-secondary hover:text-text-primary transition-colors duration-200">脚本</a>
+    </div>
+
+    <!-- Right: Actions -->
+    <div class="flex items-center gap-3">
+      <!-- Credits Badge -->
+      <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm" style="background: rgba(22, 24, 34, 0.6); border: 1px solid var(--color-border-subtle);">
+        <svg class="w-3.5 h-3.5 text-text-secondary" fill="currentColor" viewBox="0 0 20 20">
+          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+        </svg>
+        <span class="text-text-secondary font-medium">394</span>
+      </div>
+
+      <!-- Ghost Button: 链接提取 -->
+      <button class="px-4 py-1.5 rounded-lg text-sm font-medium text-text-secondary hover:text-text-primary transition-colors duration-200" style="border: 1px solid var(--color-border-subtle);">
+        链接提取
+      </button>
+
+      <!-- Primary Button: 上传视频 -->
+      <button class="px-4 py-1.5 rounded-lg text-sm font-semibold text-text-inverse gradient-primary hover:opacity-90 transition-opacity duration-200">
+        上传视频
+      </button>
+
+      <!-- User Avatar -->
+      <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold text-text-inverse gradient-primary cursor-pointer">
+        U
+      </div>
+
+      <!-- Logout -->
+      <button class="w-8 h-8 rounded-lg flex items-center justify-center text-text-tertiary hover:text-text-secondary transition-colors duration-200" aria-label="退出登录">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+        </svg>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="max-w-[1400px] mx-auto px-8 py-8">
+
+    <!-- Page Header -->
+    <div class="flex items-center justify-between mb-8">
+      <div>
+        <h1 class="heading-lg gradient-text" style="text-wrap: balance; word-break: keep-all;">短视频广场</h1>
+        <p class="text-sm text-text-secondary mt-1.5">发现热门短视频脚本，激发创作灵感</p>
+      </div>
+      <!-- Sort Pills -->
+      <div class="flex items-center gap-1 rounded-full px-1 py-1" style="background: rgba(22, 24, 34, 0.6);">
+        <button class="sort-pill-active px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200">最新</button>
+        <button class="px-4 py-1.5 rounded-full text-sm font-medium text-text-secondary hover:text-text-primary transition-colors duration-200">热门</button>
+      </div>
+    </div>
+
+    <!-- Video Grid -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
+
+      <!-- Card 1 -->
+      <article class="video-card rounded-xl overflow-hidden cursor-pointer" style="background: var(--color-bg-secondary); border: 1px solid var(--color-border-subtle);">
+        <div class="relative aspect-[9/16] thumb-gradient-1 thumb-pattern">
+          <!-- Status Badge -->
+          <div class="absolute top-2.5 left-2.5 flex flex-col gap-1.5 z-10">
+            <span class="glass-bg-light px-2 py-0.5 rounded-md text-xs font-medium text-text-secondary flex items-center gap-1.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-primary pulse-dot"></span>
+              处理中
+            </span>
+            <span class="glass-bg-light px-2 py-0.5 rounded-md text-xs text-text-tertiary">♡ 12</span>
+          </div>
+          <!-- Hover Actions -->
+          <div class="card-actions absolute top-2.5 right-2.5 flex flex-col gap-1.5 z-10">
+            <button class="w-7 h-7 rounded-full glass-bg-light flex items-center justify-center text-text-secondary hover:text-primary transition-colors duration-200" aria-label="收藏">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+            </button>
+            <button class="w-7 h-7 rounded-full glass-bg-light flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors duration-200" aria-label="删除">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+          </div>
+          <!-- Play Icon -->
+          <div class="absolute inset-0 flex items-center justify-center">
+            <div class="w-10 h-10 rounded-full glass-bg flex items-center justify-center">
+              <svg class="w-4 h-4 text-text-primary ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            </div>
+          </div>
+          <!-- Bottom Gradient -->
+          <div class="absolute bottom-0 left-0 right-0 bottom-gradient p-3 pt-10">
+            <p class="text-sm font-semibold text-text-primary truncate">链接提取视频</p>
+            <p class="text-xs text-text-tertiary mt-0.5">3天前 · user1</p>
+          </div>
+        </div>
+        <!-- Tags -->
+        <div class="px-3 py-2.5 flex gap-1.5 flex-wrap">
+          <span class="px-2 py-0.5 rounded-full text-xs text-text-secondary" style="background: var(--color-bg-tertiary);">美妆</span>
+          <span class="px-2 py-0.5 rounded-full text-xs text-text-secondary" style="background: var(--color-bg-tertiary);">测评</span>
+          <span class="px-2 py-0.5 rounded-full text-xs text-text-secondary" style="background: var(--color-bg-tertiary);">种草</span>
+        </div>
+      </article>
+
+      <!-- Card 2 -->
+      <article class="video-card rounded-xl overflow-hidden cursor-pointer" style="background: var(--color-bg-secondary); border: 1px solid var(--color-border-subtle);">
+        <div class="relative aspect-[9/16] thumb-gradient-2 thumb-pattern-2">
+          <div class="absolute top-2.5 left-2.5 flex flex-col gap-1.5 z-10">
+            <span class="glass-bg-light px-2 py-0.5 rounded-md text-xs font-medium text-primary flex items-center gap-1.5">
+              <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+              已完成
+            </span>
+            <span class="glass-bg-light px-2 py-0.5 rounded-md text-xs text-text-tertiary">♡ 28</span>
+          </div>
+          <div class="card-actions absolute top-2.5 right-2.5 flex flex-col gap-1.5 z-10">
+            <button class="w-7 h-7 rounded-full glass-bg-light flex items-center justify-center text-text-secondary hover:text-primary transition-colors duration-200" aria-label="收藏">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+            </button>
+            <button class="w-7 h-7 rounded-full glass-bg-light flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors duration-200" aria-label="删除">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+          </div>
+          <div class="absolute inset-0 flex items-center justify-center">
+            <div class="w-10 h-10 rounded-full glass-bg flex items-center justify-center">
+              <svg class="w-4 h-4 text-text-primary ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            </div>
+          </div>
+          <div class="absolute bottom-0 left-0 right-0 bottom-gradient p-3 pt-10">
+            <p class="text-sm font-semibold text-text-primary truncate">MARGYS08</p>
+            <p class="text-xs text-text-tertiary mt-0.5">1天前 · user2</p>
+          </div>
+        </div>
+        <div class="px-3 py-2.5 flex gap-1.5 flex-wrap">
+          <span class="px-2 py-0.5 rounded-full text-xs text-text-secondary" style="background: var(--color-bg-tertiary);">科技</span>
+          <span class="px-2 py-0.5 rounded-full text-xs text-text-secondary" style="background: var(--color-bg-tertiary);">开箱</span>
+        </div>
+      </article>
+
+      <!-- Card 3 -->
+      <article class="video-card rounded-xl overflow-hidden cursor-pointer" style="background: var(--color-bg-secondary); border: 1px solid var(--color-border-subtle);">
+        <div class="relative aspect-[9/16] thumb-gradient-3 thumb-pattern">
+          <div class="absolute top-2.5 left-2.5 flex flex-col gap-1.5 z-10">
+            <span class="glass-bg-light px-2 py-0.5 rounded-md text-xs font-medium text-primary flex items-center gap-1.5">
+              <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+              已完成
+            </span>
+            <span class="glass-bg-light px-2 py-0.5 rounded-md text-xs text-text-tertiary">♡ 45</span>
+          </div>
+          <div class="card-actions absolute top-2.5 right-2.5 flex flex-col gap-1.5 z-10">
+            <button class="w-7 h-7 rounded-full glass-bg-light flex items-center justify-center text-text-secondary hover:text-primary transition-colors duration-200" aria-label="收藏">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+            </button>
+            <button class="w-7 h-7 rounded-full glass-bg-light flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors duration-200" aria-label="删除">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+          </div>
+          <div class="absolute inset-0 flex items-center justify-center">
+            <div class="w-10 h-10 rounded-full glass-bg flex items-center justify-center">
+              <svg class="w-4 h-4 text-text-primary ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            </div>
+          </div>
+          <div class="absolute bottom-0 left-0 right-0 bottom-gradient p-3 pt-10">
+            <p class="text-sm font-semibold text-text-primary truncate">美食探店合集</p>
+            <p class="text-xs text-text-tertiary mt-0.5">5天前 · user3</p>
+          </div>
+        </div>
+        <div class="px-3 py-2.5 flex gap-1.5 flex-wrap">
+          <span class="px-2 py-0.5 rounded-full text-xs text-text-secondary" style="background: var(--color-bg-tertiary);">美食</span>
+          <span class="px-2 py-0.5 rounded-full text-xs text-text-secondary" style="background: var(--color-bg-tertiary);">探店</span>
+          <span class="px-2 py-0.5 rounded-full text-xs text-text-secondary" style="background: var(--color-bg-tertiary);">推荐</span>
+        </div>
+      </article>
+
+      <!-- Card 4 -->
+      <article class="video-card rounded-xl overflow-hidden cursor-pointer" style="background: var(--color-bg-secondary); border: 1px solid var(--color-border-subtle);">
+        <div class="relative aspect-[9/16] thumb-gradient-4 thumb-pattern-2">
+          <div class="absolute top-2.5 left-2.5 flex flex-col gap-1.5 z-10">
+            <span class="glass-bg-light px-2 py-0.5 rounded-md text-xs font-medium text-text-secondary flex items-center gap-1.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-primary pulse-dot"></span>
+              处理中
+            </span>
+            <span class="glass-bg-light px-2 py-0.5 rounded-md text-xs text-text-tertiary">♡ 8</span>
+          </div>
+          <div class="card-actions absolute top-2.5 right-2.5 flex flex-col gap-1.5 z-10">
+            <button class="w-7 h-7 rounded-full glass-bg-light flex items-center justify-center text-text-secondary hover:text-primary transition-colors duration-200" aria-label="收藏">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+            </button>
+            <button class="w-7 h-7 rounded-full glass-bg-light flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors duration-200" aria-label="删除">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+          </div>
+          <div class="absolute inset-0 flex items-center justify-center">
+            <div class="w-10 h-10 rounded-full glass-bg flex items-center justify-center">
+              <svg class="w-4 h-4 text-text-primary ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            </div>
+          </div>
+          <div class="absolute bottom-0 left-0 right-0 bottom-gradient p-3 pt-10">
+            <p class="text-sm font-semibold text-text-primary truncate">旅行Vlog模板</p>
+            <p class="text-xs text-text-tertiary mt-0.5">2天前 · user4</p>
+          </div>
+        </div>
+        <div class="px-3 py-2.5 flex gap-1.5 flex-wrap">
+          <span class="px-2 py-0.5 rounded-full text-xs text-text-secondary" style="background: var(--color-bg-tertiary);">旅行</span>
+          <span class="px-2 py-0.5 rounded-full text-xs text-text-secondary" style="background: var(--color-bg-tertiary);">Vlog</span>
+        </div>
+      </article>
+
+      <!-- Card 5 -->
+      <article class="video-card rounded-xl overflow-hidden cursor-pointer" style="background: var(--color-bg-secondary); border: 1px solid var(--color-border-subtle);">
+        <div class="relative aspect-[9/16] thumb-gradient-5 thumb-pattern">
+          <div class="absolute top-2.5 left-2.5 flex flex-col gap-1.5 z-10">
+            <span class="glass-bg-light px-2 py-0.5 rounded-md text-xs font-medium text-primary flex items-center gap-1.5">
+              <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+              已完成
+            </span>
+            <span class="glass-bg-light px-2 py-0.5 rounded-md text-xs text-text-tertiary">♡ 67</span>
+          </div>
+          <div class="card-actions absolute top-2.5 right-2.5 flex flex-col gap-1.5 z-10">
+            <button class="w-7 h-7 rounded-full glass-bg-light flex items-center justify-center text-text-secondary hover:text-primary transition-colors duration-200" aria-label="收藏">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+            </button>
+            <button class="w-7 h-7 rounded-full glass-bg-light flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors duration-200" aria-label="删除">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+          </div>
+          <div class="absolute inset-0 flex items-center justify-center">
+            <div class="w-10 h-10 rounded-full glass-bg flex items-center justify-center">
+              <svg class="w-4 h-4 text-text-primary ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            </div>
+          </div>
+          <div class="absolute bottom-0 left-0 right-0 bottom-gradient p-3 pt-10">
+            <p class="text-sm font-semibold text-text-primary truncate">健身跟练教程</p>
+            <p class="text-xs text-text-tertiary mt-0.5">1周前 · user5</p>
+          </div>
+        </div>
+        <div class="px-3 py-2.5 flex gap-1.5 flex-wrap">
+          <span class="px-2 py-0.5 rounded-full text-xs text-text-secondary" style="background: var(--color-bg-tertiary);">健身</span>
+          <span class="px-2 py-0.5 rounded-full text-xs text-text-secondary" style="background: var(--color-bg-tertiary);">教程</span>
+        </div>
+      </article>
+
+      <!-- Card 6 -->
+      <article class="video-card rounded-xl overflow-hidden cursor-pointer" style="background: var(--color-bg-secondary); border: 1px solid var(--color-border-subtle);">
+        <div class="relative aspect-[9/16] thumb-gradient-2 thumb-pattern">
+          <div class="absolute top-2.5 left-2.5 flex flex-col gap-1.5 z-10">
+            <span class="glass-bg-light px-2 py-0.5 rounded-md text-xs font-medium text-primary flex items-center gap-1.5">
+              <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+              已完成
+            </span>
+            <span class="glass-bg-light px-2 py-0.5 rounded-md text-xs text-text-tertiary">♡ 33</span>
+          </div>
+          <div class="card-actions absolute top-2.5 right-2.5 flex flex-col gap-1.5 z-10">
+            <button class="w-7 h-7 rounded-full glass-bg-light flex items-center justify-center text-text-secondary hover:text-primary transition-colors duration-200" aria-label="收藏">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+            </button>
+            <button class="w-7 h-7 rounded-full glass-bg-light flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors duration-200" aria-label="删除">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+          </div>
+          <div class="absolute inset-0 flex items-center justify-center">
+            <div class="w-10 h-10 rounded-full glass-bg flex items-center justify-center">
+              <svg class="w-4 h-4 text-text-primary ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            </div>
+          </div>
+          <div class="absolute bottom-0 left-0 right-0 bottom-gradient p-3 pt-10">
+            <p class="text-sm font-semibold text-text-primary truncate">数码好物分享</p>
+            <p class="text-xs text-text-tertiary mt-0.5">4天前 · user6</p>
+          </div>
+        </div>
+        <div class="px-3 py-2.5 flex gap-1.5 flex-wrap">
+          <span class="px-2 py-0.5 rounded-full text-xs text-text-secondary" style="background: var(--color-bg-tertiary);">数码</span>
+          <span class="px-2 py-0.5 rounded-full text-xs text-text-secondary" style="background: var(--color-bg-tertiary);">好物</span>
+          <span class="px-2 py-0.5 rounded-full text-xs text-text-secondary" style="background: var(--color-bg-tertiary);">种草</span>
+        </div>
+      </article>
+
+      <!-- Card 7 -->
+      <article class="video-card rounded-xl overflow-hidden cursor-pointer" style="background: var(--color-bg-secondary); border: 1px solid var(--color-border-subtle);">
+        <div class="relative aspect-[9/16] thumb-gradient-1 thumb-pattern-2">
+          <div class="absolute top-2.5 left-2.5 flex flex-col gap-1.5 z-10">
+            <span class="glass-bg-light px-2 py-0.5 rounded-md text-xs font-medium text-text-secondary flex items-center gap-1.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-primary pulse-dot"></span>
+              处理中
+            </span>
+            <span class="glass-bg-light px-2 py-0.5 rounded-md text-xs text-text-tertiary">♡ 5</span>
+          </div>
+          <div class="card-actions absolute top-2.5 right-2.5 flex flex-col gap-1.5 z-10">
+            <button class="w-7 h-7 rounded-full glass-bg-light flex items-center justify-center text-text-secondary hover:text-primary transition-colors duration-200" aria-label="收藏">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+            </button>
+            <button class="w-7 h-7 rounded-full glass-bg-light flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors duration-200" aria-label="删除">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+          </div>
+          <div class="absolute inset-0 flex items-center justify-center">
+            <div class="w-10 h-10 rounded-full glass-bg flex items-center justify-center">
+              <svg class="w-4 h-4 text-text-primary ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            </div>
+          </div>
+          <div class="absolute bottom-0 left-0 right-0 bottom-gradient p-3 pt-10">
+            <p class="text-sm font-semibold text-text-primary truncate">穿搭灵感日记</p>
+            <p class="text-xs text-text-tertiary mt-0.5">6天前 · user7</p>
+          </div>
+        </div>
+        <div class="px-3 py-2.5 flex gap-1.5 flex-wrap">
+          <span class="px-2 py-0.5 rounded-full text-xs text-text-secondary" style="background: var(--color-bg-tertiary);">穿搭</span>
+          <span class="px-2 py-0.5 rounded-full text-xs text-text-secondary" style="background: var(--color-bg-tertiary);">时尚</span>
+        </div>
+      </article>
+
+      <!-- Card 8 -->
+      <article class="video-card rounded-xl overflow-hidden cursor-pointer" style="background: var(--color-bg-secondary); border: 1px solid var(--color-border-subtle);">
+        <div class="relative aspect-[9/16] thumb-gradient-4 thumb-pattern">
+          <div class="absolute top-2.5 left-2.5 flex flex-col gap-1.5 z-10">
+            <span class="glass-bg-light px-2 py-0.5 rounded-md text-xs font-medium text-primary flex items-center gap-1.5">
+              <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+              已完成
+            </span>
+            <span class="glass-bg-light px-2 py-0.5 rounded-md text-xs text-text-tertiary">♡ 91</span>
+          </div>
+          <div class="card-actions absolute top-2.5 right-2.5 flex flex-col gap-1.5 z-10">
+            <button class="w-7 h-7 rounded-full glass-bg-light flex items-center justify-center text-text-secondary hover:text-primary transition-colors duration-200" aria-label="收藏">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+            </button>
+            <button class="w-7 h-7 rounded-full glass-bg-light flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors duration-200" aria-label="删除">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+          </div>
+          <div class="absolute inset-0 flex items-center justify-center">
+            <div class="w-10 h-10 rounded-full glass-bg flex items-center justify-center">
+              <svg class="w-4 h-4 text-text-primary ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            </div>
+          </div>
+          <div class="absolute bottom-0 left-0 right-0 bottom-gradient p-3 pt-10">
+            <p class="text-sm font-semibold text-text-primary truncate">萌宠日常记录</p>
+            <p class="text-xs text-text-tertiary mt-0.5">3天前 · user8</p>
+          </div>
+        </div>
+        <div class="px-3 py-2.5 flex gap-1.5 flex-wrap">
+          <span class="px-2 py-0.5 rounded-full text-xs text-text-secondary" style="background: var(--color-bg-tertiary);">萌宠</span>
+          <span class="px-2 py-0.5 rounded-full text-xs text-text-secondary" style="background: var(--color-bg-tertiary);">日常</span>
+          <span class="px-2 py-0.5 rounded-full text-xs text-text-secondary" style="background: var(--color-bg-tertiary);">治愈</span>
+        </div>
+      </article>
+
+      <!-- Card 9 -->
+      <article class="video-card rounded-xl overflow-hidden cursor-pointer" style="background: var(--color-bg-secondary); border: 1px solid var(--color-border-subtle);">
+        <div class="relative aspect-[9/16] thumb-gradient-3 thumb-pattern-2">
+          <div class="absolute top-2.5 left-2.5 flex flex-col gap-1.5 z-10">
+            <span class="glass-bg-light px-2 py-0.5 rounded-md text-xs font-medium text-primary flex items-center gap-1.5">
+              <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+              已完成
+            </span>
+            <span class="glass-bg-light px-2 py-0.5 rounded-md text-xs text-text-tertiary">♡ 56</span>
+          </div>
+          <div class="card-actions absolute top-2.5 right-2.5 flex flex-col gap-1.5 z-10">
+            <button class="w-7 h-7 rounded-full glass-bg-light flex items-center justify-center text-text-secondary hover:text-primary transition-colors duration-200" aria-label="收藏">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+            </button>
+            <button class="w-7 h-7 rounded-full glass-bg-light flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors duration-200" aria-label="删除">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+          </div>
+          <div class="absolute inset-0 flex items-center justify-center">
+            <div class="w-10 h-10 rounded-full glass-bg flex items-center justify-center">
+              <svg class="w-4 h-4 text-text-primary ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            </div>
+          </div>
+          <div class="absolute bottom-0 left-0 right-0 bottom-gradient p-3 pt-10">
+            <p class="text-sm font-semibold text-text-primary truncate">知识科普短片</p>
+            <p class="text-xs text-text-tertiary mt-0.5">1天前 · user9</p>
+          </div>
+        </div>
+        <div class="px-3 py-2.5 flex gap-1.5 flex-wrap">
+          <span class="px-2 py-0.5 rounded-full text-xs text-text-secondary" style="background: var(--color-bg-tertiary);">科普</span>
+          <span class="px-2 py-0.5 rounded-full text-xs text-text-secondary" style="background: var(--color-bg-tertiary);">知识</span>
+        </div>
+      </article>
+
+      <!-- Card 10 -->
+      <article class="video-card rounded-xl overflow-hidden cursor-pointer" style="background: var(--color-bg-secondary); border: 1px solid var(--color-border-subtle);">
+        <div class="relative aspect-[9/16] thumb-gradient-5 thumb-pattern">
+          <div class="absolute top-2.5 left-2.5 flex flex-col gap-1.5 z-10">
+            <span class="glass-bg-light px-2 py-0.5 rounded-md text-xs font-medium text-text-secondary flex items-center gap-1.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-primary pulse-dot"></span>
+              处理中
+            </span>
+            <span class="glass-bg-light px-2 py-0.5 rounded-md text-xs text-text-tertiary">♡ 19</span>
+          </div>
+          <div class="card-actions absolute top-2.5 right-2.5 flex flex-col gap-1.5 z-10">
+            <button class="w-7 h-7 rounded-full glass-bg-light flex items-center justify-center text-text-secondary hover:text-primary transition-colors duration-200" aria-label="收藏">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+            </button>
+            <button class="w-7 h-7 rounded-full glass-bg-light flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors duration-200" aria-label="删除">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+          </div>
+          <div class="absolute inset-0 flex items-center justify-center">
+            <div class="w-10 h-10 rounded-full glass-bg flex items-center justify-center">
+              <svg class="w-4 h-4 text-text-primary ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            </div>
+          </div>
+          <div class="absolute bottom-0 left-0 right-0 bottom-gradient p-3 pt-10">
+            <p class="text-sm font-semibold text-text-primary truncate">手工制作过程</p>
+            <p class="text-xs text-text-tertiary mt-0.5">2天前 · user10</p>
+          </div>
+        </div>
+        <div class="px-3 py-2.5 flex gap-1.5 flex-wrap">
+          <span class="px-2 py-0.5 rounded-full text-xs text-text-secondary" style="background: var(--color-bg-tertiary);">手工</span>
+          <span class="px-2 py-0.5 rounded-full text-xs text-text-secondary" style="background: var(--color-bg-tertiary);">教程</span>
+          <span class="px-2 py-0.5 rounded-full text-xs text-text-secondary" style="background: var(--color-bg-tertiary);">DIY</span>
+        </div>
+      </article>
+
+    </div>
+
+    <!-- Pagination -->
+    <div class="flex items-center justify-center gap-4 mt-10">
+      <button class="px-5 py-2 rounded-lg text-sm font-medium text-text-secondary transition-colors duration-200 hover:text-text-primary" style="border: 1px solid var(--color-border-subtle);">
+        上一页
+      </button>
+      <span class="text-sm text-text-secondary">1 / 5</span>
+      <button class="px-5 py-2 rounded-lg text-sm font-medium text-text-secondary transition-colors duration-200 hover:text-text-primary" style="border: 1px solid var(--color-border-subtle);">
+        下一页
+      </button>
+    </div>
+
+  </main>
+
+  <!-- Card hover neon-border effect via JS -->
+  <script>
+    document.querySelectorAll('.video-card').forEach(card => {
+      card.addEventListener('mouseenter', () => {
+        card.classList.add('neon-border');
+        card.style.boxShadow = 'var(--shadow-glow)';
+      });
+      card.addEventListener('mouseleave', () => {
+        card.classList.remove('neon-border');
+        card.style.boxShadow = 'none';
+      });
+    });
+  </script>
+
+
+    <style>
+    /* Page-specific styles */
+    .video-card {
+      transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1),
+                  border-color 300ms cubic-bezier(0.4, 0, 0.2, 1),
+                  box-shadow 300ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .video-card:hover {
+      transform: translateY(-2px);
+    }
+    .video-card:hover .card-actions {
+      opacity: 1;
+    }
+    .card-actions {
+      opacity: 0;
+      transition: opacity 200ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .thumb-gradient-1 {
+      background: linear-gradient(160deg, #0a2e2e 0%, #0d1b2a 50%, #08090d 100%);
+    }
+    .thumb-gradient-2 {
+      background: linear-gradient(160deg, #1a1040 0%, #0d1b2a 50%, #08090d 100%);
+    }
+    .thumb-gradient-3 {
+      background: linear-gradient(160deg, #0a2e2e 0%, #101830 50%, #08090d 100%);
+    }
+    .thumb-gradient-4 {
+      background: linear-gradient(160deg, #1a1040 0%, #0a1e30 50%, #08090d 100%);
+    }
+    .thumb-gradient-5 {
+      background: linear-gradient(160deg, #0d2a20 0%, #0d1b2a 60%, #08090d 100%);
+    }
+    .thumb-pattern {
+      background-image:
+        radial-gradient(circle at 20% 30%, rgba(6, 214, 160, 0.06) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(76, 201, 240, 0.04) 0%, transparent 50%);
+    }
+    .thumb-pattern-2 {
+      background-image:
+        radial-gradient(circle at 70% 20%, rgba(76, 201, 240, 0.06) 0%, transparent 50%),
+        radial-gradient(circle at 30% 80%, rgba(6, 214, 160, 0.04) 0%, transparent 50%);
+    }
+    .sort-pill-active {
+      background: var(--color-primary-muted);
+      color: var(--color-primary);
+      box-shadow: var(--shadow-glow);
+    }
+    .nav-pill-active {
+      background: var(--color-primary-muted);
+      color: var(--color-primary);
+      box-shadow: var(--shadow-glow);
+    }
+    .glass-bg {
+      background: rgba(15, 17, 23, 0.7);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+    .glass-bg-light {
+      background: rgba(15, 17, 23, 0.5);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+    }
+    .bottom-gradient {
+      background: linear-gradient(to top, rgba(8, 9, 13, 0.85) 0%, transparent 60%);
+    }
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+    .pulse-dot {
+      animation: pulse-dot 1.5s ease-in-out infinite;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .video-card { transition: none; }
+      .card-actions { transition: none; }
+      .pulse-dot { animation: none; }
+    }
+  </style>
+</body>
+</html>

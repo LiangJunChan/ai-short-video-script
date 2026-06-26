@@ -108,18 +108,18 @@ function DeepAnalysisSection({ videoId, onToast, onCopy, onRefetchUser }: DeepAn
 
   return (
     <div className="card p-6">
-      <h2 className="text-lg font-semibold text-slate-900 mb-4">AI 深度分析</h2>
+      <h2 className="text-lg font-semibold text-av-text-primary mb-4">AI 深度分析</h2>
 
       {/* Tabs */}
-      <div className="flex gap-1 p-1 bg-slate-50 rounded-xl mb-4">
+      <div className="flex gap-1 p-1 bg-av-bg-secondary rounded-xl mb-4">
         {tabs.map((tab) => (
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
             className={`flex-1 px-3 py-2 text-sm font-medium rounded-lg transition-all ${
               activeTab === tab.key
-                ? 'bg-white text-sky-600 shadow-sm'
-                : 'text-slate-600 hover:text-slate-900'
+                ? 'bg-av-bg-elevated text-primary shadow-av-sm'
+                : 'text-av-text-secondary hover:text-av-text-primary'
             }`}
           >
             <span className="mr-1">{tab.icon}</span>
@@ -133,7 +133,7 @@ function DeepAnalysisSection({ videoId, onToast, onCopy, onRefetchUser }: DeepAn
         {currentResult ? (
           <div>
             <div className="flex justify-between items-center mb-3">
-              <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">分析结果</span>
+              <span className="text-xs font-medium text-av-text-secondary uppercase tracking-wider">分析结果</span>
               <button
                 className="btn-secondary px-3 py-1.5 text-xs"
                 onClick={() => onCopy(currentResult)}
@@ -141,23 +141,23 @@ function DeepAnalysisSection({ videoId, onToast, onCopy, onRefetchUser }: DeepAn
                 复制
               </button>
             </div>
-            <div className="p-4 bg-sky-50 rounded-xl border border-sky-100">
-              <div className="text-sm leading-relaxed text-slate-700 whitespace-pre-wrap max-h-96 overflow-y-auto">
+            <div className="p-4 bg-primary/10 rounded-xl border border-av-border-subtle">
+              <div className="text-sm leading-relaxed text-av-text-secondary whitespace-pre-wrap max-h-96 overflow-y-auto">
                 {currentResult}
               </div>
             </div>
           </div>
         ) : (
           <div className="text-center py-12">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-sky-50 flex items-center justify-center">
-              <svg className="w-8 h-8 text-sky-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-primary/10 flex items-center justify-center">
+              <svg className="w-8 h-8 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="12" cy="12" r="10"/>
                 <path d="M12 16v-4M12 8h.01" strokeLinecap="round"/>
               </svg>
             </div>
-            <p className="text-sm text-slate-600 mb-4">还没有进行分析</p>
+            <p className="text-sm text-av-text-secondary mb-4">还没有进行分析</p>
             <button
-              className="btn-primary px-6 py-2.5 text-sm shadow-sm"
+              className="btn-primary px-6 py-2.5 text-sm shadow-av-sm"
               onClick={() => handleAnalyze(activeTab)}
               disabled={isAnalyzing}
             >

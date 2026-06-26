@@ -1,0 +1,8 @@
+bindPort = 7000
+
+auth.method = "token"
+auth.token = "Chrdw060922"
+
+allowPorts = [
+  { start = 9000, end = 9003 }
+]

@@ -8,18 +8,18 @@ const SceneNode = memo(({ data, selected }: NodeProps) => {
 
   if (nodeType === 'start') {
     return (
-      <div className="px-4 py-2 shadow-md rounded-full bg-green-100 border-2 border-green-400 min-w-[80px] text-center">
-        <div className="text-sm font-medium text-green-800">{config.label || '开始'}</div>
-        <Handle type="source" position={Position.Right} className="w-3 h-3 bg-green-500" />
+      <div className="px-4 py-2 shadow-av-md rounded-full bg-av-state-success/10 border-2 border-av-state-success/50 min-w-[80px] text-center">
+        <div className="text-sm font-medium text-av-state-success">{config.label || '开始'}</div>
+        <Handle type="source" position={Position.Right} className="w-3 h-3 bg-av-state-success" />
       </div>
     )
   }
 
   if (nodeType === 'end') {
     return (
-      <div className="px-4 py-2 shadow-md rounded-full bg-red-100 border-2 border-red-400 min-w-[80px] text-center">
-        <Handle type="target" position={Position.Left} className="w-3 h-3 bg-red-500" />
-        <div className="text-sm font-medium text-red-800">{config.label || '结束'}</div>
+      <div className="px-4 py-2 shadow-av-md rounded-full bg-av-state-error/10 border-2 border-av-state-error/50 min-w-[80px] text-center">
+        <Handle type="target" position={Position.Left} className="w-3 h-3 bg-av-state-error" />
+        <div className="text-sm font-medium text-av-state-error">{config.label || '结束'}</div>
       </div>
     )
   }
@@ -32,40 +32,40 @@ const SceneNode = memo(({ data, selected }: NodeProps) => {
   }
 
   return (
-    <div className={`shadow-md rounded-lg bg-white border-2 min-w-[250px] max-w-[300px] ${
-      selected ? 'border-sky-500' : 'border-slate-200'
+    <div className={`shadow-av-md rounded-lg bg-av-bg-secondary border-2 min-w-[250px] max-w-[300px] ${
+      selected ? 'border-primary' : 'border-av-border-subtle'
     }`}>
-      <Handle type="target" position={Position.Left} className="w-3 h-3 bg-sky-500" />
+      <Handle type="target" position={Position.Left} className="w-3 h-3 bg-primary" />
 
-      <div className="px-3 py-2 bg-sky-50 border-b border-slate-100 rounded-t-lg flex items-center justify-between">
-        <span className="text-xs font-medium text-sky-700">🎬 分镜</span>
+      <div className="px-3 py-2 bg-av-bg-tertiary border-b border-av-border-subtle rounded-t-lg flex items-center justify-between">
+        <span className="text-xs font-medium text-primary">🎬 分镜</span>
         {config.duration && (
-          <span className="text-xs text-slate-500">{config.duration}</span>
+          <span className="text-xs text-av-text-tertiary">{config.duration}</span>
         )}
       </div>
 
       <div className="px-3 py-2 space-y-1">
         {config.script && (
-          <p className="text-xs text-slate-800 line-clamp-3">{config.script}</p>
+          <p className="text-xs text-av-text-primary line-clamp-3">{config.script}</p>
         )}
         {config.description && (
-          <p className="text-xs text-slate-500 line-clamp-2">📷 {config.description}</p>
+          <p className="text-xs text-av-text-tertiary line-clamp-2">📷 {config.description}</p>
         )}
         <div className="flex gap-1 flex-wrap">
           {config.shot_type && (
-            <span className="text-xs px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded">
+            <span className="text-xs px-1.5 py-0.5 bg-accent/10 text-accent rounded">
               {shotLabels[config.shot_type] || config.shot_type}
             </span>
           )}
           {config.camera_move && (
-            <span className="text-xs px-1.5 py-0.5 bg-purple-50 text-purple-600 rounded">
+            <span className="text-xs px-1.5 py-0.5 bg-purple-500/10 text-purple-400 rounded">
               {camLabels[config.camera_move] || config.camera_move}
             </span>
           )}
         </div>
       </div>
 
-      <Handle type="source" position={Position.Right} className="w-3 h-3 bg-sky-500" />
+      <Handle type="source" position={Position.Right} className="w-3 h-3 bg-primary" />
     </div>
   )
 })

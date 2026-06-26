@@ -128,6 +128,7 @@ func main() {
 		auth.POST("/storyboards/:id/execute", handler.ExecuteStoryboard)
 		auth.POST("/storyboards/:id/nodes/:nodeId/execute", handler.ExecuteNode)
 		auth.GET("/storyboards/:id/runs", handler.GetExecutionHistory)
+		auth.GET("/storyboards/:id/runs/:runId", handler.GetRunProgress)
 
 		// AI 分镜
 		auth.POST("/storyboards/:id/auto-split", handler.AutoSplitStoryboard)

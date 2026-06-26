@@ -43,7 +43,7 @@ function TextRewriteSection({ video, videoId, onToast, onCopy, onRefetchUser }: 
 
   return (
     <div className="card p-6">
-      <h2 className="text-lg font-semibold text-slate-900 mb-4">AI 改写</h2>
+      <h2 className="text-lg font-semibold text-av-text-primary mb-4">AI 改写</h2>
 
       <div className="flex gap-3 mb-4">
         <textarea
@@ -54,7 +54,7 @@ function TextRewriteSection({ video, videoId, onToast, onCopy, onRefetchUser }: 
           rows={2}
         />
         <button
-          className="btn-primary px-5 py-3 text-sm whitespace-nowrap disabled:opacity-50 shadow-sm"
+          className="btn-primary px-5 py-3 text-sm whitespace-nowrap disabled:opacity-50 shadow-av-sm"
           onClick={handleRewrite}
           disabled={isRewriting || !rewritePrompt.trim() || video.rewriteStatus === 'rewriting'}
         >
@@ -63,9 +63,9 @@ function TextRewriteSection({ video, videoId, onToast, onCopy, onRefetchUser }: 
       </div>
 
       {currentResult && (
-        <div className="pt-4 border-t border-slate-100">
+        <div className="pt-4 border-t border-av-border-subtle">
           <div className="flex justify-between items-center mb-3">
-            <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">改写结果</span>
+            <span className="text-xs font-medium text-av-text-secondary uppercase tracking-wider">改写结果</span>
             <button
               className="btn-secondary px-3 py-1.5 text-xs"
               onClick={() => onCopy(currentResult)}
@@ -73,8 +73,8 @@ function TextRewriteSection({ video, videoId, onToast, onCopy, onRefetchUser }: 
               复制
             </button>
           </div>
-          <div className="p-4 bg-sky-50 rounded-xl border border-sky-100">
-            <div className="text-sm leading-relaxed text-slate-700 whitespace-pre-wrap max-h-48 overflow-y-auto">
+          <div className="p-4 bg-primary/10 rounded-xl border border-av-border-subtle">
+            <div className="text-sm leading-relaxed text-av-text-secondary whitespace-pre-wrap max-h-48 overflow-y-auto">
               {currentResult}
             </div>
           </div>

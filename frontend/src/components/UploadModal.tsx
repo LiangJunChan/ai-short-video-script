@@ -98,14 +98,14 @@ function UploadModal({ onClose, onUploadSuccess }: UploadModalProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-fade-in">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg mx-4 animate-scale-in">
+    <div className="fixed inset-0 z-av-modal flex items-center justify-center bg-[rgba(8,9,13,0.7)] backdrop-blur-sm animate-fade-in">
+      <div className="surface neon-border rounded-xl shadow-av-floating w-full max-w-lg mx-4 animate-scale-in">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-slate-100">
-          <h2 className="text-xl font-semibold text-slate-900">上传视频</h2>
+        <div className="flex items-center justify-between p-6 border-b border-av-border-subtle">
+          <h2 className="text-xl font-semibold text-av-text-primary">上传视频</h2>
           <button
             onClick={onClose}
-            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-lg transition-colors"
+            className="p-2 text-av-text-tertiary hover:text-av-text-primary hover:bg-av-bg-hover rounded-lg transition-colors"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M18 6L6 18M6 6l12 12" strokeLinecap="round" strokeLinejoin="round"/>
@@ -117,19 +117,19 @@ function UploadModal({ onClose, onUploadSuccess }: UploadModalProps) {
           {step === 'select' ? (
             /* Drop Zone */
             <div
-              className="border-2 border-dashed border-slate-200 rounded-xl p-12 text-center hover:border-sky-300 hover:bg-sky-50/50 transition-all cursor-pointer"
+              className="border-2 border-dashed border-av-border-strong rounded-xl p-12 text-center hover:border-primary/40 hover:bg-primary/5 transition-all cursor-pointer"
               onClick={() => document.getElementById('file-input')?.click()}
               onDragOver={(e) => e.preventDefault()}
               onDrop={handleDrop}
             >
-              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-sky-50 flex items-center justify-center">
-                <svg className="w-8 h-8 text-sky-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-primary/10 flex items-center justify-center">
+                <svg className="w-8 h-8 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </div>
-              <p className="text-slate-700 font-medium mb-2">拖拽视频文件到此处</p>
-              <p className="text-sm text-slate-500 mb-4">或点击选择文件</p>
-              <p className="text-xs text-slate-400">支持 MP4、FLV、MOV 格式，最大 4GB</p>
+              <p className="text-av-text-primary font-medium mb-2">拖拽视频文件到此处</p>
+              <p className="text-sm text-av-text-secondary mb-4">或点击选择文件</p>
+              <p className="text-xs text-av-text-tertiary">支持 MP4、FLV、MOV 格式，最大 4GB</p>
               <input
                 id="file-input"
                 type="file"
@@ -142,20 +142,20 @@ function UploadModal({ onClose, onUploadSuccess }: UploadModalProps) {
             /* Form */
             <div className="space-y-4">
               {/* File Info */}
-              <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-xl">
-                <div className="w-10 h-10 rounded-lg bg-sky-100 flex items-center justify-center flex-shrink-0">
-                  <svg className="w-5 h-5 text-sky-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <div className="flex items-center gap-3 p-4 bg-av-bg-tertiary rounded-xl">
+                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <svg className="w-5 h-5 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" strokeLinecap="round" strokeLinejoin="round"/>
                     <polyline points="14,2 14,8 20,8" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-slate-900 truncate">{selectedFile?.name}</p>
-                  <p className="text-xs text-slate-500">{selectedFile ? formatFileSize(selectedFile.size) : ''}</p>
+                  <p className="text-sm font-medium text-av-text-primary truncate">{selectedFile?.name}</p>
+                  <p className="text-xs text-av-text-secondary">{selectedFile ? formatFileSize(selectedFile.size) : ''}</p>
                 </div>
                 <button
                   onClick={() => setStep('select')}
-                  className="text-slate-400 hover:text-slate-600 transition-colors"
+                  className="text-av-text-tertiary hover:text-av-text-primary transition-colors"
                 >
                   <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M11 17l-5-5 5-5M18 17l-5-5 5-5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -165,7 +165,7 @@ function UploadModal({ onClose, onUploadSuccess }: UploadModalProps) {
 
               {/* Title Input */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">视频标题</label>
+                <label className="block text-sm font-medium text-av-text-primary mb-2">视频标题</label>
                 <input
                   type="text"
                   value={title}
@@ -180,12 +180,12 @@ function UploadModal({ onClose, onUploadSuccess }: UploadModalProps) {
               {uploading && (
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span className="text-slate-600">上传中...</span>
-                    <span className="text-slate-500">{progress}%</span>
+                    <span className="text-av-text-secondary">上传中...</span>
+                    <span className="text-av-text-secondary">{progress}%</span>
                   </div>
-                  <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                  <div className="h-2 bg-av-bg-tertiary rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-gradient-to-r from-sky-400 to-blue-500 transition-all duration-300 rounded-full"
+                      className="h-full bg-gradient-primary transition-all duration-300 rounded-full"
                       style={{ width: `${progress}%` }}
                     />
                   </div>
@@ -204,7 +204,7 @@ function UploadModal({ onClose, onUploadSuccess }: UploadModalProps) {
                 <button
                   onClick={handleUpload}
                   disabled={uploading || !title.trim()}
-                  className="flex-1 btn-primary py-2.5 text-sm disabled:opacity-50 shadow-sm"
+                  className="flex-1 btn-primary py-2.5 text-sm disabled:opacity-50"
                 >
                   {uploading ? '上传中...' : '开始上传'}
                 </button>

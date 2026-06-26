@@ -26,20 +26,20 @@ export default function ProfilePage() {
   const canConfigureModel = user.user_type === 'admin' || user.user_type === 'vip'
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-av-bg-primary">
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-lg border-b border-slate-100">
-        <div className="flex items-center h-16 px-6">
+      <header className="sticky top-0 z-av-sticky glass border-b border-av-border-subtle">
+        <div className="flex items-center h-16 px-6 max-w-2xl mx-auto">
           <button
             onClick={() => navigate('/')}
-            className="flex items-center gap-2 text-sm text-slate-500 hover:text-slate-900 transition-colors"
+            className="flex items-center gap-2 text-sm text-av-text-secondary hover:text-av-text-primary transition-colors"
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M19 12H5M12 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
             返回首页
           </button>
-          <h1 className="text-lg font-semibold text-slate-900 ml-4">我的</h1>
+          <h1 className="text-lg font-semibold text-av-text-primary ml-4">我的</h1>
         </div>
       </header>
 
@@ -54,7 +54,7 @@ export default function ProfilePage() {
 
       {/* Toast */}
       {toast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 px-4 py-2 bg-slate-900 text-white text-sm rounded-lg shadow-lg animate-fade-in">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 px-4 py-2 bg-av-bg-elevated text-av-text-primary text-sm rounded-lg shadow-av-lg animate-fade-in">
           {toast}
         </div>
       )}

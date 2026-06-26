@@ -16,6 +16,7 @@ const LLM_PROVIDERS = [
 ]
 
 const IMAGE_PROVIDERS = [
+  { value: 'agnes', label: 'Agnes Image' },
   { value: 'flux', label: 'Flux' },
   { value: 'dalle', label: 'DALL-E' },
   { value: 'midjourney', label: 'Midjourney' },
@@ -30,6 +31,7 @@ const TTS_PROVIDERS = [
 ]
 
 const VIDEO_PROVIDERS = [
+  { value: 'agnes', label: 'Agnes Video' },
   { value: 'kling', label: '可灵' },
   { value: 'runway', label: 'Runway' },
   { value: 'pika', label: 'Pika' },
@@ -64,17 +66,17 @@ export default function ModelConfigSection({ onSuccess, onError }: ModelConfigSe
 
   if (isLoading) {
     return (
-      <div className="bg-white rounded-xl border border-slate-200 p-6">
-        <h2 className="text-lg font-semibold text-slate-900 mb-4">模型配置</h2>
-        <p className="text-sm text-slate-400">加载中...</p>
+      <div className="surface rounded-xl border border-av-border-subtle p-6">
+        <h2 className="text-lg font-semibold text-av-text-primary mb-4">模型配置</h2>
+        <p className="text-sm text-av-text-tertiary">加载中...</p>
       </div>
     )
   }
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 p-6">
-      <h2 className="text-lg font-semibold text-slate-900 mb-2">模型配置</h2>
-      <p className="text-xs text-slate-400 mb-4">
+    <div className="surface rounded-xl border border-av-border-subtle p-6">
+      <h2 className="text-lg font-semibold text-av-text-primary mb-2">模型配置</h2>
+      <p className="text-xs text-av-text-tertiary mb-4">
         自定义你的 AI 模型配置。未配置的用途将使用全局默认设置。
       </p>
       <div className="space-y-4">

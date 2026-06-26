@@ -44,6 +44,20 @@ func getGlobalModelConfig(configType string) ModelConfig {
 			ApiBase:  getLLMApiBaseForProvider(provider),
 			Model:    getLLMModelForProvider(provider),
 		}
+	case "image":
+		return ModelConfig{
+			Provider: "agnes",
+			ApiKey:   os.Getenv("AGNES_API_KEY"),
+			ApiBase:  getEnvOrDefault("AGNES_API_BASE", defaultAgnesBaseURL),
+			Model:    getEnvOrDefault("AGNES_IMAGE_MODEL", defaultAgnesImageModel),
+		}
+	case "video":
+		return ModelConfig{
+			Provider: "agnes",
+			ApiKey:   os.Getenv("AGNES_API_KEY"),
+			ApiBase:  getEnvOrDefault("AGNES_API_BASE", defaultAgnesBaseURL),
+			Model:    getEnvOrDefault("AGNES_VIDEO_MODEL", defaultAgnesVideoModel),
+		}
 	default:
 		return ModelConfig{}
 	}
@@ -102,5 +116,7 @@ func GetProviderForUser(userID int) LLMProvider {
 func GetGlobalDefaultConfigs() map[string]ModelConfig {
 	configs := make(map[string]ModelConfig)
 	configs["llm"] = getGlobalModelConfig("llm")
+	configs["image"] = getGlobalModelConfig("image")
+	configs["video"] = getGlobalModelConfig("video")
 	return configs
 }

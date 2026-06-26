@@ -1,0 +1,26 @@
+serverAddr = "8.138.243.181"
+serverPort = 7000
+
+auth.method = "token"
+auth.token = "Chrdw060922"
+
+[[proxies]]
+name = "frontend"
+type = "tcp"
+localIP = "127.0.0.1"
+localPort = 5173
+remotePort = 9001
+
+[[proxies]]
+name = "backend"
+type = "tcp"
+localIP = "127.0.0.1"
+localPort = 3000
+remotePort = 9002
+
+[[proxies]]
+name = "asr"
+type = "tcp"
+localIP = "127.0.0.1"
+localPort = 8000
+remotePort = 9003

@@ -44,44 +44,44 @@ export default function ChangePasswordForm({ onSuccess, onError }: ChangePasswor
   }
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 p-6">
-      <h2 className="text-lg font-semibold text-slate-900 mb-4">修改密码</h2>
+    <div className="bg-av-bg-secondary rounded-xl border border-av-border-subtle p-6">
+      <h2 className="text-lg font-semibold text-av-text-primary mb-4">修改密码</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm text-slate-600 mb-1">旧密码</label>
+          <label className="block text-sm text-av-text-secondary mb-1">旧密码</label>
           <input
             type="password"
             value={oldPassword}
             onChange={(e) => setOldPassword(e.target.value)}
-            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+            className="input-field w-full px-3 py-2 text-sm"
             required
           />
         </div>
         <div>
-          <label className="block text-sm text-slate-600 mb-1">新密码</label>
+          <label className="block text-sm text-av-text-secondary mb-1">新密码</label>
           <input
             type="password"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
-            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+            className="input-field w-full px-3 py-2 text-sm"
             required
             minLength={6}
           />
         </div>
         <div>
-          <label className="block text-sm text-slate-600 mb-1">确认新密码</label>
+          <label className="block text-sm text-av-text-secondary mb-1">确认新密码</label>
           <input
             type="password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+            className="input-field w-full px-3 py-2 text-sm"
             required
           />
         </div>
         <button
           type="submit"
           disabled={isLoading}
-          className="px-4 py-2 bg-sky-500 text-white text-sm font-medium rounded-lg hover:bg-sky-600 transition-colors disabled:opacity-50"
+          className="btn-primary px-4 py-2 text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
         >
           {isLoading ? '保存中...' : '保存修改'}
         </button>

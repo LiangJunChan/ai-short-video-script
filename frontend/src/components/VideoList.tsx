@@ -98,13 +98,13 @@ function VideoList() {
   if (isError) {
     return (
       <div className="text-center py-24">
-        <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-red-50 flex items-center justify-center">
-          <svg className="w-8 h-8 text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-av-state-error/10 flex items-center justify-center">
+          <svg className="w-8 h-8 text-av-state-error" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <circle cx="12" cy="12" r="10"/>
             <path d="M12 8v4M12 16h.01" strokeLinecap="round"/>
           </svg>
         </div>
-        <p className="text-slate-600">加载失败，请刷新重试</p>
+        <p className="text-av-text-secondary">加载失败，请刷新重试</p>
       </div>
     )
   }
@@ -112,14 +112,14 @@ function VideoList() {
   if (videos.length === 0) {
     return (
       <div className="text-center py-24">
-        <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-slate-50 flex items-center justify-center">
-          <svg className="w-10 h-10 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+        <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-av-bg-secondary flex items-center justify-center">
+          <svg className="w-10 h-10 text-av-text-tertiary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <rect x="2" y="4" width="20" height="16" rx="2"/>
             <polygon points="10,8 16,12 10,16" fill="currentColor" stroke="none" opacity="0.3"/>
           </svg>
         </div>
-        <h3 className="text-lg font-medium text-slate-900 mb-2">还没有视频</h3>
-        <p className="text-slate-500 mb-6">上传视频或通过链接提取开始使用</p>
+        <h3 className="text-lg font-medium text-av-text-primary mb-2">还没有视频</h3>
+        <p className="text-av-text-secondary mb-6">上传视频或通过链接提取开始使用</p>
       </div>
     )
   }
@@ -155,7 +155,7 @@ function VideoList() {
     <div>
       {/* Batch Action Bar */}
       {videos.some(v => v.status === 'done') && (
-        <div className="flex items-center justify-end mb-6 p-4 bg-sky-50 border border-sky-100 rounded-xl">
+        <div className="flex items-center justify-end mb-6 p-4 bg-primary/10 border border-av-border-subtle rounded-xl">
           <div className="flex items-center gap-3">
             {!selectMode ? (
               <button
@@ -166,36 +166,36 @@ function VideoList() {
               </button>
             ) : (
               <>
-                <span className="text-sm text-slate-600">
+                <span className="text-sm text-av-text-secondary">
                   已选择 {selectedIds.size} 个视频
                 </span>
-                <div className="w-px h-5 bg-sky-200" />
+                <div className="w-px h-5 bg-av-border-strong" />
                 <button
                   onClick={selectAll}
-                  className="px-3 py-1.5 text-sm text-sky-600 hover:bg-sky-100 rounded-lg transition-colors"
+                  className="px-3 py-1.5 text-sm text-primary hover:bg-av-bg-hover rounded-lg transition-colors"
                 >
                   全选本页
                 </button>
                 <button
                   onClick={clearSelection}
-                  className="px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                  className="px-3 py-1.5 text-sm text-av-text-secondary hover:bg-av-bg-hover rounded-lg transition-colors"
                 >
                   取消选择
                 </button>
                 {selectedIds.size > 0 && (
                   <>
-                    <div className="w-px h-5 bg-sky-200" />
+                    <div className="w-px h-5 bg-av-border-strong" />
                     <button
                       onClick={() => setShowBatchDeleteConfirm(true)}
                       disabled={isDeleting}
-                      className="px-4 py-2 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors disabled:opacity-50"
+                      className="px-4 py-2 text-sm font-medium text-av-state-error bg-av-state-error/10 hover:bg-av-state-error/20 rounded-lg transition-colors disabled:opacity-50"
                     >
                       {isDeleting ? '删除中...' : `删除选中 (${selectedIds.size}个)`}
                     </button>
                     <button
                       onClick={handleExport}
                       disabled={isExporting || !hasSelectedDone}
-                      className="btn-primary px-4 py-2 text-sm shadow-sm disabled:opacity-50"
+                      className="btn-primary px-4 py-2 text-sm shadow-av-sm disabled:opacity-50"
                     >
                       {isExporting ? '导出中...' : `导出Markdown`}
                     </button>
@@ -227,19 +227,19 @@ function VideoList() {
           <button
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page === 1}
-            className="px-4 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="px-4 py-2 text-sm font-medium text-av-text-secondary bg-av-bg-secondary border border-av-border-subtle rounded-lg hover:bg-av-bg-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             上一页
           </button>
 
-          <span className="px-4 py-2 text-sm text-slate-500">
+          <span className="px-4 py-2 text-sm text-av-text-secondary">
             {page} / {pagination.totalPages}
           </span>
 
           <button
             onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
             disabled={page === pagination.totalPages}
-            className="px-4 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="px-4 py-2 text-sm font-medium text-av-text-secondary bg-av-bg-secondary border border-av-border-subtle rounded-lg hover:bg-av-bg-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             下一页
           </button>
@@ -271,7 +271,7 @@ function VideoList() {
 
       {/* Toast */}
       {showToast && (
-        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-6 py-3 rounded-xl shadow-lg z-50 animate-fade-in">
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-av-bg-elevated text-white px-6 py-3 rounded-xl shadow-av-lg z-av-toast animate-fade-in">
           {showToast}
         </div>
       )}

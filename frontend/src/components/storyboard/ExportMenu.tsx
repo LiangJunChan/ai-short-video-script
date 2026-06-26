@@ -22,19 +22,19 @@ export default function ExportMenu({ storyboardId, onClose }: ExportMenuProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>
-      <div className="bg-white rounded-xl p-6 w-[300px]" onClick={(e) => e.stopPropagation()}>
-        <h2 className="text-lg font-semibold mb-4">导出</h2>
+    <div className="fixed inset-0 z-av-modal flex items-center justify-center bg-[rgba(8,9,13,0.7)] backdrop-blur-sm" onClick={onClose}>
+      <div className="surface neon-border rounded-xl p-6 w-[300px]" onClick={(e) => e.stopPropagation()}>
+        <h2 className="text-lg font-semibold mb-4 text-av-text-primary">导出</h2>
         <div className="space-y-2">
           <button onClick={() => handleExport('md')}
-            className="w-full p-3 text-left border border-slate-200 rounded-lg hover:bg-slate-50">
-            <span className="text-sm font-medium">Markdown</span>
-            <span className="text-xs text-slate-400 block">分镜号+画面描述+文案+时长</span>
+            className="w-full p-3 text-left border border-av-border-subtle rounded-lg hover:bg-av-bg-hover transition-colors">
+            <span className="text-sm font-medium text-av-text-primary">Markdown</span>
+            <span className="text-xs text-av-text-tertiary block">分镜号+画面描述+文案+时长</span>
           </button>
           <button onClick={() => handleExport('text')}
-            className="w-full p-3 text-left border border-slate-200 rounded-lg hover:bg-slate-50">
-            <span className="text-sm font-medium">纯文案</span>
-            <span className="text-xs text-slate-400 block">只导出文案内容</span>
+            className="w-full p-3 text-left border border-av-border-subtle rounded-lg hover:bg-av-bg-hover transition-colors">
+            <span className="text-sm font-medium text-av-text-primary">纯文案</span>
+            <span className="text-xs text-av-text-tertiary block">只导出文案内容</span>
           </button>
         </div>
       </div>

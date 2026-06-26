@@ -13,6 +13,7 @@ import (
 type WorkflowEngine struct {
 	UserID       int
 	StoryboardID int
+	Force        bool // true = 强制重新执行已成功的节点
 }
 
 // NodeExecutionResult 节点执行结果
@@ -32,8 +33,17 @@ type RunResult struct {
 	TotalCost int                   `json:"totalCost"`
 }
 
-// Execute 执行整个工作流
-func (e *WorkflowEngine) Execute() (*RunResult, error) {
+// Execute 执行整个工作流。runID 由调用方预先创建（保证异步返回前 run 已存在）。
+func (e *WorkflowEngine) Execute(runID int) (ret *RunResult, err error) {
+	// panic recover：goroutine 内崩溃时把 run 标记 failed，避免永久 running
+	defer func() {
+		if r := recover(); r != nil {
+			updateRun(runID, "failed", 0)
+			ret = &RunResult{RunID: runID, Status: "failed"}
+			err = fmt.Errorf("执行 panic: %v", r)
+		}
+	}()
+
 	// 1. 获取所有节点和边
 	nodes, err := database.GetNodesByStoryboard(e.StoryboardID)
 	if err != nil {
@@ -51,11 +61,8 @@ func (e *WorkflowEngine) Execute() (*RunResult, error) {
 	// 2. 构建执行顺序（拓扑排序）
 	orderedNodes := topologicalSort(nodes, edges)
 
-	// 3. 创建执行记录
-	runID, err := createRun(e.StoryboardID, e.UserID)
-	if err != nil {
-		return nil, fmt.Errorf("创建执行记录失败: %v", err)
-	}
+	// runID 由调用方传入，这里不再 createRun
+
 
 	// 4. 依次执行每个节点
 	var results []NodeExecutionResult
@@ -64,8 +71,37 @@ func (e *WorkflowEngine) Execute() (*RunResult, error) {
 	hasError := false
 
 	for _, node := range orderedNodes {
-		// 跳过不需要执行的节点类型
-		if node.NodeType == "scene" || node.NodeType == "start" || node.NodeType == "end" {
+		// start/end 节点是流程标记，纯视觉用，不执行
+		if node.NodeType == "start" || node.NodeType == "end" {
+			continue
+		}
+
+		// scene 节点是数据容器，但它需要"虚拟执行"以把 description/script 暴露给下游
+		// 默认跳过已成功执行的节点（除非强制重新执行）
+		// 强制执行的来源有两种：全局 e.Force 或节点级 config.force_execute
+		nodeForceExecute := false
+		if node.ConfigJSON != nil {
+			var cfg map[string]interface{}
+			if json.Unmarshal([]byte(*node.ConfigJSON), &cfg) == nil {
+				if v, ok := cfg["force_execute"].(bool); ok {
+					nodeForceExecute = v
+				}
+			}
+		}
+		if !e.Force && !nodeForceExecute && node.State == "done" {
+			output := ""
+			if node.ResultJSON != nil {
+				output = *node.ResultJSON
+			}
+			results = append(results, NodeExecutionResult{
+				NodeID:  node.ID,
+				Status:  "done",
+				Output:  output,
+				Credits: 0,
+			})
+			if node.ResultJSON != nil {
+				nodeOutputs[node.ID] = *node.ResultJSON
+			}
 			continue
 		}
 
@@ -82,8 +118,12 @@ func (e *WorkflowEngine) Execute() (*RunResult, error) {
 				result.Output, time.Now(), node.ID)
 			nodeOutputs[node.ID] = result.Output
 		} else {
+			errOutput, _ := json.Marshal(map[string]interface{}{
+				"error":   result.Error,
+				"credits": 0,
+			})
 			database.DB.Exec("UPDATE storyboard_nodes SET state = 'error', result_json = ?, updated_at = ? WHERE id = ?",
-				result.Error, time.Now(), node.ID)
+				string(errOutput), time.Now(), node.ID)
 			hasError = true
 		}
 	}
@@ -118,7 +158,11 @@ func (e *WorkflowEngine) ExecuteNode(nodeID int) (*NodeExecutionResult, error) {
 	if result.Status == "done" {
 		database.DB.Exec("UPDATE storyboard_nodes SET state = 'done', result_json = ? WHERE id = ?", result.Output, nodeID)
 	} else {
-		database.DB.Exec("UPDATE storyboard_nodes SET state = 'error', result_json = ? WHERE id = ?", result.Error, nodeID)
+		errOutput, _ := json.Marshal(map[string]interface{}{
+			"error":   result.Error,
+			"credits": 0,
+		})
+		database.DB.Exec("UPDATE storyboard_nodes SET state = 'error', result_json = ? WHERE id = ?", string(errOutput), nodeID)
 	}
 
 	return &result, nil
@@ -146,12 +190,30 @@ func (e *WorkflowEngine) executeNode(node database.StoryboardNode, nodeOutputs m
 	inputText := e.getInputText(node, nodeOutputs)
 
 	switch node.NodeType {
+	case "scene":
+		// scene 节点是数据容器，不调用 AI，但要把 config 暴露给下游节点
+		// 虚拟 result_json 包含 description / script / text 三个字段
+		// 下游节点通过 getInputText 拿 description（画面描述）作为 prompt
+		sceneOutput := map[string]interface{}{
+			"text":       getStringConfig(config, "description", getStringConfig(config, "script", "")),
+			"description": getStringConfig(config, "description", ""),
+			"script":     getStringConfig(config, "script", ""),
+		}
+		sceneJSON, _ := json.Marshal(sceneOutput)
+		return NodeExecutionResult{
+			NodeID:  node.ID,
+			Status:  "done",
+			Output:  string(sceneJSON),
+			Credits: 0,
+		}
 	case "ai_text":
 		return e.executeAIText(node.ID, config, inputText)
 	case "ai_split":
 		return e.executeAISplit(node.ID, inputText)
 	case "ai_image":
-		return e.executeAIImage(node.ID)
+		return e.executeAIImage(node.ID, config, inputText)
+	case "ai_video":
+		return e.executeAIVideo(node.ID, config, inputText, nodeOutputs)
 	case "tts":
 		return e.executeTTS(node.ID)
 	default:
@@ -236,7 +298,7 @@ func (e *WorkflowEngine) executeAISplit(nodeID int, inputText string) NodeExecut
 		return NodeExecutionResult{
 			NodeID:  nodeID,
 			Status:  "error",
-			Error:   "缺少输入文案：请将 ai_text 节点连接到此节点",
+			Error:   "缺少输入文案：请连接 ai_text 节点或在节点配置中填写 input_text",
 			Credits: 0,
 		}
 	}
@@ -263,12 +325,130 @@ func (e *WorkflowEngine) executeAISplit(nodeID int, inputText string) NodeExecut
 	}
 }
 
-// executeAIImage 执行 AI 图片生成节点（占位）
-func (e *WorkflowEngine) executeAIImage(nodeID int) NodeExecutionResult {
+// executeAIImage 执行 AI 图片生成节点
+func (e *WorkflowEngine) executeAIImage(nodeID int, config map[string]interface{}, inputText string) NodeExecutionResult {
+	prompt := inputText
+	if prompt == "" {
+		if p, ok := config["prompt"].(string); ok {
+			prompt = p
+		}
+	}
+	if prompt == "" {
+		return NodeExecutionResult{
+			NodeID:  nodeID,
+			Status:  "error",
+			Error:   "缺少图片提示词：请在上游节点或配置中提供 prompt",
+			Credits: 0,
+		}
+	}
+
+	size := getStringConfig(config, "size", "1024x768")
+	responseFormat := getStringConfig(config, "response_format", "url")
+	provider := NewAgnesService(GetUserModelConfig(e.UserID, "image"))
+	result, err := provider.GenerateImage(AgnesImageRequest{
+		Prompt:         prompt,
+		Size:           size,
+		ResponseFormat: responseFormat,
+	})
+	if err != nil {
+		return NodeExecutionResult{
+			NodeID:  nodeID,
+			Status:  "error",
+			Error:   fmt.Sprintf("AI 图片生成失败: %v", err),
+			Credits: 0,
+		}
+	}
+
+	output, _ := json.Marshal(map[string]interface{}{
+		"image_url":      result.URL,
+		"b64_json":       result.B64JSON,
+		"revised_prompt": result.RevisedPrompt,
+		"model":          result.Model,
+		"size":           result.Size,
+		"credits":        0,
+	})
 	return NodeExecutionResult{
 		NodeID:  nodeID,
-		Status:  "error",
-		Error:   "AI 图片生成功能暂未实现",
+		Status:  "done",
+		Output:  string(output),
+		Credits: 0,
+	}
+}
+
+// executeAIVideo 执行 AI 视频生成节点
+func (e *WorkflowEngine) executeAIVideo(nodeID int, config map[string]interface{}, inputText string, nodeOutputs map[int]string) NodeExecutionResult {
+	mode := getStringConfig(config, "mode", "text_to_video")
+	prompt := inputText
+	if prompt == "" {
+		if p, ok := config["prompt"].(string); ok {
+			prompt = p
+		}
+	}
+	if prompt == "" {
+		return NodeExecutionResult{
+			NodeID:  nodeID,
+			Status:  "error",
+			Error:   "缺少视频提示词：请在上游节点或配置中提供 prompt",
+			Credits: 0,
+		}
+	}
+
+	imageURL := ""
+	if mode == "image_to_video" {
+		imageURL = e.getInputImageURL(nodeID, nodeOutputs)
+		if imageURL == "" {
+			if u, ok := config["image_url"].(string); ok {
+				imageURL = strings.TrimSpace(u)
+			}
+		}
+		if imageURL == "" {
+			return NodeExecutionResult{
+				NodeID:  nodeID,
+				Status:  "error",
+				Error:   "缺少输入图片：请连接 AI 图片节点或手动填写图片 URL",
+				Credits: 0,
+			}
+		}
+	}
+
+	provider := NewAgnesService(GetUserModelConfig(e.UserID, "video"))
+	result, err := provider.GenerateVideo(AgnesVideoRequest{
+		Prompt:         prompt,
+		ImageURL:       imageURL,
+		Width:          getIntConfig(config, "width", 1152),
+		Height:         getIntConfig(config, "height", 768),
+		NumFrames:      getIntConfig(config, "num_frames", 121),
+		FrameRate:      getIntConfig(config, "frame_rate", 24),
+		NegativePrompt: getStringConfig(config, "negative_prompt", ""),
+	})
+	if err != nil {
+		return NodeExecutionResult{
+			NodeID:  nodeID,
+			Status:  "error",
+			Error:   fmt.Sprintf("AI 视频生成失败: %v", err),
+			Credits: 0,
+		}
+	}
+
+	output, _ := json.Marshal(map[string]interface{}{
+		"video_url":  result.VideoURL,
+		"task_id":    result.TaskID,
+		"video_id":   result.VideoID,
+		"status":     result.Status,
+		"progress":   result.Progress,
+		"model":      result.Model,
+		"mode":       mode,
+		"image_url":  imageURL,
+		"width":      result.Width,
+		"height":     result.Height,
+		"num_frames": result.NumFrames,
+		"frame_rate": result.FrameRate,
+		"credits":    0,
+	})
+	return NodeExecutionResult{
+		NodeID:  nodeID,
+		Status:  "done",
+		Output:  string(output),
 		Credits: 0,
 	}
 }
@@ -286,7 +466,7 @@ func (e *WorkflowEngine) executeTTS(nodeID int) NodeExecutionResult {
 // nodeNeedsInput 判断节点类型是否需要上游输入
 func (e *WorkflowEngine) nodeNeedsInput(node database.StoryboardNode) bool {
 	return node.NodeType == "ai_text" || node.NodeType == "ai_image" ||
-		node.NodeType == "ai_split" || node.NodeType == "tts"
+		node.NodeType == "ai_split" || node.NodeType == "ai_video" || node.NodeType == "tts"
 }
 
 // nodeHasInput 判断节点是否有有效输入（上游边输出或配置提示词）
@@ -326,6 +506,26 @@ func (e *WorkflowEngine) getInputText(node database.StoryboardNode, nodeOutputs 
 				if text, ok := result["text"].(string); ok {
 					return text
 				}
+				if prompt, ok := result["prompt"].(string); ok {
+					return prompt
+				}
+				// ai_split 节点的输出是 {scenes: [...]}
+				// 把所有 scenes 的 script 字段拼成一段文本
+				if scenes, ok := result["scenes"].([]interface{}); ok && len(scenes) > 0 {
+					parts := make([]string, 0, len(scenes))
+					for _, s := range scenes {
+						scene, ok := s.(map[string]interface{})
+						if !ok {
+							continue
+						}
+						if script, ok := scene["script"].(string); ok && strings.TrimSpace(script) != "" {
+							parts = append(parts, script)
+						}
+					}
+					if len(parts) > 0 {
+						return strings.Join(parts, "\n")
+					}
+				}
 			}
 		}
 	}
@@ -341,6 +541,51 @@ func (e *WorkflowEngine) getInputText(node database.StoryboardNode, nodeOutputs 
 		}
 	}
 	return ""
+}
+
+func (e *WorkflowEngine) getInputImageURL(nodeID int, nodeOutputs map[int]string) string {
+	edges, _ := database.GetEdgesByStoryboard(e.StoryboardID)
+	for _, edge := range edges {
+		if edge.TargetNodeID != nodeID {
+			continue
+		}
+		output, ok := nodeOutputs[edge.SourceNodeID]
+		if !ok {
+			continue
+		}
+		var result map[string]interface{}
+		if err := json.Unmarshal([]byte(output), &result); err != nil {
+			continue
+		}
+		if imageURL, ok := result["image_url"].(string); ok && strings.TrimSpace(imageURL) != "" {
+			return strings.TrimSpace(imageURL)
+		}
+		if imageURL, ok := result["imageUrl"].(string); ok && strings.TrimSpace(imageURL) != "" {
+			return strings.TrimSpace(imageURL)
+		}
+	}
+	return ""
+}
+
+func getStringConfig(config map[string]interface{}, key, defaultValue string) string {
+	if value, ok := config[key].(string); ok && strings.TrimSpace(value) != "" {
+		return strings.TrimSpace(value)
+	}
+	return defaultValue
+}
+
+func getIntConfig(config map[string]interface{}, key string, defaultValue int) int {
+	switch value := config[key].(type) {
+	case int:
+		return value
+	case float64:
+		return int(value)
+	case json.Number:
+		if i, err := value.Int64(); err == nil {
+			return int(i)
+		}
+	}
+	return defaultValue
 }
 
 // topologicalSort 拓扑排序 - BFS (Kahn's algorithm)
@@ -381,8 +626,8 @@ func topologicalSort(nodes []database.StoryboardNode, edges []database.Storyboar
 	return sorted
 }
 
-// createRun 创建执行记录
-func createRun(storyboardID, userID int) (int, error) {
+// CreateRun 创建执行记录，返回 runID。导出给 handler 预先创建 run。
+func CreateRun(storyboardID, userID int) (int, error) {
 	result, err := database.DB.Exec(`
 		INSERT INTO storyboard_runs (storyboard_id, user_id, status) VALUES (?, ?, 'running')
 	`, storyboardID, userID)

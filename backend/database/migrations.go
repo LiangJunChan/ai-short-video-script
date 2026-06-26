@@ -23,6 +23,17 @@ func RunStoryboardRunMigrations() {
 	if err != nil {
 		log.Printf("Warning: create storyboard_runs table: %v", err)
 	}
+
+	// 孤儿 run 兜底清理：启动时把超过 30 分钟仍 running 的 run 标记为 failed
+	// （无取消功能，goroutine panic 或重启可能留下永久 running 的 run，会卡住前端轮询）
+	_, err = DB.Exec(`
+		UPDATE storyboard_runs
+		SET status = 'failed', finished_at = CURRENT_TIMESTAMP
+		WHERE status = 'running' AND started_at < datetime('now', '-30 minutes')
+	`)
+	if err != nil {
+		log.Printf("Warning: cleanup orphan runs: %v", err)
+	}
 }
 
 // RunSquareMigrations 执行短视频广场功能数据库迁移

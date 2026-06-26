@@ -101,10 +101,10 @@ function SquarePage() {
   if (isError) {
     return (
       <div className="text-center py-24">
-        <p className="text-slate-600">加载失败，请刷新重试</p>
+        <p className="text-av-text-secondary">加载失败，请刷新重试</p>
         <button
           onClick={() => refetch()}
-          className="mt-4 px-4 py-2 bg-sky-500 text-white rounded-lg hover:bg-sky-600"
+          className="mt-4 btn-primary px-4 py-2"
         >
           重新加载
         </button>
@@ -116,27 +116,27 @@ function SquarePage() {
   const pagination = data?.data?.pagination
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-8">
+    <div className="max-w-[1400px] mx-auto px-8 py-8">
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-slate-900">短视频广场</h1>
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-slate-500">排序：</span>
+        <h1 className="text-2xl font-semibold gradient-text">短视频广场</h1>
+        <div className="flex items-center gap-2 bg-av-bg-tertiary/60 rounded-full p-1">
+          <span className="text-sm text-av-text-secondary pl-2">排序：</span>
           <button
             onClick={() => { setSortBy('newest'); setPage(1); }}
-            className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
+            className={`px-3 py-1.5 text-sm rounded-full transition-all duration-200 ${
               sortBy === 'newest'
-                ? 'bg-sky-500 text-white'
-                : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                ? 'bg-av-bg-elevated shadow-av-sm ring-1 ring-primary/30 text-primary font-medium'
+                : 'text-av-text-secondary hover:text-av-text-primary'
             }`}
           >
             最新
           </button>
           <button
             onClick={() => { setSortBy('popular'); setPage(1); }}
-            className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
+            className={`px-3 py-1.5 text-sm rounded-full transition-all duration-200 ${
               sortBy === 'popular'
-                ? 'bg-sky-500 text-white'
-                : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                ? 'bg-av-bg-elevated shadow-av-sm ring-1 ring-primary/30 text-primary font-medium'
+                : 'text-av-text-secondary hover:text-av-text-primary'
             }`}
           >
             热门
@@ -146,18 +146,18 @@ function SquarePage() {
 
       {videos.length === 0 ? (
         <div className="text-center py-24">
-          <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-slate-50 flex items-center justify-center">
-            <svg className="w-10 h-10 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <div className="w-24 h-24 mx-auto mb-6 rounded-2xl bg-primary/10 flex items-center justify-center">
+            <svg className="w-12 h-12 text-av-text-tertiary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <rect x="2" y="4" width="20" height="16" rx="2"/>
               <polygon points="10,8 16,12 10,16" fill="currentColor" stroke="none" opacity="0.3"/>
             </svg>
           </div>
-          <h3 className="text-lg font-medium text-slate-900 mb-2">广场暂无视频</h3>
-          <p className="text-slate-500 mb-6">成为第一个上传爆款视频的创作者吧！</p>
+          <h3 className="text-lg font-medium text-av-text-primary mb-2">广场暂无视频</h3>
+          <p className="text-av-text-secondary mb-6">成为第一个上传爆款视频的创作者吧！</p>
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
             {videos.map((video: SquareVideo) => (
               <div key={video.id} className="relative group">
                 <VideoCard
@@ -172,7 +172,7 @@ function SquarePage() {
                       e.stopPropagation()
                       handleCollect(video.id)
                     }}
-                    className="p-2 bg-white/90 backdrop-blur rounded-lg shadow-md hover:bg-sky-500 hover:text-white transition-colors"
+                    className="p-2 bg-av-bg-elevated/80 backdrop-blur-sm rounded-xl shadow-av-sm hover:bg-primary hover:text-av-text-inverse transition-colors"
                     title="收藏到素材库"
                   >
                     <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -183,7 +183,7 @@ function SquarePage() {
                 {/* Collect count badge */}
                 {video.collectCount > 0 && (
                   <div className="absolute top-2 left-2">
-                    <span className="px-2 py-1 bg-black/60 text-white text-xs rounded-lg backdrop-blur">
+                    <span className="px-2 py-1 bg-[rgba(8,9,13,0.6)] backdrop-blur-sm text-av-text-primary text-xs rounded-xl">
                       ♡ {video.collectCount}
                     </span>
                   </div>
@@ -192,7 +192,7 @@ function SquarePage() {
                 {video.tags && (
                   <div className="mt-2 flex flex-wrap gap-1">
                     {video.tags.split(',').slice(0, 3).map((tag: string) => (
-                      <span key={tag} className="px-2 py-0.5 bg-slate-100 text-slate-600 text-xs rounded">
+                      <span key={tag} className="px-2 py-0.5 bg-av-bg-tertiary text-av-text-secondary text-xs rounded-full">
                         {tag.trim()}
                       </span>
                     ))}
@@ -208,19 +208,19 @@ function SquarePage() {
               <button
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="px-4 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="px-4 py-2 text-sm font-medium text-av-text-secondary bg-av-bg-secondary border border-av-border-subtle rounded-full hover:bg-av-bg-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 上一页
               </button>
 
-              <span className="px-4 py-2 text-sm text-slate-500">
+              <span className="px-4 py-2 text-sm text-av-text-secondary">
                 {page} / {pagination.totalPages}
               </span>
 
               <button
                 onClick={() => setPage(p => Math.min(pagination.totalPages, p + 1))}
                 disabled={page === pagination.totalPages}
-                className="px-4 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="px-4 py-2 text-sm font-medium text-av-text-secondary bg-av-bg-secondary border border-av-border-subtle rounded-full hover:bg-av-bg-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 下一页
               </button>
@@ -232,14 +232,14 @@ function SquarePage() {
       {/* Collection Selector Modal */}
       {selectedVideoId !== null && (
         <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center animate-fade-in"
+          className="fixed inset-0 bg-[rgba(8,9,13,0.7)] backdrop-blur-sm z-av-modal flex items-center justify-center animate-fade-in"
           onClick={handleCancel}
         >
           <div
-            className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm mx-4 animate-scale-in"
+            className="surface neon-border rounded-xl shadow-av-floating p-6 w-full max-w-sm mx-4 animate-scale-in"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-lg font-semibold text-slate-900 mb-4">收藏视频到收藏夹</h3>
+            <h3 className="text-lg font-semibold text-av-text-primary mb-4">收藏视频到收藏夹</h3>
             <CollectionSelector
               collections={collectionsData?.data?.collections || []}
               videoCollections={[]}
@@ -248,7 +248,7 @@ function SquarePage() {
             <div className="mt-4 flex justify-end">
               <button
                 onClick={handleCancel}
-                className="px-4 py-2 text-sm text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors"
+                className="px-4 py-2 text-sm text-av-text-secondary bg-av-bg-tertiary rounded-lg hover:bg-av-bg-hover transition-colors"
               >
                 取消
               </button>
@@ -259,7 +259,7 @@ function SquarePage() {
 
       {/* Toast */}
       {toast && (
-        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-6 py-3 rounded-xl shadow-lg z-50 animate-fade-in">
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-av-bg-elevated/90 backdrop-blur-sm text-av-text-primary px-6 py-3 rounded-2xl shadow-av-md z-av-toast animate-fade-in">
           {toast}
         </div>
       )}

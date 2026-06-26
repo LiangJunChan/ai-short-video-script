@@ -58,17 +58,19 @@ function LibraryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-av-bg-primary">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="border-b border-slate-100">
+        <div className="border-b border-av-border-subtle">
           <div className="flex items-center justify-between h-16 px-6">
             <div>
-              <h1 className="text-xl font-semibold text-slate-900">我的素材库</h1>
+              <h1 className="text-2xl font-bold gradient-text">
+                我的素材库
+              </h1>
             </div>
             <button
               onClick={() => navigate('/')}
-              className="flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900 transition-colors"
+              className="flex items-center gap-2 text-sm text-av-text-secondary hover:text-primary transition-colors duration-200"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M19 12H5M12 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round"/>
@@ -82,29 +84,29 @@ function LibraryPage() {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 py-8 px-6">
           {/* Collections */}
           <div className="lg:col-span-3">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-semibold text-slate-900">收藏夹</h2>
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-xl font-bold text-av-text-primary">收藏夹</h2>
               <button
                 onClick={() => setShowCreateModal(true)}
-                className="btn-primary px-4 py-2 text-sm shadow-sm"
+                className="btn-primary px-4 py-2 text-sm shadow-av-sm hover:shadow-av-glow transition-shadow duration-200"
               >
                 + 新建收藏夹
               </button>
             </div>
 
             {collectionsLoading ? (
-              <div className="text-center py-12 text-slate-500">加载中...</div>
+              <div className="text-center py-16 text-av-text-tertiary">加载中...</div>
             ) : !collectionsData?.data?.collections || collectionsData.data.collections.length === 0 ? (
-              <div className="card p-12 text-center">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-slate-50 flex items-center justify-center">
-                  <svg className="w-8 h-8 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <div className="rounded-2xl surface shadow-av-sm p-12 text-center">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-primary/10 flex items-center justify-center">
+                  <svg className="w-8 h-8 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                     <path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                 </div>
-                <p className="text-slate-600 mb-4">还没有收藏夹</p>
+                <p className="text-av-text-secondary mb-4">还没有收藏夹</p>
                 <button
                   onClick={() => setShowCreateModal(true)}
-                  className="btn-primary px-6 py-2 text-sm shadow-sm"
+                  className="btn-primary px-6 py-2 text-sm shadow-av-sm hover:shadow-av-glow transition-shadow duration-200"
                 >
                   创建第一个收藏夹
                 </button>
@@ -114,19 +116,23 @@ function LibraryPage() {
                 {collectionsData.data.collections.map((collection: Collection) => (
                   <div
                     key={collection.id}
-                    className="card p-6 hover:shadow-md cursor-pointer group"
+                    className="collection-card rounded-xl bg-av-bg-secondary border border-av-border-subtle shadow-av-sm p-6 hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-av-glow transition-all duration-300 cursor-pointer group"
                     onClick={() => navigate(`/library/collections/${collection.id}`)}
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          {collection.icon && <span className="text-xl">{collection.icon}</span>}
-                          <h3 className="font-semibold text-slate-900">{collection.name}</h3>
+                        <div className="flex items-center gap-2.5 mb-2">
+                          {collection.icon && (
+                            <span className="text-xl flex items-center justify-center w-9 h-9 rounded-xl bg-av-bg-tertiary shadow-av-sm">
+                              {collection.icon}
+                            </span>
+                          )}
+                          <h3 className="font-semibold text-av-text-primary">{collection.name}</h3>
                         </div>
                         {collection.description && (
-                          <p className="text-sm text-slate-500 mb-2 line-clamp-2">{collection.description}</p>
+                          <p className="text-sm text-av-text-tertiary mb-2 line-clamp-2">{collection.description}</p>
                         )}
-                        <div className="flex items-center gap-2 text-sm text-slate-400">
+                        <div className="flex items-center gap-2 text-sm text-primary">
                           <span>{collection.videoCount} 个视频</span>
                         </div>
                       </div>
@@ -135,7 +141,7 @@ function LibraryPage() {
                           e.stopPropagation()
                           handleDeleteCollection(collection.id, collection.name)
                         }}
-                        className="text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-1"
+                        className="text-av-text-tertiary hover:text-av-state-error opacity-0 group-hover:opacity-100 transition-opacity p-1"
                       >
                         <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                           <path d="M18 6L6 18M6 6l12 12" strokeLinecap="round"/>
@@ -157,7 +163,7 @@ function LibraryPage() {
                 >
                   上一页
                 </button>
-                <span className="text-sm text-slate-500">
+                <span className="text-sm text-av-text-tertiary">
                   {page} / {collectionsData.data.pagination.totalPages}
                 </span>
                 <button
@@ -173,22 +179,22 @@ function LibraryPage() {
 
           {/* Tags Sidebar */}
           <div className="lg:col-span-1">
-            <h2 className="text-lg font-semibold text-slate-900 mb-6">标签</h2>
+            <h2 className="text-xl font-bold text-av-text-primary mb-6">标签</h2>
             {tagsLoading ? (
-              <div className="text-center py-12 text-slate-500">加载中...</div>
+              <div className="text-center py-12 text-av-text-tertiary">加载中...</div>
             ) : !tagsData?.data?.tags || tagsData.data.tags.length === 0 ? (
-              <div className="card p-6 text-center">
-                <p className="text-sm text-slate-500">还没有标签</p>
-                <p className="text-xs text-slate-400 mt-2">在视频详情页添加标签</p>
+              <div className="rounded-2xl bg-av-bg-secondary border border-av-border-subtle shadow-av-sm p-6 text-center">
+                <p className="text-sm text-av-text-tertiary">还没有标签</p>
+                <p className="text-xs text-primary mt-2">在视频详情页添加标签</p>
               </div>
             ) : (
-              <div className="card p-6">
+              <div className="rounded-2xl bg-av-bg-secondary border border-av-border-subtle shadow-av-sm p-6">
                 <div className="flex flex-wrap gap-2">
                   {tagsData.data.tags.map((tag: Tag) => (
                     <div key={tag.id} className="group inline-flex items-center">
                       <button
                         onClick={() => navigate(`/library/tags/${tag.id}`)}
-                        className="badge badge-ice hover:bg-sky-100 transition-colors"
+                        className="badge badge-ice hover:shadow-av-sm transition-all duration-200"
                       >
                         #{tag.name} ({tag.usageCount})
                       </button>
@@ -197,7 +203,7 @@ function LibraryPage() {
                           e.stopPropagation()
                           handleDeleteTag(tag.id, tag.name)
                         }}
-                        className="ml-1 text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="ml-1 text-av-text-tertiary hover:text-av-state-error opacity-0 group-hover:opacity-100 transition-opacity"
                       >
                         ×
                       </button>
@@ -210,18 +216,18 @@ function LibraryPage() {
             {/* Quick Search */}
             <button
               onClick={() => navigate('/library/search')}
-              className="card w-full mt-4 p-4 text-left hover:shadow-md transition-shadow"
+              className="rounded-2xl bg-av-bg-secondary border border-av-border-subtle shadow-av-sm w-full mt-4 p-4 text-left hover:border-primary/40 hover:shadow-av-md transition-all duration-300"
             >
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-sky-50 flex items-center justify-center">
-                  <svg className="w-5 h-5 text-sky-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <div className="w-10 h-10 rounded-xl bg-av-bg-tertiary flex items-center justify-center">
+                  <svg className="w-5 h-5 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <circle cx="11" cy="11" r="8"/>
                     <path d="M21 21l-4.35-4.35" strokeLinecap="round"/>
                   </svg>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-slate-900">搜索素材库</p>
-                  <p className="text-xs text-slate-500">关键词、标签、收藏夹</p>
+                  <p className="text-sm font-medium text-av-text-primary">搜索素材库</p>
+                  <p className="text-xs text-av-text-tertiary">关键词、标签、收藏夹</p>
                 </div>
               </div>
             </button>
@@ -231,13 +237,13 @@ function LibraryPage() {
 
       {/* Create Collection Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 animate-scale-in">
-            <div className="flex items-center justify-between p-6 border-b border-slate-100">
-              <h2 className="text-xl font-semibold text-slate-900">创建收藏夹</h2>
+        <div className="fixed inset-0 z-av-modal flex items-center justify-center bg-[rgba(8,9,13,0.7)] backdrop-blur-sm animate-fade-in">
+          <div className="surface neon-border rounded-xl shadow-av-floating w-full max-w-md mx-4 animate-scale-in">
+            <div className="flex items-center justify-between p-6 border-b border-av-border-subtle">
+              <h2 className="text-xl font-semibold text-av-text-primary">创建收藏夹</h2>
               <button
                 onClick={() => setShowCreateModal(false)}
-                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-lg transition-colors"
+                className="p-2 text-av-text-tertiary hover:text-primary hover:bg-av-bg-hover rounded-lg transition-colors"
               >
                 <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M18 6L6 18M6 6l12 12" strokeLinecap="round" strokeLinejoin="round"/>
@@ -247,7 +253,7 @@ function LibraryPage() {
 
             <form onSubmit={handleCreateCollection} className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">名称</label>
+                <label className="block text-sm font-medium text-av-text-secondary mb-2">名称</label>
                 <input
                   type="text"
                   value={newCollection.name}
@@ -259,7 +265,7 @@ function LibraryPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">图标（可选）</label>
+                <label className="block text-sm font-medium text-av-text-secondary mb-2">图标（可选）</label>
                 <input
                   type="text"
                   value={newCollection.icon}
@@ -269,7 +275,7 @@ function LibraryPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">描述（可选）</label>
+                <label className="block text-sm font-medium text-av-text-secondary mb-2">描述（可选）</label>
                 <textarea
                   value={newCollection.description}
                   onChange={(e) => setNewCollection({ ...newCollection, description: e.target.value })}
@@ -288,7 +294,7 @@ function LibraryPage() {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 btn-primary py-2.5 text-sm shadow-sm"
+                  className="flex-1 btn-primary py-2.5 text-sm shadow-av-sm"
                 >
                   创建
                 </button>

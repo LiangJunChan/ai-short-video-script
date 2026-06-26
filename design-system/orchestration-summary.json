@@ -1,0 +1,56 @@
+{
+  "project": {
+    "name": "AI短视频脚本平台 · 科技感",
+    "path": "/Users/chenliangjun/Library/Application Support/TRAE SOLO CN/ModularData/ai-agent/work-mode-projects/6a3cca23e57bf80cc73e32c9/ai-video-platform",
+    "operation": "create",
+    "deviceType": "desktop",
+    "language": "zh-CN",
+    "styleDefinitionBrief": "Retro-futuristic dark theme: deep navy-black bg (#08090d), cyan/mint primary (#06d6a0), electric blue accent (#4cc9f0), Inter font, neon border glow effects, grid background pattern, glassmorphism cards, AI creative tool aesthetic",
+    "designRead": "AI creative tool / content creators / retro-futuristic tech trust / medium density / avoid purple neon or generic blue SaaS",
+    "designDials": { "layoutVariance": 3, "motionIntensity": 2, "visualDensity": 3 },
+    "styleContinuityAnchors": {
+      "colorSystem": { "primaryColorRole": "cyan/mint #06d6a0 for primary CTA, active states, neon glow borders, and AI accent", "brandHuePolicy": "single cyan primary hue; electric blue #4cc9f0 as secondary accent for info/highlights only", "stateColors": "semantic success/warning/error/info tokens" },
+      "shapeSystem": "radius-sm: 6px, radius-md: 10px, radius-lg: 14px, radius-xl: 18px, radius-full: 9999px",
+      "typographySystem": "Inter for all text; JetBrains Mono for data values",
+      "spacingSystem": "4px base grid, generous 24-32px section gaps",
+      "componentLanguage": "dark glassmorphism cards with neon border glow, grid background pattern, subtle scanline effects",
+      "surfaceAndDepth": "neon-border static surfaces; glow shadows for primary emphasis; deep shadows only for floating layers",
+      "imageryAndIconography": "minimal decorative imagery; neon-outlined icons; video thumbnails with glow border on hover",
+      "interactionTone": "smooth 200-300ms transitions, glow pulse on key elements, subtle hover lift"
+    },
+    "sharedProjectShellContract": {
+      "navigationShell": "top navbar with glassmorphism bg, logo with glow, pill-style nav items, credits badge, action buttons, user avatar",
+      "primaryColorSystem": "cyan/mint #06d6a0 primary; electric blue #4cc9f0 secondary accent",
+      "typographySystem": "Inter display + body; JetBrains Mono for data; tight tracking for headings",
+      "radiusScale": "6/10/14/18/9999px scale; max 18px for cards",
+      "surfaceDepthModel": "neon-border cards; glow effects on primary elements; shadow only for modals/dropdowns",
+      "ctaStyle": "gradient primary buttons (cyan→blue) with glow hover; ghost secondary buttons with neon border",
+      "alignmentRules": "left-aligned content; centered video grid; grid-based card layout"
+    },
+    "generationTree": {
+      "root": {
+        "nodeId": "gen-project-shell",
+        "kind": "project-shell",
+        "pageIds": ["page-login", "page-square", "page-library", "page-storyboards"],
+        "output": "partials/project-shell.html",
+        "sharedRegions": ["topbar"],
+        "privateRegions": [],
+        "mutableSlots": ["activeNavItem", "pageTitle"],
+        "status": "planned",
+        "children": [
+          { "nodeId": "gen-page-login", "kind": "page-leaf", "pageIds": ["page-login"], "output": "pages/login.html", "sharedRegions": [], "privateRegions": ["login form with grid bg"], "mutableSlots": [], "status": "planned", "children": [] },
+          { "nodeId": "gen-page-square", "kind": "page-leaf", "pageIds": ["page-square"], "output": "pages/square.html", "sharedRegions": ["topbar"], "privateRegions": ["video grid, sort controls, pagination"], "mutableSlots": ["activeNavItem"], "status": "planned", "children": [] },
+          { "nodeId": "gen-page-library", "kind": "page-leaf", "pageIds": ["page-library"], "output": "pages/library.html", "sharedRegions": ["topbar"], "privateRegions": ["collection cards, tags sidebar, search"], "mutableSlots": ["activeNavItem"], "status": "planned", "children": [] },
+          { "nodeId": "gen-page-storyboards", "kind": "page-leaf", "pageIds": ["page-storyboards"], "output": "pages/storyboards.html", "sharedRegions": ["topbar"], "privateRegions": ["storyboard list, create button"], "mutableSlots": ["activeNavItem"], "status": "planned", "children": [] }
+        ]
+      }
+    }
+  },
+  "designSource": { "operatingMode": "free-explore", "libraryIdentity": null, "cssFilePath": "/Users/chenliangjun/Library/Application Support/TRAE SOLO CN/ModularData/ai-agent/work-mode-projects/6a3cca23e57bf80cc73e32c9/ai-video-platform/colors_and_type.css", "brandPrefix": "av", "themeMode": "dark" },
+  "pages": [
+    { "nodeId": "page-login", "slug": "login", "title": "登录", "htmlSrc": "pages/login.html", "pageIndex": 1, "pageType": "showcase", "businessScenario": "Login page with grid background and glowing form card", "soulElement": "Animated grid background with subtle glow pulse on logo" },
+    { "nodeId": "page-square", "slug": "square", "title": "短视频广场", "htmlSrc": "pages/square.html", "pageIndex": 2, "pageType": "information-dense", "businessScenario": "Video discovery grid with sort, collect, and pagination", "soulElement": "Video cards with neon border glow on hover, collect count badge with glass effect" },
+    { "nodeId": "page-library", "slug": "library", "title": "素材库", "htmlSrc": "pages/library.html", "pageIndex": 3, "pageType": "information-dense", "businessScenario": "Collection management with tags sidebar and search", "soulElement": "Collection cards with emoji display area and gradient glow border" },
+    { "nodeId": "page-storyboards", "slug": "storyboards", "title": "脚本工作台", "htmlSrc": "pages/storyboards.html", "pageIndex": 4, "pageType": "information-dense", "businessScenario": "Storyboard list with create new and status indicators", "soulElement": "Storyboard cards with AI processing status glow animation" }
+  ]
+}

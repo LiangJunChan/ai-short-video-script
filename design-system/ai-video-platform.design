@@ -1,0 +1,96 @@
+{
+  "data": [
+    {
+      "id": "page-login",
+      "title": "登录",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1782379900000,
+      "canvasData": {
+        "x": 0,
+        "y": 765,
+        "group": 0
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/login.html",
+        "interactions": []
+      }
+    },
+    {
+      "id": "page-square",
+      "title": "短视频广场",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1782379900000,
+      "canvasData": {
+        "x": 620,
+        "y": 0,
+        "group": 0
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/square.html",
+        "interactions": [
+          {
+            "type": "navigate",
+            "domId": "nav-library",
+            "targetPageId": "page-library"
+          },
+          {
+            "type": "navigate",
+            "domId": "nav-storyboards",
+            "targetPageId": "page-storyboards"
+          }
+        ]
+      }
+    },
+    {
+      "id": "page-library",
+      "title": "素材库",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1782379900000,
+      "canvasData": {
+        "x": 0,
+        "y": 0,
+        "group": 0
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/library.html",
+        "interactions": [
+          {
+            "type": "navigate",
+            "domId": "nav-square",
+            "targetPageId": "page-square"
+          }
+        ]
+      }
+    },
+    {
+      "id": "page-storyboards",
+      "title": "脚本工作台",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1782379900000,
+      "canvasData": {
+        "x": 0,
+        "y": 377,
+        "group": 0
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/storyboards.html",
+        "interactions": [
+          {
+            "type": "navigate",
+            "domId": "nav-square",
+            "targetPageId": "page-square"
+          }
+        ]
+      }
+    }
+  ],
+  "config": {
+    "autoLayout": true,
+    "deviceType": "desktop",
+    "projectName": "AI短视频脚本平台 · 科技感"
+  }
+}

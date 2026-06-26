@@ -19,20 +19,20 @@ function ConfirmModal({
   isLoading = false,
   confirmButtonType = 'primary',
 }: ConfirmModalProps) {
-  const confirmButtonClass = confirmButtonType === 'danger' 
-    ? 'bg-red-500 text-white hover:bg-red-600'
-    : 'bg-gradient-to-r from-sky-400 to-blue-500 text-white hover:from-sky-500 hover:to-blue-600 shadow-sm'
+  const confirmButtonClass = confirmButtonType === 'danger'
+    ? 'bg-av-state-error text-white hover:bg-av-state-error/90 shadow-av-sm'
+    : 'btn-gradient-primary text-av-text-inverse'
 
-  const iconColor = confirmButtonType === 'danger' ? 'text-red-500' : 'text-sky-500'
-  const bgColor = confirmButtonType === 'danger' ? 'bg-red-50' : 'bg-sky-50'
+  const iconColor = confirmButtonType === 'danger' ? 'text-av-state-error' : 'text-primary'
+  const bgColor = confirmButtonType === 'danger' ? 'bg-av-state-error/10' : 'bg-primary/10'
 
   return (
     <div
-      className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center animate-fade-in"
+      className="fixed inset-0 bg-[rgba(8,9,13,0.7)] backdrop-blur-sm z-av-modal flex items-center justify-center animate-fade-in"
       onClick={onCancel}
     >
       <div
-        className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm mx-4 animate-scale-in"
+        className="surface neon-border rounded-xl p-6 w-full max-w-sm mx-4 animate-scale-in"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Icon */}
@@ -47,8 +47,8 @@ function ConfirmModal({
         </div>
 
         {/* Content */}
-        <h3 className="text-lg font-semibold text-center text-slate-900 mb-2">{title}</h3>
-        <p className="text-sm text-center text-slate-500 mb-6 whitespace-pre-line">{message}</p>
+        <h3 className="text-lg font-semibold text-center text-av-text-primary mb-2">{title}</h3>
+        <p className="text-sm text-center text-av-text-secondary mb-6 whitespace-pre-line">{message}</p>
 
         {/* Actions */}
         <div className="flex gap-3">
@@ -62,7 +62,7 @@ function ConfirmModal({
           <button
             onClick={onConfirm}
             disabled={isLoading}
-            className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-colors disabled:opacity-50 ${confirmButtonClass}`}
+            className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-all disabled:opacity-50 ${confirmButtonClass}`}
           >
             {isLoading ? '处理中...' : confirmText}
           </button>

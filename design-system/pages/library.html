@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>素材库 — AI短视频脚本平台</title>
+    <style id="theme-vars">
+/* ========================================
+   AI短视频脚本平台 — 科技感暗色主题
+   Retro-futuristic / AI Creative Tool
+   ======================================== */
+
+:root {
+  /* ── Color System ── */
+  --color-bg-primary: #08090d;
+  --color-bg-secondary: #0f1117;
+  --color-bg-tertiary: #161822;
+  --color-bg-elevated: #1c1f2e;
+  --color-bg-hover: #232738;
+  --color-bg-active: #2a2f42;
+
+  --color-border-default: #1e2233;
+  --color-border-subtle: #181b28;
+  --color-border-strong: #2a2f45;
+  --color-border-focus: #06d6a0;
+
+  --color-text-primary: #e8ecf4;
+  --color-text-secondary: #8892a8;
+  --color-text-tertiary: #5a6478;
+  --color-text-inverse: #08090d;
+
+  /* Brand Primary — Cyan/Mint */
+  --color-primary: #06d6a0;
+  --color-primary-hover: #34e0b5;
+  --color-primary-muted: rgba(6, 214, 160, 0.10);
+  --color-primary-subtle: rgba(6, 214, 160, 0.05);
+
+  /* Secondary Accent — Electric Blue */
+  --color-accent: #4cc9f0;
+  --color-accent-muted: rgba(76, 201, 240, 0.10);
+
+  /* State Colors */
+  --state-success: #06d6a0;
+  --state-warning: #ffd166;
+  --state-error: #ef476f;
+  --state-info: #4cc9f0;
+
+  /* ── Typography ── */
+  --font-display: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.8125rem;
+  --text-base: 0.875rem;
+  --text-lg: 1rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 2rem;
+
+  --leading-tight: 1.25;
+  --leading-normal: 1.5;
+
+  --tracking-tight: -0.02em;
+  --tracking-normal: 0;
+
+  --weight-normal: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  /* ── Spacing ── */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  /* ── Radius ── */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
+  --radius-full: 9999px;
+
+  /* ── Shadows (border-first for static; deeper for floating) ── */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.05);
+  --shadow-floating: 0 12px 40px rgba(0, 0, 0, 0.4);
+
+  /* Brand glow (not a standard shadow — for primary emphasis only) */
+  --shadow-glow: 0 0 20px rgba(6, 214, 160, 0.15);
+  --shadow-glow-strong: 0 0 40px rgba(6, 214, 160, 0.25);
+  --shadow-glow-accent: 0 0 20px rgba(76, 201, 240, 0.15);
+
+  /* ── Transitions ── */
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --duration: 200ms;
+  --duration-slow: 300ms;
+
+  /* ── Z-index ── */
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-modal: 300;
+  --z-toast: 400;
+}
+
+/* ── Dark mode defaults ── */
+html.dark {
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-primary);
+}
+
+body {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  letter-spacing: var(--tracking-normal);
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Typography ── */
+.heading-xl { font-family: var(--font-display); font-size: var(--text-3xl); font-weight: var(--weight-bold); line-height: var(--leading-tight); letter-spacing: var(--tracking-tight); }
+.heading-lg { font-family: var(--font-display); font-size: var(--text-2xl); font-weight: var(--weight-semibold); line-height: var(--leading-tight); letter-spacing: var(--tracking-tight); }
+.heading-md { font-family: var(--font-display); font-size: var(--text-xl); font-weight: var(--weight-semibold); line-height: var(--leading-tight); }
+.heading-sm { font-family: var(--font-display); font-size: var(--text-lg); font-weight: var(--weight-medium); line-height: var(--leading-tight); }
+.mono { font-family: var(--font-mono); font-size: var(--text-sm); }
+
+/* ── Surface & Card ── */
+.surface { background-color: var(--color-bg-secondary); border: 1px solid var(--color-border-subtle); border-radius: var(--radius-lg); }
+.surface-elevated { background-color: var(--color-bg-tertiary); border: 1px solid var(--color-border-default); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); }
+
+/* ── Gradient accents ── */
+.gradient-primary { background: linear-gradient(135deg, var(--color-primary), var(--color-accent)); }
+.gradient-text { background: linear-gradient(135deg, var(--color-primary), var(--color-accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+/* ── Glow effects ── */
+.glow-primary { box-shadow: var(--shadow-glow); }
+.glow-strong { box-shadow: var(--shadow-glow-strong); }
+.glow-accent { box-shadow: var(--shadow-glow-accent); }
+
+/* ── Neon border effect ── */
+.neon-border { border: 1px solid rgba(6, 214, 160, 0.2); box-shadow: inset 0 0 20px rgba(6, 214, 160, 0.03); }
+.neon-border-accent { border: 1px solid rgba(76, 201, 240, 0.2); box-shadow: inset 0 0 20px rgba(76, 201, 240, 0.03); }
+
+/* ── Grid background pattern ── */
+.grid-bg {
+  background-image:
+    linear-gradient(rgba(6, 214, 160, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(6, 214, 160, 0.03) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--color-border-strong); border-radius: var(--radius-full); }
+::-webkit-scrollbar-thumb:hover { background: var(--color-text-tertiary); }
+
+/* ── Animations ── */
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes scaleIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+@keyframes glowPulse { 0%, 100% { box-shadow: 0 0 15px rgba(6, 214, 160, 0.1); } 50% { box-shadow: 0 0 30px rgba(6, 214, 160, 0.2); } }
+@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+@keyframes gridMove { 0% { background-position: 0 0; } 100% { background-position: 60px 60px; } }
+@keyframes scanline { 0% { transform: translateY(-100%); } 100% { transform: translateY(100vh); } }
+
+.animate-fade-in { animation: fadeIn var(--duration) var(--ease); }
+.animate-slide-up { animation: slideUp var(--duration-slow) var(--ease); }
+.animate-scale-in { animation: scaleIn var(--duration-slow) var(--ease); }
+.animate-glow-pulse { animation: glowPulse 3s ease-in-out infinite; }
+.animate-float { animation: float 4s ease-in-out infinite; }
+.animate-grid-move { animation: gridMove 20s linear infinite; }
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-primary: var(--color-primary);
+    --color-accent: var(--color-accent);
+  }
+  @layer base {
+    body { background: var(--color-bg-primary); color: var(--color-text-primary); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+    </style>
+</head>
+<body class="bg-av-bg-primary text-av-text-primary font-body min-h-screen">
+
+  <!-- ══════════════════════════════════════════
+       Top Navbar
+       ══════════════════════════════════════════ -->
+  <nav class="sticky top-0 z-40 bg-av-bg-secondary/80 backdrop-blur-xl border-b border-av-border-subtle">
+    <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+      <!-- Left: Logo + Nav Pills -->
+      <div class="flex items-center gap-8">
+        <!-- Logo -->
+        <a href="#" class="flex items-center gap-2.5 group">
+          <div class="w-8 h-8 rounded-av-md gradient-primary flex items-center justify-center shadow-av-glow">
+            <svg class="w-4 h-4 text-av-text-inverse" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="23 7 16 12 23 17 23 7"></polygon>
+              <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+            </svg>
+          </div>
+          <span class="font-display font-semibold text-av-text-primary text-sm tracking-tight">ScriptAI</span>
+        </a>
+
+        <!-- Nav Pills -->
+        <div class="flex items-center gap-1 bg-av-bg-tertiary/60 rounded-av-lg p-1">
+          <a href="#" data-dom-id="nav-square" class="nav-pill px-4 py-1.5 rounded-av-md text-sm font-medium text-av-text-secondary hover:text-av-text-primary hover:bg-av-bg-hover">
+            广场
+          </a>
+          <a href="#" class="nav-pill px-4 py-1.5 rounded-av-md text-sm font-medium text-av-text-inverse bg-av-primary/90 shadow-av-glow" aria-current="page">
+            素材库
+          </a>
+          <a href="#" data-dom-id="nav-storyboards" class="nav-pill px-4 py-1.5 rounded-av-md text-sm font-medium text-av-text-secondary hover:text-av-text-primary hover:bg-av-bg-hover">
+            脚本
+          </a>
+        </div>
+      </div>
+
+      <!-- Right: Credits + Actions + Avatar -->
+      <div class="flex items-center gap-3">
+        <!-- Credits Badge -->
+        <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-av-md bg-av-primary-subtle border border-av-primary/10">
+          <svg class="w-3.5 h-3.5 text-av-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M12 6v12"></path>
+            <path d="M17 12H7"></path>
+          </svg>
+          <span class="text-xs font-mono font-medium text-av-primary">2,480</span>
+        </div>
+
+        <!-- Action Button -->
+        <button class="p-2 rounded-av-md text-av-text-secondary hover:text-av-text-primary hover:bg-av-bg-hover transition-colors duration-av">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+          </svg>
+        </button>
+
+        <!-- User Avatar -->
+        <button class="w-8 h-8 rounded-av-full bg-av-bg-elevated border border-av-border-default flex items-center justify-center text-xs font-semibold text-av-text-secondary hover:border-av-border-strong transition-colors duration-av">
+          U
+        </button>
+
+        <!-- Logout -->
+        <button class="p-2 rounded-av-md text-av-text-tertiary hover:text-av-state-error hover:bg-av-state-error/5 transition-colors duration-av" title="退出登录">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+            <polyline points="16 17 21 12 16 7"></polyline>
+            <line x1="21" y1="12" x2="9" y2="12"></line>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ══════════════════════════════════════════
+       Main Content
+       ══════════════════════════════════════════ -->
+  <main class="max-w-7xl mx-auto px-6 py-8">
+
+    <!-- Page Header -->
+    <div class="flex items-center justify-between mb-8">
+      <h1 class="heading-lg gradient-text">我的素材库</h1>
+      <button class="gradient-primary text-av-text-inverse text-sm font-semibold px-4 py-2 rounded-av-lg shadow-av-glow hover:shadow-av-glow-strong transition-shadow duration-av flex items-center gap-1.5">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        新建收藏夹
+      </button>
+    </div>
+
+    <!-- 3-Column Layout: Collections (3/4) + Tags Sidebar (1/4) -->
+    <div class="flex gap-6">
+
+      <!-- ══════════════════════════════════════
+           Collections Section (3/4)
+           ══════════════════════════════════════ -->
+      <section class="flex-1 min-w-0" style="flex: 3;">
+        <h2 class="heading-md text-av-text-primary mb-5">收藏夹</h2>
+
+        <!-- Collection Cards Grid (2-column) -->
+        <div class="grid grid-cols-2 gap-4">
+
+          <!-- Card 1: 美妆测评 -->
+          <div class="collection-card surface rounded-av-xl p-5 hover:neon-border hover:glow-primary cursor-pointer group">
+            <div class="flex items-start justify-between">
+              <div class="w-12 h-12 rounded-av-xl bg-av-bg-tertiary flex items-center justify-center text-2xl">
+                💄
+              </div>
+              <button class="delete-btn p-1.5 rounded-av-md text-av-text-tertiary hover:text-av-state-error hover:bg-av-state-error/10 transition-colors duration-av" title="删除收藏夹" aria-label="删除收藏夹">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+            <h3 class="font-semibold text-av-text-primary mt-4 mb-1">美妆测评</h3>
+            <p class="text-sm text-av-text-secondary mb-4 truncate">热门美妆产品测评与试用分享</p>
+            <div class="flex items-center gap-1.5 text-xs text-av-text-tertiary">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+              </svg>
+              <span>12 个视频</span>
+            </div>
+          </div>
+
+          <!-- Card 2: 影视剪辑 -->
+          <div class="collection-card surface rounded-av-xl p-5 hover:neon-border hover:glow-primary cursor-pointer group">
+            <div class="flex items-start justify-between">
+              <div class="w-12 h-12 rounded-av-xl bg-av-bg-tertiary flex items-center justify-center text-2xl">
+                🎬
+              </div>
+              <button class="delete-btn p-1.5 rounded-av-md text-av-text-tertiary hover:text-av-state-error hover:bg-av-state-error/10 transition-colors duration-av" title="删除收藏夹" aria-label="删除收藏夹">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+            <h3 class="font-semibold text-av-text-primary mt-4 mb-1">影视剪辑</h3>
+            <p class="text-sm text-av-text-secondary mb-4 truncate">影视剧精彩片段与混剪素材</p>
+            <div class="flex items-center gap-1.5 text-xs text-av-text-tertiary">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+              </svg>
+              <span>8 个视频</span>
+            </div>
+          </div>
+
+          <!-- Card 3: 数码科技 -->
+          <div class="collection-card surface rounded-av-xl p-5 hover:neon-border hover:glow-primary cursor-pointer group">
+            <div class="flex items-start justify-between">
+              <div class="w-12 h-12 rounded-av-xl bg-av-bg-tertiary flex items-center justify-center text-2xl">
+                📱
+              </div>
+              <button class="delete-btn p-1.5 rounded-av-md text-av-text-tertiary hover:text-av-state-error hover:bg-av-state-error/10 transition-colors duration-av" title="删除收藏夹" aria-label="删除收藏夹">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+            <h3 class="font-semibold text-av-text-primary mt-4 mb-1">数码科技</h3>
+            <p class="text-sm text-av-text-secondary mb-4 truncate">数码产品开箱与科技资讯</p>
+            <div class="flex items-center gap-1.5 text-xs text-av-text-tertiary">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+              </svg>
+              <span>15 个视频</span>
+            </div>
+          </div>
+
+          <!-- Card 4: 生活vlog -->
+          <div class="collection-card surface rounded-av-xl p-5 hover:neon-border hover:glow-primary cursor-pointer group">
+            <div class="flex items-start justify-between">
+              <div class="w-12 h-12 rounded-av-xl bg-av-bg-tertiary flex items-center justify-center text-2xl">
+                🎵
+              </div>
+              <button class="delete-btn p-1.5 rounded-av-md text-av-text-tertiary hover:text-av-state-error hover:bg-av-state-error/10 transition-colors duration-av" title="删除收藏夹" aria-label="删除收藏夹">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+            <h3 class="font-semibold text-av-text-primary mt-4 mb-1">生活vlog</h3>
+            <p class="text-sm text-av-text-secondary mb-4 truncate">日常生活记录与旅行分享</p>
+            <div class="flex items-center gap-1.5 text-xs text-av-text-tertiary">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+              </svg>
+              <span>6 个视频</span>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ══════════════════════════════════════
+           Tags Sidebar (1/4)
+           ══════════════════════════════════════ -->
+      <aside class="w-72 flex-shrink-0 space-y-6" style="flex: 1;">
+
+        <!-- Tags Section -->
+        <div>
+          <h2 class="heading-md text-av-text-primary mb-4">标签</h2>
+          <div class="neon-border-accent rounded-av-xl bg-av-bg-secondary p-4">
+            <div class="flex flex-wrap gap-2">
+              <span class="tag-pill inline-flex items-center gap-1.5 px-3 py-1.5 rounded-av-full bg-av-bg-tertiary text-sm text-av-text-secondary hover:bg-av-accent-muted hover:text-av-accent cursor-pointer transition-colors duration-av">
+                #美妆
+                <span class="text-xs opacity-60">(3)</span>
+                <button class="tag-delete ml-0.5 text-av-text-tertiary hover:text-av-state-error" aria-label="删除标签">
+                  <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                </button>
+              </span>
+              <span class="tag-pill inline-flex items-center gap-1.5 px-3 py-1.5 rounded-av-full bg-av-bg-tertiary text-sm text-av-text-secondary hover:bg-av-accent-muted hover:text-av-accent cursor-pointer transition-colors duration-av">
+                #测评
+                <span class="text-xs opacity-60">(5)</span>
+                <button class="tag-delete ml-0.5 text-av-text-tertiary hover:text-av-state-error" aria-label="删除标签">
+                  <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                </button>
+              </span>
+              <span class="tag-pill inline-flex items-center gap-1.5 px-3 py-1.5 rounded-av-full bg-av-bg-tertiary text-sm text-av-text-secondary hover:bg-av-accent-muted hover:text-av-accent cursor-pointer transition-colors duration-av">
+                #种草
+                <span class="text-xs opacity-60">(2)</span>
+                <button class="tag-delete ml-0.5 text-av-text-tertiary hover:text-av-state-error" aria-label="删除标签">
+                  <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                </button>
+              </span>
+              <span class="tag-pill inline-flex items-center gap-1.5 px-3 py-1.5 rounded-av-full bg-av-bg-tertiary text-sm text-av-text-secondary hover:bg-av-accent-muted hover:text-av-accent cursor-pointer transition-colors duration-av">
+                #数码
+                <span class="text-xs opacity-60">(4)</span>
+                <button class="tag-delete ml-0.5 text-av-text-tertiary hover:text-av-state-error" aria-label="删除标签">
+                  <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                </button>
+              </span>
+              <span class="tag-pill inline-flex items-center gap-1.5 px-3 py-1.5 rounded-av-full bg-av-bg-tertiary text-sm text-av-text-secondary hover:bg-av-accent-muted hover:text-av-accent cursor-pointer transition-colors duration-av">
+                #生活
+                <span class="text-xs opacity-60">(1)</span>
+                <button class="tag-delete ml-0.5 text-av-text-tertiary hover:text-av-state-error" aria-label="删除标签">
+                  <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                </button>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Search Card -->
+        <div>
+          <div class="search-card rounded-av-xl bg-av-bg-secondary border border-av-border-default p-4 hover:neon-border-accent hover:glow-accent cursor-pointer group">
+            <div class="flex items-start gap-3">
+              <div class="w-10 h-10 rounded-av-lg bg-av-accent-muted flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5 text-av-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+              </div>
+              <div class="min-w-0">
+                <h3 class="text-sm font-semibold text-av-text-primary mb-0.5">搜索素材库</h3>
+                <p class="text-xs text-av-text-tertiary">关键词、标签、收藏夹</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </aside>
+    </div>
+
+  </main>
+
+
+    <style>
+    /* Page-specific styles */
+    .collection-card {
+      transition: transform var(--duration) var(--ease), box-shadow var(--duration) var(--ease), border-color var(--duration) var(--ease);
+    }
+    .collection-card:hover {
+      transform: translateY(-1px);
+    }
+    .collection-card .delete-btn {
+      opacity: 0;
+      transition: opacity 160ms var(--ease);
+    }
+    .collection-card:hover .delete-btn {
+      opacity: 1;
+    }
+    .tag-pill .tag-delete {
+      opacity: 0;
+      transition: opacity 160ms var(--ease);
+    }
+    .tag-pill:hover .tag-delete {
+      opacity: 1;
+    }
+    .nav-pill {
+      transition: background-color var(--duration) var(--ease), box-shadow var(--duration) var(--ease);
+    }
+    .search-card {
+      transition: border-color var(--duration) var(--ease), box-shadow var(--duration) var(--ease);
+    }
+  </style>
+</body>
+</html>

@@ -51,29 +51,29 @@ export default function ModelConfigCard({
   const hasConfig = config !== null
 
   return (
-    <div className="border border-slate-200 rounded-lg p-4">
+    <div className="border border-av-border-subtle rounded-lg p-4">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-semibold text-slate-800">
+        <h3 className="text-sm font-semibold text-av-text-primary">
           {icon} {title}
         </h3>
         {hasConfig && (
-          <span className="text-xs px-2 py-0.5 bg-green-50 text-green-700 rounded-full">自定义</span>
+          <span className="text-xs px-2 py-0.5 bg-av-state-success/10 text-av-state-success rounded-full">自定义</span>
         )}
       </div>
 
       {globalDefault && !hasConfig && (
-        <p className="text-xs text-slate-400 mb-3">
+        <p className="text-xs text-av-text-tertiary mb-3">
           当前使用全局默认：{globalDefault.provider} / {globalDefault.model}
         </p>
       )}
 
       <div className="space-y-3">
         <div>
-          <label className="block text-xs text-slate-500 mb-1">Provider</label>
+          <label className="block text-xs text-av-text-secondary mb-1">Provider</label>
           <select
             value={provider}
             onChange={(e) => setProvider(e.target.value)}
-            className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+            className="input-field w-full px-3 py-1.5 text-sm"
           >
             <option value="">选择 Provider</option>
             {providers.map((p) => (
@@ -82,36 +82,36 @@ export default function ModelConfigCard({
           </select>
         </div>
         <div>
-          <label className="block text-xs text-slate-500 mb-1">API Key</label>
+          <label className="block text-xs text-av-text-secondary mb-1">API Key</label>
           <input
             type="password"
             value={apiKey}
             onChange={(e) => setApiKey(e.target.value)}
             placeholder={hasConfig ? '已设置，留空保持不变' : '输入 API Key'}
-            className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+            className="input-field w-full px-3 py-1.5 text-sm"
           />
           {hasConfig && config?.api_key && (
-            <p className="text-xs text-slate-400 mt-1">当前：{config.api_key}</p>
+            <p className="text-xs text-av-text-tertiary mt-1">当前：{config.api_key}</p>
           )}
         </div>
         <div>
-          <label className="block text-xs text-slate-500 mb-1">API Base</label>
+          <label className="block text-xs text-av-text-secondary mb-1">API Base</label>
           <input
             type="text"
             value={apiBase}
             onChange={(e) => setApiBase(e.target.value)}
             placeholder="https://api.example.com"
-            className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+            className="input-field w-full px-3 py-1.5 text-sm"
           />
         </div>
         <div>
-          <label className="block text-xs text-slate-500 mb-1">Model</label>
+          <label className="block text-xs text-av-text-secondary mb-1">Model</label>
           <input
             type="text"
             value={model}
             onChange={(e) => setModel(e.target.value)}
             placeholder="模型名称"
-            className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+            className="input-field w-full px-3 py-1.5 text-sm"
           />
         </div>
       </div>
@@ -120,7 +120,7 @@ export default function ModelConfigCard({
         <button
           onClick={handleSave}
           disabled={isLoading || !provider || !apiBase || !model}
-          className="px-3 py-1.5 bg-sky-500 text-white text-xs font-medium rounded-lg hover:bg-sky-600 transition-colors disabled:opacity-50"
+          className="btn-primary px-3 py-1.5 text-xs font-medium rounded-lg transition-colors disabled:opacity-50"
         >
           {isLoading ? '保存中...' : '保存'}
         </button>
@@ -128,7 +128,7 @@ export default function ModelConfigCard({
           <button
             onClick={() => onDelete(configType)}
             disabled={isLoading}
-            className="px-3 py-1.5 text-xs text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+            className="px-3 py-1.5 text-xs text-av-text-secondary hover:text-av-state-error hover:bg-av-state-error/10 rounded-lg transition-colors"
           >
             恢复默认
           </button>

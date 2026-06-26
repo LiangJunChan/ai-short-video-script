@@ -414,10 +414,12 @@ export const videoApi = createApi({
       }),
     }),
 
-    // Workflow execution
-    executeStoryboard: builder.mutation<{ code: number; data: any }, number>({
-      query: (id) => ({ url: `/storyboards/${id}/execute`, method: 'POST' }),
-      invalidatesTags: ['Video'],
+    // Workflow execution — 异步：秒回 { runId, status }
+    executeStoryboard: builder.mutation<{ code: number; data: { runId: number; status: string } }, { id: number; force?: boolean }>({
+      query: ({ id, force }) => ({
+        url: force ? `/storyboards/${id}/execute?force=true` : `/storyboards/${id}/execute`,
+        method: 'POST',
+      }),
     }),
     executeNode: builder.mutation<{ code: number; data: any }, { storyboardId: number; nodeId: number }>({
       query: ({ storyboardId, nodeId }) => ({
@@ -425,6 +427,13 @@ export const videoApi = createApi({
         method: 'POST',
       }),
       invalidatesTags: ['Video'],
+    }),
+    // 轮询：run 进度快照（run 状态 + 各节点 state）
+    getRunProgress: builder.query<
+      { code: number; data: { run: { id: number; status: string; startedAt: any; finishedAt: any; totalCredits: number }; nodes: { id: number; nodeType: string; state: string }[] } },
+      { storyboardId: number; runId: number }
+    >({
+      query: ({ storyboardId, runId }) => `/storyboards/${storyboardId}/runs/${runId}`,
     }),
     getExecutionHistory: builder.query<{ code: number; data: { runs: any[] } }, number>({
       query: (id) => `/storyboards/${id}/runs`,
@@ -494,5 +503,6 @@ export const {
   // Workflow execution
   useExecuteStoryboardMutation,
   useExecuteNodeMutation,
+  useGetRunProgressQuery,
   useGetExecutionHistoryQuery,
 } = videoApi
