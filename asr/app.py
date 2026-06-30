@@ -12,37 +12,23 @@ import uvicorn
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from funasr import AutoModel
 
-# 模型 ID (paraformer large, NANO模型当前不可用)
-MODEL_ID = "paraformer"
-# 标点恢复模型
-PUNC_MODEL = "ct-punc"
+# 模型 ID (SenseVoice Small 轻量模型，自带标点输出，CPU 推理更快)
+MODEL_ID = "iic/SenseVoiceSmall"
 
 # 全局模型实例
 model = None
-punc_enabled = False
 
 
 def init_model():
-    """初始化 ASR 模型 + 标点恢复模型"""
-    global model, punc_enabled
+    """初始化 SenseVoice Small 模型"""
+    global model
     if model is None:
-        try:
-            # 尝试加载 ASR + 标点恢复联合模型
-            model = AutoModel(
-                model=MODEL_ID,
-                punc_model=PUNC_MODEL,
-                device="cpu",
-            )
-            punc_enabled = True
-            print(f"ASR + 标点恢复模型加载成功")
-        except Exception as e:
-            print(f"标点模型加载失败，使用纯ASR模式: {e}")
-            # 回退到纯 ASR
-            model = AutoModel(
-                model=MODEL_ID,
-                device="cpu",
-            )
-            punc_enabled = False
+        model = AutoModel(
+            model=MODEL_ID,
+            device="cpu",
+            disable_update=True,
+        )
+        print(f"SenseVoice Small 模型加载成功")
     return model
 
 
@@ -57,8 +43,8 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Fun-ASR 语音识别服务",
-    description="基于 Paraformer 模型的本地语音识别服务 (NANO模型暂不可用)",
-    version="1.0.0",
+    description="基于 SenseVoice Small 轻量模型的本地语音识别服务，自带标点输出，CPU 推理更快",
+    version="1.2.0",
     lifespan=lifespan,
 )
 
@@ -97,8 +83,8 @@ async def recognize_speech(file: UploadFile = File(...)):
         tmp_path = tmp.name
 
     try:
-        # 执行识别
-        result = model.generate(input=tmp_path)
+        # 执行识别（use_itn=True 启用标点输出）
+        result = model.generate(input=tmp_path, use_itn=True)
         print(f"ASR原始结果: {result}")
 
         # 解析结果 - generate 返回 list，每项是 dict 或字符串
@@ -115,25 +101,10 @@ async def recognize_speech(file: UploadFile = File(...)):
         else:
             text = ""
 
-        # 标点恢复（Fun-ASR的非VAD路径不会自动调用标点模型，需手动串联）
-        if punc_enabled and text.strip():
-            try:
-                punc_res = model.inference(
-                    text,
-                    model=model.punc_model,
-                    kwargs=model.punc_kwargs,
-                )
-                print(f"标点恢复结果: {punc_res}")
-                if punc_res and len(punc_res) > 0:
-                    text = punc_res[0].get("text", text)
-            except Exception as punc_err:
-                print(f"标点恢复失败: {punc_err}")
-
         return {
             "success": True,
             "text": text,
             "filename": filename,
-            "punctuation": punc_enabled,
         }
 
     except Exception as e:
@@ -147,7 +118,7 @@ async def recognize_speech(file: UploadFile = File(...)):
 @app.get("/health")
 async def health_check():
     """健康检查接口"""
-    return {"status": "ok", "model": MODEL_ID, "punctuation": punc_enabled}
+    return {"status": "ok", "model": MODEL_ID}
 
 
 if __name__ == "__main__":
