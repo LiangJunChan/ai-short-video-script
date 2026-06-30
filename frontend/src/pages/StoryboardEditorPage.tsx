@@ -10,6 +10,7 @@ import TemplatePanel from '../components/storyboard/TemplatePanel'
 import ExportMenu from '../components/storyboard/ExportMenu'
 import ExecutePanel from '../components/storyboard/ExecutePanel'
 import ExecutionProgressBar from '../components/storyboard/ExecutionProgressBar'
+import Toast from '../components/Toast'
 
 export default function StoryboardEditorPage() {
   const { id } = useParams<{ id: string }>()
@@ -461,7 +462,7 @@ export default function StoryboardEditorPage() {
           </div>
         </div>
       )}
-      {toast && <div className="fixed bottom-6 left-1/2 -translate-x-1/2 px-4 py-2 bg-av-bg-elevated text-white text-sm rounded-lg shadow-av-lg">{toast}</div>}
+      {toast && <Toast message={toast} />}
     </div>
   )
 }

@@ -103,7 +103,10 @@ type HighlightMoment struct {
 
 // AnalyzeVideoStructure 分析文案结构（钩子/内容/结尾）
 func AnalyzeVideoStructure(userID int, text string, duration float64) (string, error) {
-	provider := GetProviderForUser(userID)
+	provider, err := GetProviderForUser(userID)
+	if err != nil {
+		return "", err
+	}
 
 	systemPrompt := `你是一个专业的短视频文案分析师。请分析以下文案的结构，将其分为三部分：
 1. 开头钩子：前3-5秒，用来吸引观众注意力的部分
@@ -160,7 +163,10 @@ func parseStructureAnalysis(jsonStr string) (*StructureAnalysis, error) {
 
 // AnalyzeViralPoints 分析爆款点
 func AnalyzeViralPoints(userID int, text string) (string, error) {
-	provider := GetProviderForUser(userID)
+	provider, err := GetProviderForUser(userID)
+	if err != nil {
+		return "", err
+	}
 
 	systemPrompt := `你是一个专业的短视频内容分析师。请分析以下文案爆在哪里，从以下几个维度分析：
 1. 选题：是否击中目标人群的痛点/痒点/共鸣点
@@ -199,7 +205,10 @@ func AnalyzeViralPoints(userID int, text string) (string, error) {
 
 // ExtractTags 提取选题标签
 func ExtractTags(userID int, text string) (string, error) {
-	provider := GetProviderForUser(userID)
+	provider, err := GetProviderForUser(userID)
+	if err != nil {
+		return "", err
+	}
 
 	systemPrompt := `你是一个专业的短视频内容标签分析师。请从以下文案中提取核心选题和标签。
 
@@ -239,7 +248,10 @@ func ExtractTags(userID int, text string) (string, error) {
 
 // AnalyzeRhythm 分析口播节奏
 func AnalyzeRhythm(userID int, text string, duration float64) (string, error) {
-	provider := GetProviderForUser(userID)
+	provider, err := GetProviderForUser(userID)
+	if err != nil {
+		return "", err
+	}
 
 	systemPrompt := `你是一个专业的短视频口播节奏分析师。请分析以下文案的口播节奏特点：
 
@@ -272,7 +284,10 @@ func AnalyzeRhythm(userID int, text string, duration float64) (string, error) {
 
 // GenerateAnalysisReport 生成完整分析报告
 func GenerateAnalysisReport(userID int, text string, duration float64, structure *StructureAnalysis, viralPoints []string, tags []string) (string, error) {
-	provider := GetProviderForUser(userID)
+	provider, err := GetProviderForUser(userID)
+	if err != nil {
+		return "", err
+	}
 
 	systemPrompt := "你是一个专业的短视频文案分析师。请根据以下分析结果，生成一份结构化的爆款文案分析报告。\n\n报告格式要求：\n【爆款文案结构分析】\n- 开头钩子：...（描述）\n- 主体内容：...（描述）\n- 结尾引导：...（描述）\n\n【爆款点分析】\n- ...（逐条列出）\n\n【标签】\n#标签1 #标签2 ...\n\n请直接输出报告内容，不要有多余的格式符号（如 markdown 代码块）。"
 

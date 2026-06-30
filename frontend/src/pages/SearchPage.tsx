@@ -12,6 +12,8 @@ import {
 import VideoCard from '../components/VideoCard'
 import Loading from '../components/Loading'
 import ConfirmModal from '../components/ConfirmModal'
+import Toast from '../components/Toast'
+import Pagination from '../components/Pagination'
 import { Collection, Tag, Video } from '../types'
 
 function SearchPage() {
@@ -166,7 +168,7 @@ function SearchPage() {
                 <path d="M19 12H5M12 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </button>
-            <h1 className="text-xl font-semibold text-av-text-primary">搜索素材库</h1>
+            <h1 className="heading-lg text-av-text-primary">搜索素材库</h1>
           </div>
         </div>
 
@@ -369,25 +371,11 @@ function SearchPage() {
                   </div>
 
                   {searchResult.data.pagination.totalPages > 1 && (
-                    <div className="flex items-center justify-center gap-2 mt-12">
-                      <button
-                        onClick={() => setPage(p => Math.max(1, p - 1))}
-                        disabled={page === 1}
-                        className="btn-secondary px-4 py-2 text-sm disabled:opacity-50"
-                      >
-                        上一页
-                      </button>
-                      <span className="text-sm text-av-text-secondary">
-                        {page} / {searchResult.data.pagination.totalPages}
-                      </span>
-                      <button
-                        onClick={() => setPage(p => Math.min(searchResult.data.pagination.totalPages, p + 1))}
-                        disabled={page === searchResult.data.pagination.totalPages}
-                        className="btn-secondary px-4 py-2 text-sm disabled:opacity-50"
-                      >
-                        下一页
-                      </button>
-                    </div>
+                    <Pagination
+                      currentPage={page}
+                      totalPages={searchResult.data.pagination.totalPages}
+                      onPageChange={setPage}
+                    />
                   )}
                 </>
               )}
@@ -405,11 +393,7 @@ function SearchPage() {
           )}
 
           {/* Toast */}
-          {showToast && (
-            <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-av-bg-elevated text-white px-6 py-3 rounded-xl shadow-av-lg z-av-toast animate-fade-in">
-              {showToast}
-            </div>
-          )}
+          {showToast && <Toast message={showToast} />}
 
           {/* Clear History Confirm */}
           {showClearHistoryConfirm && (

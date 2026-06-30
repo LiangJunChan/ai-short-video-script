@@ -266,7 +266,15 @@ func (e *WorkflowEngine) executeAIText(nodeID int, config map[string]interface{}
 
 请直接输出文案内容，不要添加额外说明。`, style, wordCount, topic)
 
-	provider := GetProviderForUser(e.UserID)
+	provider, err := GetProviderForUser(e.UserID)
+	if err != nil {
+		return NodeExecutionResult{
+			NodeID:  nodeID,
+			Status:  "error",
+			Error:   fmt.Sprintf("AI 调用失败: %v", err),
+			Credits: 0,
+		}
+	}
 	response, err := provider.Chat([]ChatMessage{{Role: "user", Content: prompt}})
 	if err != nil {
 		return NodeExecutionResult{
@@ -344,7 +352,16 @@ func (e *WorkflowEngine) executeAIImage(nodeID int, config map[string]interface{
 
 	size := getStringConfig(config, "size", "1024x768")
 	responseFormat := getStringConfig(config, "response_format", "url")
-	provider := NewAgnesService(GetUserModelConfig(e.UserID, "image"))
+	imgConfig, err := GetUserModelConfig(e.UserID, "image")
+	if err != nil {
+		return NodeExecutionResult{
+			NodeID:  nodeID,
+			Status:  "error",
+			Error:   fmt.Sprintf("获取图片模型配置失败: %v", err),
+			Credits: 0,
+		}
+	}
+	provider := NewAgnesService(imgConfig)
 	result, err := provider.GenerateImage(AgnesImageRequest{
 		Prompt:         prompt,
 		Size:           size,
@@ -411,7 +428,16 @@ func (e *WorkflowEngine) executeAIVideo(nodeID int, config map[string]interface{
 		}
 	}
 
-	provider := NewAgnesService(GetUserModelConfig(e.UserID, "video"))
+	videoConfig, err := GetUserModelConfig(e.UserID, "video")
+	if err != nil {
+		return NodeExecutionResult{
+			NodeID:  nodeID,
+			Status:  "error",
+			Error:   fmt.Sprintf("获取视频模型配置失败: %v", err),
+			Credits: 0,
+		}
+	}
+	provider := NewAgnesService(videoConfig)
 	result, err := provider.GenerateVideo(AgnesVideoRequest{
 		Prompt:         prompt,
 		ImageURL:       imageURL,

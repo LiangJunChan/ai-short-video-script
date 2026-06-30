@@ -8,6 +8,7 @@ function RegisterPage() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -102,36 +103,99 @@ function RegisterPage() {
         <div className="neon-border rounded-xl p-8" style={{ backgroundColor: 'var(--color-bg-secondary)' }}>
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-av-text-primary mb-2">用户名</label>
+              <label
+                htmlFor="reg-username"
+                className="block text-sm font-medium mb-2"
+                style={{ color: 'var(--color-text-secondary)' }}
+              >
+                用户名
+              </label>
               <input
+                id="reg-username"
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 className="input-field w-full px-4 py-3 text-sm rounded-lg"
                 placeholder="设置用户名（至少3个字符）"
+                autoComplete="username"
                 autoFocus
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-av-text-primary mb-2">密码</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="input-field w-full px-4 py-3 text-sm rounded-lg"
-                placeholder="设置密码（至少6个字符）"
-              />
+              <label
+                htmlFor="reg-password"
+                className="block text-sm font-medium mb-2"
+                style={{ color: 'var(--color-text-secondary)' }}
+              >
+                密码
+              </label>
+              <div className="relative">
+                <input
+                  id="reg-password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="input-field w-full px-4 py-3 text-sm rounded-lg pr-11"
+                  placeholder="设置密码（至少6个字符）"
+                  autoComplete="new-password"
+                />
+                <button
+                  type="button"
+                  aria-label="切换密码可见性"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded transition-opacity duration-200"
+                  style={{
+                    color: 'var(--color-text-tertiary)',
+                    background: 'transparent',
+                    border: 'none',
+                    cursor: 'pointer',
+                  }}
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    {showPassword ? (
+                      <>
+                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
+                        <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+                        <line x1="1" y1="1" x2="23" y2="23" />
+                        <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24" />
+                      </>
+                    ) : (
+                      <>
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                        <circle cx="12" cy="12" r="3" />
+                      </>
+                    )}
+                  </svg>
+                </button>
+              </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-av-text-primary mb-2">确认密码</label>
+              <label
+                htmlFor="reg-confirm"
+                className="block text-sm font-medium mb-2"
+                style={{ color: 'var(--color-text-secondary)' }}
+              >
+                确认密码
+              </label>
               <input
-                type="password"
+                id="reg-confirm"
+                type={showPassword ? 'text' : 'password'}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 className="input-field w-full px-4 py-3 text-sm rounded-lg"
                 placeholder="再次输入密码"
+                autoComplete="new-password"
               />
             </div>
 

@@ -38,59 +38,119 @@ export default function StoryboardListPage() {
 
   return (
     <div className="min-h-screen bg-av-bg-primary">
-      <header className="sticky top-0 z-av-sticky glass border-b border-av-border-subtle">
-        <div className="flex items-center justify-between h-16 px-6 max-w-5xl mx-auto">
-          <div className="flex items-center gap-3">
-            <button onClick={() => navigate('/')} className="text-sm text-av-text-secondary hover:text-av-text-primary transition-colors">
-              ← 返回首页
-            </button>
-            <h1 className="text-lg font-semibold text-av-text-primary">我的脚本</h1>
+      <main className="max-w-5xl mx-auto px-6 py-10">
+        {/* Page Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1
+              className="heading-lg gradient-text"
+              style={{ marginBottom: 'var(--space-2)' }}
+            >
+              脚本工作台
+            </h1>
+            <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
+              管理和编辑你的AI短视频脚本
+            </p>
           </div>
           <button
             onClick={() => setShowCreate(true)}
-            className="btn-primary px-4 py-2 text-sm font-medium"
+            className="btn-gradient-primary flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold cursor-pointer"
+            style={{ border: 'none' }}
           >
-            新建画布
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            <span>新建脚本</span>
           </button>
         </div>
-      </header>
 
-      <main className="max-w-5xl mx-auto px-6 py-10">
         {isLoading ? (
           <p className="text-sm text-av-text-tertiary">加载中...</p>
         ) : storyboards.length === 0 ? (
-          <div className="text-center py-20">
-            <p className="text-av-text-tertiary mb-4">还没有脚本</p>
+          // Empty State CTA
+          <div
+            className="mt-10 rounded-xl p-8 flex flex-col items-center text-center"
+            style={{
+              backgroundColor: 'rgba(22, 24, 34, 0.5)',
+              border: '1px solid var(--color-border-subtle)',
+            }}
+          >
+            <div
+              className="w-12 h-12 rounded-xl flex items-center justify-center mb-4"
+              style={{ backgroundColor: 'var(--color-primary-muted)' }}
+            >
+              <svg
+                className="w-6 h-6"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                style={{ color: 'var(--color-primary)' }}
+              >
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="12" y1="18" x2="12" y2="12"></line>
+                <line x1="9" y1="15" x2="15" y2="15"></line>
+              </svg>
+            </div>
+            <p className="text-sm font-medium mb-1" style={{ color: 'var(--color-text-secondary)' }}>
+              还没有脚本？创建你的第一个AI短视频脚本
+            </p>
             <button
               onClick={() => setShowCreate(true)}
-              className="btn-primary px-4 py-2 text-sm"
+              className="btn-gradient-primary px-5 py-2 rounded-lg text-sm font-semibold mt-3 cursor-pointer"
+              style={{ border: 'none' }}
             >
-              创建第一个画布
+              开始创建
             </button>
           </div>
         ) : (
+          // Storyboard List
           <div className="flex flex-col gap-4">
             {storyboards.map((sb) => (
               <div
                 key={sb.id}
                 onClick={() => navigate(`/storyboard/${sb.id}`)}
-                className="storyboard-card surface rounded-xl p-5 flex items-center justify-between cursor-pointer group"
+                className="storyboard-card rounded-xl p-5 flex items-center justify-between cursor-pointer group"
+                style={{
+                  backgroundColor: 'var(--color-bg-secondary)',
+                  border: '1px solid var(--color-border-subtle)',
+                }}
               >
                 <div className="flex items-center gap-4 min-w-0">
-                  <div className="w-3 h-3 rounded-full flex-shrink-0 status-glow" style={{ backgroundColor: 'var(--state-success)' }} />
+                  {/* Status Dot — 业务兼容：根据 status 字段显示（默认 success 表示已完成） */}
+                  <div
+                    className="w-3 h-3 rounded-full flex-shrink-0 status-glow"
+                    style={{ backgroundColor: 'var(--state-success)' }}
+                  />
                   <div className="min-w-0">
-                    <h3 className="text-sm font-semibold truncate text-av-text-primary">{sb.name}</h3>
-                    <p className="text-sm truncate mt-0.5 text-av-text-secondary">
+                    <h3
+                      className="text-sm font-semibold truncate"
+                      style={{ color: 'var(--color-text-primary)' }}
+                    >
+                      {sb.name}
+                    </h3>
+                    <p
+                      className="text-sm truncate mt-0.5"
+                      style={{ color: 'var(--color-text-secondary)' }}
+                    >
                       更新于 {new Date(sb.updatedAt).toLocaleDateString('zh-CN')}
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 flex-shrink-0 ml-4">
-                  <div className="card-actions flex items-center gap-1" style={{ opacity: 0 }}>
+                  {/* Actions (hover) — 业务保留：仅删除按钮 */}
+                  <div className="card-actions flex items-center gap-1">
                     <button
                       onClick={(e) => handleDelete(e, sb.id)}
-                      className="ghost-btn px-3 py-1.5 rounded-lg text-xs font-medium"
-                      style={{ color: 'var(--state-error)', border: '1px solid var(--color-border-subtle)' }}
+                      className="ghost-btn px-3 py-1.5 rounded-lg text-xs font-medium cursor-pointer"
+                      style={{
+                        color: 'var(--state-error)',
+                        border: '1px solid var(--color-border-subtle)',
+                      }}
                     >
                       删除
                     </button>

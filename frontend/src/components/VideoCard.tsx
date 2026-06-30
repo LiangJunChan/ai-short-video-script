@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import type { Video } from '@/types'
 
 interface VideoCardProps {
@@ -8,7 +9,23 @@ interface VideoCardProps {
   onToggleSelect?: (video: Video) => void
 }
 
+const gradientClasses = [
+  'thumb-gradient-1',
+  'thumb-gradient-2',
+  'thumb-gradient-3',
+  'thumb-gradient-4',
+  'thumb-gradient-5',
+]
+const patternClasses = ['thumb-pattern', 'thumb-pattern-2']
+
 function VideoCard({ video, onClick, onDelete, selected, onToggleSelect }: VideoCardProps) {
+  const [isHovered, setIsHovered] = useState(false)
+
+  // 通过 video.id 派生一个稳定但不同的 gradient/pattern index
+  const seed = (video.id ?? 0) + (video.title?.length ?? 0)
+  const gradient = gradientClasses[seed % 5]
+  const pattern = patternClasses[seed % 2]
+
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr)
     const now = new Date()
@@ -34,18 +51,61 @@ function VideoCard({ video, onClick, onDelete, selected, onToggleSelect }: Video
     onDelete(video)
   }
 
-  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCheckboxClick = (e: React.MouseEvent) => {
     e.stopPropagation()
     onToggleSelect?.(video)
   }
 
+  // 状态徽章类名
+  const statusClass =
+    video.status === 'done'
+      ? 'status-done'
+      : video.status === 'processing'
+        ? 'status-processing'
+        : video.status === 'failed'
+          ? 'status-failed'
+          : ''
+  const statusText =
+    video.status === 'done'
+      ? '已完成'
+      : video.status === 'processing'
+        ? '处理中'
+        : video.status === 'failed'
+          ? '提取失败'
+          : ''
+
+  // 缩略图兜底：与设计稿对齐的居中视频图标
+  const fallbackThumb = (
+    <div className={`w-full h-full ${gradient} ${pattern}`}>
+      <div className="absolute inset-0 flex items-center justify-center">
+        <svg
+          width="40"
+          height="40"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          style={{ color: 'rgba(255,255,255,0.15)' }}
+        >
+          <rect x="2" y="4" width="20" height="16" rx="2" />
+          <polygon points="10,8 16,12 10,16" fill="currentColor" opacity="0.2" />
+        </svg>
+      </div>
+    </div>
+  )
+
   return (
-    <div
-      className={`group rounded-xl border overflow-hidden transition-all duration-300 cursor-pointer ${
-        selected
-          ? 'border-primary/40 ring-2 ring-primary/30 bg-av-bg-elevated'
-          : 'border-av-border-subtle bg-av-bg-secondary hover:border-primary/20 hover:shadow-av-glow hover:-translate-y-1'
+    <article
+      className={`video-card rounded-xl overflow-hidden cursor-pointer ${
+        isHovered || selected ? 'neon-border' : ''
       }`}
+      style={{
+        background: 'var(--color-bg-secondary)',
+        border: '1px solid var(--color-border-subtle)',
+        boxShadow: isHovered || selected ? 'var(--shadow-glow)' : 'none',
+      }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       onClick={onClick}
     >
       {/* Thumbnail - 9:16 */}
@@ -58,81 +118,82 @@ function VideoCard({ video, onClick, onDelete, selected, onToggleSelect }: Video
             loading="lazy"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <div className="w-16 h-16 rounded-2xl bg-av-bg-elevated flex items-center justify-center">
-              <svg className="w-8 h-8 text-av-text-tertiary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <rect x="2" y="4" width="20" height="16" rx="2" />
-                <polygon points="10,8 16,12 10,16" fill="currentColor" stroke="none" opacity="0.5"/>
-              </svg>
-            </div>
-          </div>
+          fallbackThumb
         )}
 
         {/* Bottom gradient overlay */}
-        <div className="absolute bottom-0 left-0 right-0 h-16 bottom-gradient pointer-events-none" />
+        <div className="absolute bottom-0 left-0 right-0 h-20 bottom-gradient pointer-events-none" />
 
-        {/* Checkbox (when in select mode) */}
+        {/* Checkbox（左上角，选择模式） */}
         {onToggleSelect && (
           <div
-            className="absolute top-3 left-3 w-6 h-6 bg-av-bg-elevated/90 backdrop-blur-sm rounded-lg shadow-av-sm flex items-center justify-center"
-            onClick={(e) => e.stopPropagation()}
+            className={`checkbox-card ${selected ? 'checked' : ''}`}
+            onClick={handleCheckboxClick}
+            role="checkbox"
+            aria-checked={selected ?? false}
+            aria-label={`选择视频 ${video.title}`}
           >
-            <input
-              type="checkbox"
-              checked={selected ?? false}
-              onChange={handleCheckboxChange}
-              className="w-4 h-4 text-primary rounded focus:ring-primary/50 border-av-border-strong"
-            />
+            {selected && (
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            )}
           </div>
         )}
 
-        {/* Status Badge */}
-        {video.status === 'processing' && (
-          <div className={`absolute top-3 ${onToggleSelect ? 'left-12' : 'left-3'} bg-av-bg-elevated/80 backdrop-blur-sm text-primary text-xs font-medium px-2.5 py-1.5 rounded-full shadow-av-sm`}>
-            <div className="flex items-center gap-1.5">
-              <div className="w-1.5 h-1.5 rounded-full bg-primary pulse-dot"/>
-              <span>处理中</span>
-            </div>
-          </div>
+        {/* Status badge（右上角） */}
+        {statusText && (
+          <span className={`status-badge ${statusClass}`}>{statusText}</span>
         )}
 
-        {video.status === 'failed' && (
-          <div className={`absolute top-3 ${onToggleSelect ? 'left-12' : 'left-3'} bg-av-bg-elevated/80 backdrop-blur-sm text-av-state-error text-xs font-medium px-2.5 py-1.5 rounded-full shadow-av-sm`}>
-            提取失败
-          </div>
+        {/* Delete button（右上角，hover 显示，非选择模式） */}
+        {!onToggleSelect && (
+          <button
+            className="delete-card-btn"
+            onClick={handleDeleteClick}
+            aria-label="删除视频"
+            title="删除视频"
+          >
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
         )}
-
-        {/* Rewrite Status Badge */}
-        {video.rewriteStatus === 'done' && (
-          <div className="absolute top-3 right-3 bg-av-bg-elevated/80 backdrop-blur-sm text-av-state-success text-xs font-medium px-2.5 py-1.5 rounded-full shadow-av-sm">
-            已改写
-          </div>
-        )}
-
-        {/* Delete button */}
-        <button
-          className="absolute top-3 right-3 w-8 h-8 bg-av-bg-elevated/80 backdrop-blur-sm hover:bg-av-state-error/20 hover:text-av-state-error rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-av-sm hover:scale-110"
-          onClick={handleDeleteClick}
-          title="删除视频"
-        >
-          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M18 6L6 18M6 6l12 12" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        </button>
       </div>
 
       {/* Info */}
-      <div className="p-4">
-        <h3 className="font-semibold text-sm text-av-text-primary truncate mb-1.5" title={video.title}>
+      <div className="p-3">
+        <h3
+          className="font-medium text-sm text-av-text-primary truncate"
+          title={video.title}
+          style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+        >
           {truncateText(video.title, 24)}
         </h3>
-        <div className="flex items-center gap-2 text-xs text-av-text-tertiary">
-          <span>{formatDate(video.createdAt)}</span>
-          <span className="w-1 h-1 rounded-full bg-av-text-tertiary"/>
-          <span className="truncate">{video.uploader}</span>
+        <div className="text-xs text-av-text-tertiary mt-1">
+          {formatDate(video.createdAt)}
         </div>
       </div>
-    </div>
+    </article>
   )
 }
 

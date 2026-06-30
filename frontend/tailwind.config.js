@@ -33,6 +33,24 @@ module.exports = {
           tertiary: '#5a6478',
           inverse: '#08090d',
         },
+        // Brand Primary — 与 LAYOUT_REFERENCE.md 对齐的 av-primary 前缀
+        'av-primary': {
+          DEFAULT: '#06d6a0',
+          hover: '#34e0b5',
+          muted: 'rgba(6, 214, 160, 0.10)',
+          subtle: 'rgba(6, 214, 160, 0.05)',
+        },
+        // Brand Accent — 与 LAYOUT_REFERENCE.md 对齐的 av-accent 前缀
+        'av-accent': {
+          DEFAULT: '#4cc9f0',
+          muted: 'rgba(76, 201, 240, 0.10)',
+        },
+        // State — 平铺形式，与 LAYOUT_REFERENCE.md 对齐
+        'av-success': '#06d6a0',
+        'av-warning': '#ffd166',
+        'av-error': '#ef476f',
+        'av-info': '#4cc9f0',
+        // 旧别名（兼容期，保留以避免破坏现有 className）
         primary: {
           DEFAULT: '#06d6a0',
           hover: '#34e0b5',
@@ -48,33 +66,6 @@ module.exports = {
           warning: '#ffd166',
           error: '#ef476f',
           info: '#4cc9f0',
-        },
-        // ── ice 色板（兼容期，待后续清理任务删除） ──
-        ice: {
-          50: '#f0f9ff',
-          100: '#e0f2fe',
-          200: '#bae6fd',
-          300: '#7dd3fc',
-          400: '#38bdf8',
-          500: '#0ea5e9',
-          600: '#0284c7',
-          700: '#0369a1',
-          800: '#075985',
-          900: '#0c4a6e',
-        },
-        semantic: {
-          success: '#06d6a0',
-          'success-bg': 'rgba(6, 214, 160, 0.10)',
-          'success-border': 'rgba(6, 214, 160, 0.3)',
-          warning: '#ffd166',
-          'warning-bg': 'rgba(255, 209, 102, 0.10)',
-          'warning-border': 'rgba(255, 209, 102, 0.3)',
-          error: '#ef476f',
-          'error-bg': 'rgba(239, 71, 111, 0.10)',
-          'error-border': 'rgba(239, 71, 111, 0.3)',
-          info: '#4cc9f0',
-          'info-bg': 'rgba(76, 201, 240, 0.10)',
-          'info-border': 'rgba(76, 201, 240, 0.3)',
         },
       },
       fontSize: {
@@ -104,15 +95,6 @@ module.exports = {
         'av-glow': '0 0 20px rgba(6, 214, 160, 0.15)',
         'av-glow-strong': '0 0 40px rgba(6, 214, 160, 0.25)',
         'av-glow-accent': '0 0 20px rgba(76, 201, 240, 0.15)',
-        // 旧 soft-*（兼容期，已改基于暗色）
-        'soft-xs': '0 1px 2px rgba(0, 0, 0, 0.05)',
-        'soft-sm': '0 2px 8px rgba(0, 0, 0, 0.08)',
-        'soft-md': '0 4px 16px rgba(0, 0, 0, 0.1)',
-        'soft-lg': '0 8px 32px rgba(0, 0, 0, 0.12)',
-        'soft-xl': '0 12px 48px rgba(0, 0, 0, 0.14)',
-        'soft-2xl': '0 20px 64px rgba(0, 0, 0, 0.16)',
-        'glow': '0 0 20px rgba(6, 214, 160, 0.15)',
-        'glow-lg': '0 0 40px rgba(6, 214, 160, 0.25)',
         'focus-ring': '0 0 0 3px rgba(6, 214, 160, 0.25)',
       },
       backgroundImage: {
@@ -139,6 +121,18 @@ module.exports = {
         xs: '2px',
         '2xl': '40px',
         '3xl': '64px',
+      },
+      // 与 LAYOUT_REFERENCE.md 对齐的 av-* spacing token
+      spacing: {
+        'av-1': '4px',
+        'av-2': '8px',
+        'av-3': '12px',
+        'av-4': '16px',
+        'av-5': '20px',
+        'av-6': '24px',
+        'av-8': '32px',
+        'av-10': '40px',
+        'av-12': '48px',
       },
       keyframes: {
         fadeIn: { from: { opacity: '0' }, to: { opacity: '1' } },

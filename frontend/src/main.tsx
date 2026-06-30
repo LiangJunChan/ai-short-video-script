@@ -4,6 +4,7 @@ import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom'
 import { Provider } from 'react-redux'
 import { store } from './store'
 import App from './App'
+import Layout from './components/Layout'
 import DetailPage from './pages/DetailPage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
@@ -28,84 +29,23 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 const router = createBrowserRouter([
   {
-    path: '/',
     element: (
       <ProtectedRoute>
-        <App />
+        <Layout />
       </ProtectedRoute>
     ),
-  },
-  {
-    path: '/detail/:id',
-    element: (
-      <ProtectedRoute>
-        <DetailPage />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: '/library',
-    element: (
-      <ProtectedRoute>
-        <LibraryPage />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: '/library/collections/:id',
-    element: (
-      <ProtectedRoute>
-        <CollectionDetailPage />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: '/library/tags/:id',
-    element: (
-      <ProtectedRoute>
-        <TagFilterPage />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: '/library/search',
-    element: (
-      <ProtectedRoute>
-        <SearchPage />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: '/square',
-    element: (
-      <ProtectedRoute>
-        <SquarePage />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: '/profile',
-    element: (
-      <ProtectedRoute>
-        <ProfilePage />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: '/storyboards',
-    element: (
-      <ProtectedRoute>
-        <StoryboardListPage />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: '/storyboard/:id',
-    element: (
-      <ProtectedRoute>
-        <StoryboardEditorPage />
-      </ProtectedRoute>
-    ),
+    children: [
+      { index: true, element: <App /> },
+      { path: 'detail/:id', element: <DetailPage /> },
+      { path: 'library', element: <LibraryPage /> },
+      { path: 'library/collections/:id', element: <CollectionDetailPage /> },
+      { path: 'library/tags/:id', element: <TagFilterPage /> },
+      { path: 'library/search', element: <SearchPage /> },
+      { path: 'square', element: <SquarePage /> },
+      { path: 'profile', element: <ProfilePage /> },
+      { path: 'storyboards', element: <StoryboardListPage /> },
+      { path: 'storyboard/:id', element: <StoryboardEditorPage /> },
+    ],
   },
   {
     path: '/login',

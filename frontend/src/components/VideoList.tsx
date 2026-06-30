@@ -5,9 +5,15 @@ import VideoCard from './VideoCard'
 import Loading from './Loading'
 import DeleteModal from './DeleteModal'
 import ConfirmModal from './ConfirmModal'
+import Toast from './Toast'
+import Pagination from './Pagination'
 import type { Video } from '../types'
 
-function VideoList() {
+interface VideoListProps {
+  onUpload?: () => void
+}
+
+function VideoList({ onUpload }: VideoListProps) {
   const navigate = useNavigate()
   const [page, setPage] = useState(1)
   const pageSize = 12
@@ -77,7 +83,7 @@ function VideoList() {
       setTimeout(() => setShowToast(null), 3000)
       // 清除选择
       clearSelection()
-    } catch (err: any) {
+    } catch {
       alert('导出失败，请重试')
     }
   }
@@ -87,44 +93,7 @@ function VideoList() {
     setSelectedIds(allIds)
   }
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center py-24">
-        <Loading />
-      </div>
-    )
-  }
-
-  if (isError) {
-    return (
-      <div className="text-center py-24">
-        <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-av-state-error/10 flex items-center justify-center">
-          <svg className="w-8 h-8 text-av-state-error" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="12" cy="12" r="10"/>
-            <path d="M12 8v4M12 16h.01" strokeLinecap="round"/>
-          </svg>
-        </div>
-        <p className="text-av-text-secondary">加载失败，请刷新重试</p>
-      </div>
-    )
-  }
-
-  if (videos.length === 0) {
-    return (
-      <div className="text-center py-24">
-        <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-av-bg-secondary flex items-center justify-center">
-          <svg className="w-10 h-10 text-av-text-tertiary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <rect x="2" y="4" width="20" height="16" rx="2"/>
-            <polygon points="10,8 16,12 10,16" fill="currentColor" stroke="none" opacity="0.3"/>
-          </svg>
-        </div>
-        <h3 className="text-lg font-medium text-av-text-primary mb-2">还没有视频</h3>
-        <p className="text-av-text-secondary mb-6">上传视频或通过链接提取开始使用</p>
-      </div>
-    )
-  }
-
-  const hasSelectedDone = Array.from(selectedIds).some(id => 
+  const hasSelectedDone = Array.from(selectedIds).some(id =>
     videos.find(v => v.id === id)?.status === 'done'
   )
 
@@ -151,56 +120,109 @@ function VideoList() {
     clearSelection()
   }
 
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center py-24">
+        <Loading />
+      </div>
+    )
+  }
+
+  if (isError) {
+    return (
+      <div className="text-center py-24">
+        <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-av-state-error/10 flex items-center justify-center">
+          <svg className="w-8 h-8 text-av-state-error" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 8v4M12 16h.01" strokeLinecap="round"/>
+          </svg>
+        </div>
+        <p className="text-av-text-secondary">加载失败，请刷新重试</p>
+      </div>
+    )
+  }
+
+  // 空状态
+  if (videos.length === 0) {
+    return (
+      <div>
+        {/* Page Header */}
+        <div className="page-header">
+          <div className="page-header-left">
+            <h1 className="heading-lg gradient-text">我的视频</h1>
+            <span className="sort-label">还没有视频</span>
+          </div>
+        </div>
+
+        <div className="empty-state">
+          <div className="empty-icon">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <rect x="2" y="4" width="20" height="16" rx="2"/>
+              <polygon points="10,8 16,12 10,16" fill="currentColor" stroke="none" opacity="0.3"/>
+            </svg>
+          </div>
+          <h3 className="empty-title">还没有视频</h3>
+          <p className="empty-desc">上传视频或通过链接提取开始使用</p>
+          {onUpload && (
+            <button className="empty-cta" onClick={onUpload}>
+              上传视频
+            </button>
+          )}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div>
-      {/* Batch Action Bar */}
-      {videos.some(v => v.status === 'done') && (
-        <div className="flex items-center justify-end mb-6 p-4 bg-primary/10 border border-av-border-subtle rounded-xl">
-          <div className="flex items-center gap-3">
-            {!selectMode ? (
-              <button
-                onClick={() => setSelectMode(true)}
-                className="btn-secondary px-4 py-2 text-sm"
-              >
-                批量选择
-              </button>
-            ) : (
+      {/* Page Header */}
+      <div className="page-header">
+        <div className="page-header-left">
+          <h1 className="heading-lg gradient-text">我的视频</h1>
+          <span className="sort-label">最近上传</span>
+        </div>
+        {videos.some(v => v.status === 'done') && (
+          <button
+            className={`batch-select-btn ${selectMode ? 'is-active' : ''}`}
+            onClick={() => (selectMode ? clearSelection() : setSelectMode(true))}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="9 11 12 14 22 4" />
+              <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />
+            </svg>
+            {selectMode ? '退出选择' : '批量选择'}
+          </button>
+        )}
+      </div>
+
+      {/* Batch Action Bar（仅选择模式显示） */}
+      {selectMode && (
+        <div className="batch-action-bar animate-slide-down">
+          <span className="batch-count">已选择 {selectedIds.size} 个</span>
+          <div className="batch-actions">
+            <button className="batch-ghost primary-ghost" onClick={selectAll}>
+              全选
+            </button>
+            <button className="batch-ghost secondary-ghost" onClick={clearSelection}>
+              取消
+            </button>
+            {selectedIds.size > 0 && (
               <>
-                <span className="text-sm text-av-text-secondary">
-                  已选择 {selectedIds.size} 个视频
-                </span>
-                <div className="w-px h-5 bg-av-border-strong" />
+                <span className="batch-divider" />
                 <button
-                  onClick={selectAll}
-                  className="px-3 py-1.5 text-sm text-primary hover:bg-av-bg-hover rounded-lg transition-colors"
+                  className="error-btn"
+                  onClick={() => setShowBatchDeleteConfirm(true)}
+                  disabled={isDeleting}
                 >
-                  全选本页
+                  {isDeleting ? '删除中...' : `删除选中(${selectedIds.size})`}
                 </button>
                 <button
-                  onClick={clearSelection}
-                  className="px-3 py-1.5 text-sm text-av-text-secondary hover:bg-av-bg-hover rounded-lg transition-colors"
+                  className="batch-export-btn"
+                  onClick={handleExport}
+                  disabled={isExporting || !hasSelectedDone}
                 >
-                  取消选择
+                  {isExporting ? '导出中...' : '导出MD'}
                 </button>
-                {selectedIds.size > 0 && (
-                  <>
-                    <div className="w-px h-5 bg-av-border-strong" />
-                    <button
-                      onClick={() => setShowBatchDeleteConfirm(true)}
-                      disabled={isDeleting}
-                      className="px-4 py-2 text-sm font-medium text-av-state-error bg-av-state-error/10 hover:bg-av-state-error/20 rounded-lg transition-colors disabled:opacity-50"
-                    >
-                      {isDeleting ? '删除中...' : `删除选中 (${selectedIds.size}个)`}
-                    </button>
-                    <button
-                      onClick={handleExport}
-                      disabled={isExporting || !hasSelectedDone}
-                      className="btn-primary px-4 py-2 text-sm shadow-av-sm disabled:opacity-50"
-                    >
-                      {isExporting ? '导出中...' : `导出Markdown`}
-                    </button>
-                  </>
-                )}
               </>
             )}
           </div>
@@ -208,7 +230,7 @@ function VideoList() {
       )}
 
       {/* Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
         {videos.map((video) => (
           <VideoCard
             key={video.id}
@@ -223,27 +245,11 @@ function VideoList() {
 
       {/* Pagination */}
       {pagination && pagination.totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2 mt-12">
-          <button
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={page === 1}
-            className="px-4 py-2 text-sm font-medium text-av-text-secondary bg-av-bg-secondary border border-av-border-subtle rounded-lg hover:bg-av-bg-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            上一页
-          </button>
-
-          <span className="px-4 py-2 text-sm text-av-text-secondary">
-            {page} / {pagination.totalPages}
-          </span>
-
-          <button
-            onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
-            disabled={page === pagination.totalPages}
-            className="px-4 py-2 text-sm font-medium text-av-text-secondary bg-av-bg-secondary border border-av-border-subtle rounded-lg hover:bg-av-bg-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            下一页
-          </button>
-        </div>
+        <Pagination
+          currentPage={page}
+          totalPages={pagination.totalPages}
+          onPageChange={setPage}
+        />
       )}
 
       {/* Delete Modal */}
@@ -270,11 +276,7 @@ function VideoList() {
       )}
 
       {/* Toast */}
-      {showToast && (
-        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-av-bg-elevated text-white px-6 py-3 rounded-xl shadow-av-lg z-av-toast animate-fade-in">
-          {showToast}
-        </div>
-      )}
+      {showToast && <Toast message={showToast} />}
     </div>
   )
 }

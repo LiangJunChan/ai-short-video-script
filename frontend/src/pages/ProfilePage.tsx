@@ -4,6 +4,7 @@ import { useAuth } from '../hooks/useAuth'
 import UserInfoCard from '../components/profile/UserInfoCard'
 import ChangePasswordForm from '../components/profile/ChangePasswordForm'
 import ModelConfigSection from '../components/profile/ModelConfigSection'
+import Toast from '../components/Toast'
 
 export default function ProfilePage() {
   const { user, isAuthenticated } = useAuth()
@@ -39,7 +40,7 @@ export default function ProfilePage() {
             </svg>
             返回首页
           </button>
-          <h1 className="text-lg font-semibold text-av-text-primary ml-4">我的</h1>
+          <h1 className="heading-lg text-av-text-primary ml-4">我的</h1>
         </div>
       </header>
 
@@ -53,11 +54,7 @@ export default function ProfilePage() {
       </main>
 
       {/* Toast */}
-      {toast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 px-4 py-2 bg-av-bg-elevated text-av-text-primary text-sm rounded-lg shadow-av-lg animate-fade-in">
-          {toast}
-        </div>
-      )}
+      {toast && <Toast message={toast} />}
     </div>
   )
 }

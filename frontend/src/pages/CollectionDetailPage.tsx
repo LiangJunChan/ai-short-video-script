@@ -7,6 +7,8 @@ import {
 } from '../store/videoApi'
 import VideoCard from '../components/VideoCard'
 import ConfirmModal from '../components/ConfirmModal'
+import Toast from '../components/Toast'
+import Pagination from '../components/Pagination'
 import type { Video } from '../types'
 
 function CollectionDetailPage() {
@@ -148,8 +150,8 @@ function CollectionDetailPage() {
             <div className="flex items-center gap-3">
               {collection.icon && <span className="text-2xl">{collection.icon}</span>}
               <div>
-                <h1 className="text-xl font-semibold text-av-text-primary">{collection.name}</h1>
-                <p className="text-sm text-av-text-secondary">{collection.videoCount} 个视频</p>
+                <h1 className="heading-lg text-av-text-primary">{collection.name}</h1>
+                <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>{collection.videoCount} 个视频</p>
               </div>
             </div>
           </div>
@@ -239,34 +241,18 @@ function CollectionDetailPage() {
               </div>
 
               {pagination.totalPages > 1 && (
-                <div className="flex items-center justify-center gap-2 mt-12">
-                  <button
-                    onClick={() => setPage(p => Math.max(1, p - 1))}
-                    disabled={page === 1}
-                    className="btn-secondary px-4 py-2 text-sm disabled:opacity-50"
-                  >
-                    上一页
-                  </button>
-                  <span className="text-sm text-av-text-secondary">{page} / {pagination.totalPages}</span>
-                  <button
-                    onClick={() => setPage(p => Math.min(pagination.totalPages, p + 1))}
-                    disabled={page === pagination.totalPages}
-                    className="btn-secondary px-4 py-2 text-sm disabled:opacity-50"
-                  >
-                    下一页
-                  </button>
-                </div>
+                <Pagination
+                  currentPage={page}
+                  totalPages={pagination.totalPages}
+                  onPageChange={setPage}
+                />
               )}
             </>
           )}
         </div>
 
         {/* Toast */}
-        {showToast && (
-          <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-av-bg-elevated text-av-text-primary px-6 py-3 rounded-xl shadow-av-lg z-av-toast animate-fade-in">
-            {showToast}
-          </div>
-        )}
+        {showToast && <Toast message={showToast} />}
 
         {/* Remove Single Video Confirm */}
         {showRemoveConfirm.show && (

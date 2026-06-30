@@ -4,6 +4,7 @@ import { useGetPublicVideosQuery, useCollectSquareVideoMutation, useGetCollectio
 import Loading from '../components/Loading'
 import CollectionSelector from '../components/CollectionSelector'
 import VideoCard from '../components/VideoCard'
+import Toast from '../components/Toast'
 import type { Video } from '../types'
 import type { SquareVideo } from '../types'
 
@@ -117,27 +118,39 @@ function SquarePage() {
 
   return (
     <div className="max-w-[1400px] mx-auto px-8 py-8">
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold gradient-text">短视频广场</h1>
-        <div className="flex items-center gap-2 bg-av-bg-tertiary/60 rounded-full p-1">
-          <span className="text-sm text-av-text-secondary pl-2">排序：</span>
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1
+            className="heading-lg gradient-text"
+            style={{ textWrap: 'balance', wordBreak: 'keep-all' }}
+          >
+            短视频广场
+          </h1>
+          <p className="text-sm mt-1.5" style={{ color: 'var(--color-text-secondary)' }}>
+            发现热门短视频脚本，激发创作灵感
+          </p>
+        </div>
+        {/* Sort Pills */}
+        <div
+          className="flex items-center gap-1 rounded-full px-1 py-1"
+          style={{ background: 'rgba(22, 24, 34, 0.6)' }}
+        >
           <button
             onClick={() => { setSortBy('newest'); setPage(1); }}
-            className={`px-3 py-1.5 text-sm rounded-full transition-all duration-200 ${
-              sortBy === 'newest'
-                ? 'bg-av-bg-elevated shadow-av-sm ring-1 ring-primary/30 text-primary font-medium'
-                : 'text-av-text-secondary hover:text-av-text-primary'
+            className={`sort-pill-active px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 cursor-pointer ${
+              sortBy === 'newest' ? '' : '!bg-transparent !shadow-none !text-av-text-secondary hover:!text-av-text-primary'
             }`}
           >
             最新
           </button>
           <button
             onClick={() => { setSortBy('popular'); setPage(1); }}
-            className={`px-3 py-1.5 text-sm rounded-full transition-all duration-200 ${
-              sortBy === 'popular'
-                ? 'bg-av-bg-elevated shadow-av-sm ring-1 ring-primary/30 text-primary font-medium'
-                : 'text-av-text-secondary hover:text-av-text-primary'
+            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors duration-200 cursor-pointer ${
+              sortBy === 'popular' ? 'sort-pill-active' : ''
             }`}
+            style={
+              sortBy !== 'popular' ? { color: 'var(--color-text-secondary)' } : undefined
+            }
           >
             热门
           </button>
@@ -165,8 +178,8 @@ function SquarePage() {
                   onClick={() => goToDetail(video.id)}
                   onDelete={() => {}}
                 />
-                {/* Collection overlay */}
-                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                {/* Collection overlay — 业务保留（VideoCard 内部也提供删除入口，二者并存） */}
+                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-20">
                   <button
                     onClick={(e) => {
                       e.stopPropagation()
@@ -180,22 +193,12 @@ function SquarePage() {
                     </svg>
                   </button>
                 </div>
-                {/* Collect count badge */}
+                {/* Collect count badge — 保留业务计数展示 */}
                 {video.collectCount > 0 && (
-                  <div className="absolute top-2 left-2">
-                    <span className="px-2 py-1 bg-[rgba(8,9,13,0.6)] backdrop-blur-sm text-av-text-primary text-xs rounded-xl">
+                  <div className="absolute top-2 left-2 z-10">
+                    <span className="glass-bg-light px-2 py-0.5 rounded-md text-xs" style={{ color: 'var(--color-text-tertiary)' }}>
                       ♡ {video.collectCount}
                     </span>
-                  </div>
-                )}
-                {/* Tags */}
-                {video.tags && (
-                  <div className="mt-2 flex flex-wrap gap-1">
-                    {video.tags.split(',').slice(0, 3).map((tag: string) => (
-                      <span key={tag} className="px-2 py-0.5 bg-av-bg-tertiary text-av-text-secondary text-xs rounded-full">
-                        {tag.trim()}
-                      </span>
-                    ))}
                   </div>
                 )}
               </div>
@@ -204,23 +207,37 @@ function SquarePage() {
 
           {/* Pagination */}
           {pagination && pagination.totalPages > 1 && (
-            <div className="flex items-center justify-center gap-2 mt-12">
+            <div className="flex items-center justify-center gap-4 mt-10">
               <button
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="px-4 py-2 text-sm font-medium text-av-text-secondary bg-av-bg-secondary border border-av-border-subtle rounded-full hover:bg-av-bg-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="px-5 py-2 rounded-lg text-sm font-medium transition-colors duration-200 cursor-pointer"
+                style={{
+                  color: page === 1 ? 'var(--color-text-tertiary)' : 'var(--color-text-secondary)',
+                  border: '1px solid var(--color-border-subtle)',
+                  background: 'transparent',
+                  opacity: page === 1 ? 0.5 : 1,
+                  cursor: page === 1 ? 'not-allowed' : 'pointer',
+                }}
               >
                 上一页
               </button>
 
-              <span className="px-4 py-2 text-sm text-av-text-secondary">
+              <span className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
                 {page} / {pagination.totalPages}
               </span>
 
               <button
                 onClick={() => setPage(p => Math.min(pagination.totalPages, p + 1))}
                 disabled={page === pagination.totalPages}
-                className="px-4 py-2 text-sm font-medium text-av-text-secondary bg-av-bg-secondary border border-av-border-subtle rounded-full hover:bg-av-bg-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="px-5 py-2 rounded-lg text-sm font-medium transition-colors duration-200 cursor-pointer"
+                style={{
+                  color: page === pagination.totalPages ? 'var(--color-text-tertiary)' : 'var(--color-text-secondary)',
+                  border: '1px solid var(--color-border-subtle)',
+                  background: 'transparent',
+                  opacity: page === pagination.totalPages ? 0.5 : 1,
+                  cursor: page === pagination.totalPages ? 'not-allowed' : 'pointer',
+                }}
               >
                 下一页
               </button>
@@ -258,11 +275,7 @@ function SquarePage() {
       )}
 
       {/* Toast */}
-      {toast && (
-        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-av-bg-elevated/90 backdrop-blur-sm text-av-text-primary px-6 py-3 rounded-2xl shadow-av-md z-av-toast animate-fade-in">
-          {toast}
-        </div>
-      )}
+      {toast && <Toast message={toast} />}
     </div>
   )
 }

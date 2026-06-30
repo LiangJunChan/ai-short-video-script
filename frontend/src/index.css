@@ -73,16 +73,6 @@
   --info: #4cc9f0;
   --info-bg: rgba(76, 201, 240, 0.10);
   --info-border: rgba(76, 201, 240, 0.3);
-  --ice-50: #0f1117;
-  --ice-100: #161822;
-  --ice-200: #1e2233;
-  --ice-300: #2a2f45;
-  --ice-400: #06d6a0;
-  --ice-500: #06d6a0;
-  --ice-600: #34e0b5;
-  --ice-700: #06d6a0;
-  --ice-800: #34e0b5;
-  --ice-900: #4cc9f0;
 
   /* ── 阴影 / 辉光 (基于 #06d6a0) ── */
   --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
@@ -539,6 +529,391 @@ input, textarea, select {
 /* ── 底部渐变遮罩（视频卡片缩略图） ── */
 .bottom-gradient {
   background: linear-gradient(to top, rgba(8, 9, 13, 0.85) 0%, transparent 60%);
+}
+
+/* ── Video Card（与 LAYOUT_REFERENCE.md 对齐） ── */
+.video-card {
+  transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1),
+              border-color 300ms cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.video-card:hover {
+  transform: translateY(-2px);
+}
+.video-card:hover .card-actions {
+  opacity: 1;
+}
+.card-actions {
+  opacity: 0;
+  transition: opacity 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Thumbnail gradients（缩略图兜底） ── */
+.thumb-gradient-1 {
+  background: linear-gradient(160deg, #0a2e2e 0%, #0d1b2a 50%, #08090d 100%);
+}
+.thumb-gradient-2 {
+  background: linear-gradient(160deg, #1a1040 0%, #0d1b2a 50%, #08090d 100%);
+}
+.thumb-gradient-3 {
+  background: linear-gradient(160deg, #0a2e2e 0%, #101830 50%, #08090d 100%);
+}
+.thumb-gradient-4 {
+  background: linear-gradient(160deg, #1a1040 0%, #0a1e30 50%, #08090d 100%);
+}
+.thumb-gradient-5 {
+  background: linear-gradient(160deg, #0d2a20 0%, #0d1b2a 60%, #08090d 100%);
+}
+.thumb-pattern {
+  background-image:
+    radial-gradient(circle at 20% 30%, rgba(6, 214, 160, 0.06) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(76, 201, 240, 0.04) 0%, transparent 50%);
+}
+.thumb-pattern-2 {
+  background-image:
+    radial-gradient(circle at 70% 20%, rgba(76, 201, 240, 0.06) 0%, transparent 50%),
+    radial-gradient(circle at 30% 80%, rgba(6, 214, 160, 0.04) 0%, transparent 50%);
+}
+
+/* ── Nav pill 基础态 ── */
+.nav-pill {
+  transition: color var(--duration-fast) var(--ease),
+              background-color var(--duration-fast) var(--ease),
+              box-shadow var(--duration-fast) var(--ease);
+}
+
+/* ── Collection Card（与 LAYOUT_REFERENCE.md 对齐） ── */
+.collection-card {
+  transition: transform var(--duration) var(--ease),
+              box-shadow var(--duration) var(--ease),
+              border-color var(--duration) var(--ease);
+}
+.collection-card:hover {
+  transform: translateY(-1px);
+}
+.collection-card .delete-btn {
+  opacity: 0;
+  transition: opacity 160ms var(--ease);
+}
+.collection-card:hover .delete-btn {
+  opacity: 1;
+}
+
+/* ── Storyboard Card（与 LAYOUT_REFERENCE.md 对齐） ── */
+.storyboard-card {
+  transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1),
+              border-color 200ms cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.storyboard-card:hover {
+  transform: translateY(-1px);
+  border-color: rgba(6, 214, 160, 0.2);
+  box-shadow: inset 0 0 20px rgba(6, 214, 160, 0.03), 0 0 20px rgba(6, 214, 160, 0.06);
+}
+.storyboard-card .card-actions {
+  opacity: 0;
+  transition: opacity 160ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.storyboard-card:hover .card-actions {
+  opacity: 1;
+}
+
+/* ════════════════════════════════════════════════════════════
+   我的视频页 — 与设计稿对齐的组件类
+   ════════════════════════════════════════════════════════════ */
+
+/* ── Page Header ── */
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-6, 24px);
+}
+.page-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1, 4px);
+}
+.sort-label {
+  font-size: var(--text-sm, 0.8125rem);
+  color: var(--color-text-tertiary);
+}
+
+/* ── Batch Select Button（页头右侧） ── */
+.batch-select-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  padding: var(--space-2, 8px) var(--space-3, 12px);
+  border-radius: var(--radius-md, 10px);
+  font-size: var(--text-sm, 0.8125rem);
+  color: var(--color-text-tertiary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: color var(--duration, 200ms) var(--ease),
+              background-color var(--duration, 200ms) var(--ease);
+}
+.batch-select-btn:hover {
+  color: var(--color-primary);
+}
+.batch-select-btn.is-active {
+  color: var(--color-primary);
+  background: var(--color-primary-muted);
+}
+
+/* ── Video Card Checkbox（左上角自定义勾选框） ── */
+.checkbox-card {
+  position: absolute;
+  top: var(--space-2, 8px);
+  left: var(--space-2, 8px);
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-sm, 6px);
+  border: 2px solid var(--color-border-strong);
+  background: rgba(8, 9, 13, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: transparent;
+  cursor: pointer;
+  z-index: 10;
+  transition: border-color var(--duration, 200ms) var(--ease),
+              background-color var(--duration, 200ms) var(--ease),
+              color var(--duration, 200ms) var(--ease);
+}
+.checkbox-card.checked {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-text-inverse);
+}
+
+/* ── Status Badge（右上角） ── */
+.status-badge {
+  position: absolute;
+  top: var(--space-2, 8px);
+  right: var(--space-2, 8px);
+  padding: 2px var(--space-2, 8px);
+  border-radius: var(--radius-sm, 6px);
+  font-size: var(--text-xs, 0.75rem);
+  font-weight: var(--weight-medium, 500);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 5;
+}
+.status-badge.status-done {
+  background: rgba(6, 214, 160, 0.15);
+  color: var(--state-success);
+}
+.status-badge.status-processing {
+  background: rgba(76, 201, 240, 0.15);
+  color: var(--state-info);
+}
+.status-badge.status-failed {
+  background: rgba(239, 71, 111, 0.15);
+  color: var(--state-error);
+}
+
+/* ── Delete Card Button（右上角 hover） ── */
+.delete-card-btn {
+  position: absolute;
+  top: var(--space-2, 8px);
+  right: var(--space-2, 8px);
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm, 6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(8, 9, 13, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: none;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  opacity: 0;
+  z-index: 12;
+  transition: opacity var(--duration, 200ms) var(--ease),
+              color var(--duration, 200ms) var(--ease);
+}
+.video-card:hover .delete-card-btn {
+  opacity: 1;
+}
+.delete-card-btn:hover {
+  color: var(--state-error);
+}
+
+/* ── Batch Action Bar（选择模式操作栏） ── */
+.batch-action-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4, 16px);
+  border-radius: var(--radius-lg, 14px);
+  background: var(--color-primary-subtle);
+  border: 1px solid var(--color-border-subtle);
+  margin-bottom: var(--space-6, 24px);
+}
+.batch-count {
+  font-size: var(--text-sm, 0.8125rem);
+  color: var(--color-primary);
+  font-weight: var(--weight-medium, 500);
+}
+.batch-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3, 12px);
+}
+.batch-divider {
+  width: 1px;
+  height: 20px;
+  background: var(--color-border-strong);
+}
+.batch-ghost {
+  padding: 6px var(--space-3, 12px);
+  border-radius: var(--radius-md, 10px);
+  font-size: var(--text-sm, 0.8125rem);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: background-color var(--duration, 200ms) var(--ease),
+              color var(--duration, 200ms) var(--ease);
+}
+.batch-ghost.primary-ghost {
+  color: var(--color-primary);
+}
+.batch-ghost.primary-ghost:hover {
+  background: var(--color-bg-hover);
+}
+.batch-ghost.secondary-ghost {
+  color: var(--color-text-secondary);
+}
+.batch-ghost.secondary-ghost:hover {
+  background: var(--color-bg-hover);
+}
+.error-btn {
+  padding: 6px var(--space-4, 16px);
+  border-radius: var(--radius-md, 10px);
+  font-size: var(--text-sm, 0.8125rem);
+  font-weight: var(--weight-medium, 500);
+  color: var(--state-error);
+  cursor: pointer;
+  border: none;
+  background: rgba(239, 71, 111, 0.1);
+  transition: background-color var(--duration, 200ms) var(--ease);
+}
+.error-btn:hover {
+  background: rgba(239, 71, 111, 0.2);
+}
+.error-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.batch-export-btn {
+  padding: 6px var(--space-4, 16px);
+  border-radius: var(--radius-md, 10px);
+  font-size: var(--text-sm, 0.8125rem);
+  font-weight: var(--weight-medium, 500);
+  color: var(--color-text-inverse);
+  cursor: pointer;
+  border: none;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+  box-shadow: var(--shadow-glow);
+  transition: opacity var(--duration, 200ms) var(--ease);
+}
+.batch-export-btn:hover {
+  opacity: 0.9;
+}
+.batch-export-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* ── Pagination（页码按钮） ── */
+.page-btn {
+  padding: var(--space-2, 8px) var(--space-5, 20px);
+  border-radius: var(--radius-md, 10px);
+  font-size: var(--text-sm, 0.8125rem);
+  font-weight: var(--weight-medium, 500);
+  border: 1px solid var(--color-border-subtle);
+  background: transparent;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  transition: background-color var(--duration, 200ms) var(--ease),
+              color var(--duration, 200ms) var(--ease),
+              border-color var(--duration, 200ms) var(--ease);
+}
+.page-btn:hover:not(:disabled) {
+  background: var(--color-bg-hover);
+  color: var(--color-text-primary);
+}
+.page-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  color: var(--color-text-tertiary);
+}
+.page-btn.active-page {
+  background: var(--color-primary-muted);
+  color: var(--color-primary);
+  border-color: rgba(6, 214, 160, 0.3);
+  box-shadow: var(--shadow-glow);
+}
+.page-num-btn {
+  min-width: 36px;
+  padding: var(--space-2, 8px) var(--space-3, 12px);
+  text-align: center;
+}
+.page-info {
+  font-size: var(--text-sm, 0.8125rem);
+  color: var(--color-text-secondary);
+}
+
+/* ── Empty State ── */
+.empty-state {
+  text-align: center;
+  padding: 96px 0;
+}
+.empty-icon {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto var(--space-6, 24px);
+  border-radius: var(--radius-xl, 18px);
+  background: var(--color-bg-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.empty-icon svg {
+  color: var(--color-text-tertiary);
+}
+.empty-title {
+  font-size: var(--text-lg, 1rem);
+  font-weight: var(--weight-medium, 500);
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-2, 8px);
+}
+.empty-desc {
+  font-size: var(--text-sm, 0.8125rem);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-6, 24px);
+}
+.empty-cta {
+  padding: var(--space-2, 8px) var(--space-6, 24px);
+  border-radius: var(--radius-md, 10px);
+  font-size: var(--text-sm, 0.8125rem);
+  font-weight: var(--weight-semibold, 600);
+  color: var(--color-text-inverse);
+  cursor: pointer;
+  border: none;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+  box-shadow: var(--shadow-glow);
+  transition: opacity var(--duration, 200ms) var(--ease);
+}
+.empty-cta:hover {
+  opacity: 0.9;
 }
 
 /* ════════════════════════════════════════════════════════════

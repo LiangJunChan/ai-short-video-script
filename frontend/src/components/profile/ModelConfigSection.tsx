@@ -10,6 +10,7 @@ interface ModelConfigSectionProps {
 const LLM_PROVIDERS = [
   { value: 'minimax', label: 'MiniMax' },
   { value: 'volcano', label: '火山方舟' },
+  { value: 'agnes', label: 'Agnes 2.0 Flash' },
   { value: 'openai', label: 'OpenAI' },
   { value: 'deepseek', label: 'DeepSeek' },
   { value: 'custom', label: '自定义' },

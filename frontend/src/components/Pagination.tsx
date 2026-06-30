@@ -5,41 +5,50 @@ interface PaginationProps {
 }
 
 function Pagination({ currentPage, totalPages, onPageChange }: PaginationProps) {
-  const renderPageNumbers = () => {
-    const pages = []
-    for (let i = 1; i <= totalPages; i++) {
-      pages.push(
-        <button
-          key={i}
-          className={`min-w-[40px] h-10 flex items-center justify-center border rounded-lg text-sm font-normal transition-all ${
-            i === currentPage
-              ? 'bg-primary border-primary text-av-text-inverse shadow-av-glow'
-              : 'border-av-border-subtle text-av-text-secondary hover:border-primary hover:text-primary'
-          }`}
-          onClick={() => onPageChange(i)}
-        >
-          {i}
-        </button>
-      )
+  if (totalPages <= 1) return null
+
+  const prevDisabled = currentPage === 1
+  const nextDisabled = currentPage === totalPages
+
+  // 计算要显示的页码窗口
+  const getPageNumbers = (): number[] => {
+    const maxVisible = 5
+    if (totalPages <= maxVisible) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1)
     }
-    return pages
+    let start = Math.max(1, currentPage - 2)
+    const end = Math.min(totalPages, start + maxVisible - 1)
+    start = Math.max(1, end - maxVisible + 1)
+    return Array.from({ length: end - start + 1 }, (_, i) => start + i)
   }
 
+  const pageNumbers = getPageNumbers()
+
   return (
-    <div className="flex justify-center items-center gap-1 mt-16 pb-20">
+    <div className="flex items-center justify-center gap-3 mt-10">
       <button
-        className="min-w-[40px] h-10 px-3 flex items-center justify-center border border-av-border-subtle rounded-lg text-sm font-normal text-av-text-secondary hover:border-primary hover:text-primary transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-        disabled={currentPage === 1}
+        className="page-btn"
+        disabled={prevDisabled}
         onClick={() => onPageChange(currentPage - 1)}
       >
         上一页
       </button>
 
-      {renderPageNumbers()}
+      {pageNumbers.map((num) => (
+        <button
+          key={num}
+          className={`page-btn page-num-btn ${num === currentPage ? 'active-page' : ''}`}
+          onClick={() => onPageChange(num)}
+        >
+          {num}
+        </button>
+      ))}
+
+      <span className="page-info">/ {totalPages}</span>
 
       <button
-        className="min-w-[40px] h-10 px-3 flex items-center justify-center border border-av-border-subtle rounded-lg text-sm font-normal text-av-text-secondary hover:border-primary hover:text-primary transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-        disabled={currentPage === totalPages}
+        className="page-btn"
+        disabled={nextDisabled}
         onClick={() => onPageChange(currentPage + 1)}
       >
         下一页

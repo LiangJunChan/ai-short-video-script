@@ -127,7 +127,14 @@ func GetModelConfigs(c *gin.Context) {
 	}
 
 	// 获取全局默认配置
-	globalDefaults := service.GetGlobalDefaultConfigs()
+	globalDefaults, err := service.GetGlobalDefaultConfigs()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, APIResponse{
+			Code:    500,
+			Message: "获取全局默认配置失败: " + err.Error(),
+		})
+		return
+	}
 
 	c.JSON(http.StatusOK, APIResponse{
 		Code:    200,

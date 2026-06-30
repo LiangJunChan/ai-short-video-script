@@ -209,13 +209,18 @@ func getEnvOrDefault(key, defaultVal string) string {
 }
 
 // getCurrentProvider 根据环境变量获取当前 Provider
-func getCurrentProvider() LLMProvider {
+// case 精准匹配（minimax/volcano/agnes），default 走错误
+func getCurrentProvider() (LLMProvider, error) {
 	providerType := os.Getenv("LLM_PROVIDER")
 	switch providerType {
-	case "volcengine":
-		return NewVolcanoEngineProvider()
+	case "minimax":
+		return NewMinimaxProvider(), nil
+	case "volcengine", "volcano":
+		return NewVolcanoEngineProvider(), nil
+	case "agnes":
+		return NewAgnesLLMProvider(), nil
 	default:
-		return NewMinimaxProvider()
+		return nil, fmt.Errorf("未识别的 LLM_PROVIDER=%q（必须是 minimax/volcano/agnes）", providerType)
 	}
 }
 
@@ -252,10 +257,13 @@ func getSystemPrompt() string {
 
 // RewriteText 调用 LLM 对文案进行改写
 func RewriteText(userID int, originalText, userPrompt string) (string, error) {
-	provider := GetProviderForUser(userID)
-
 	if originalText == "" {
 		return "", fmt.Errorf("原文案为空，无法进行改写")
+	}
+
+	provider, err := GetProviderForUser(userID)
+	if err != nil {
+		return "", err
 	}
 
 	systemPrompt := getSystemPrompt()

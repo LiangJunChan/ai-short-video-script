@@ -1,15 +1,35 @@
 interface ToastProps {
   message: string
+  type?: 'success' | 'error' | 'info' | 'warning'
 }
 
-function Toast({ message }: ToastProps) {
+const typeColors: Record<NonNullable<ToastProps['type']>, { border: string; dot: string }> = {
+  success: { border: 'var(--color-primary)', dot: 'var(--color-primary)' },
+  error: { border: 'var(--state-error)', dot: 'var(--state-error)' },
+  warning: { border: 'var(--state-warning)', dot: 'var(--state-warning)' },
+  info: { border: 'var(--state-info)', dot: 'var(--state-info)' },
+}
+
+function Toast({ message, type = 'info' }: ToastProps) {
+  const colors = typeColors[type]
+
   return (
     <div className="fixed top-6 left-1/2 -translate-x-1/2 z-av-toast animate-slide-down">
-      <div className="bg-av-bg-elevated text-av-text-primary px-5 py-3 rounded-full shadow-av-lg border border-av-border-subtle text-sm font-medium flex items-center gap-2">
-        <svg className="w-4 h-4 text-av-state-success" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-          <path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
-        {message}
+      <div
+        className="rounded-lg px-4 py-3 flex items-center gap-3 min-w-[260px] max-w-[420px] shadow-av-lg"
+        style={{
+          background: 'var(--color-bg-elevated)',
+          border: '1px solid var(--color-border-subtle)',
+          borderLeft: `3px solid ${colors.border}`,
+        }}
+      >
+        <span
+          className="w-2 h-2 rounded-full flex-shrink-0"
+          style={{ background: colors.dot }}
+        />
+        <p className="text-sm font-medium flex-1" style={{ color: 'var(--color-text-primary)' }}>
+          {message}
+        </p>
       </div>
     </div>
   )
