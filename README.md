@@ -219,6 +219,75 @@ docker compose build --build-arg GOPROXY=direct --build-arg PIP_INDEX_URL=https:
 或直接编辑 `backend/Dockerfile` / `asr/Dockerfile` 顶部的 `ENV` 行。
 
 
+## 🛡️ 抖音反爬策略
+
+> **目的**：向后来者解释"抖音链接提取为什么这么复杂"，以及为什么不能简单 `requests.get` 拿视频 URL。本节是工程语境说明，不是运维指南；细节定位请直接查 `backend/extract_douyin.py`。
+
+抖音从 2024 年起逐步上线多层反爬，2026 年中已形成"按访问路径分级拦截"的产品化体系。本项目是 headless chromium 自动化访问，**完全无状态**（不持久登录 cookie），属于抖音拦截优先级最高的场景。
+
+### 抖音反爬链与本项目应对
+
+| 层 | 抖音的反爬手段 | 我们怎么绕 |
+|---|---|---|
+| **1. User-Agent 检测** | headless chromium 默认 UA 含 `HeadlessChrome`，立刻 403 | launch args `--disable-blink-features=AutomationControlled` + 把 UA 声明成"Mac + Chrome 149"（对齐容器里真实的 chromium build） |
+| **2. JS 指纹** | 检测 `navigator.webdriver=true`、`window.chrome` 缺失等自动化特征 | `context.add_init_script` 抹掉 `navigator.webdriver`、注入 `window.chrome` 对象、补全 `navigator.plugins/languages` |
+| **3. WAF challenge** | 第一步返回纯 JS 挑战页（`<script>` 含 `waf-jschallenge`），客户端通过后才放完整 HTML | `_wait_until_page_ready()` 轮询。判定逻辑要正确——HTML < 20KB 判为 shell；含 `render_data/aweme_detail/sigi_state/play_addr` 直接判真页（不要只看关键词，否则真实页也会被误判） |
+| **4. URL 分级拦截** | 不同入口的反爬严格度完全不同 | 见下方"URL 路由表" |
+| **5. 接口签名** | `aweme/v1/web/aweme/detail/` API 要求 `_signature` / `X-Bogus` 戳，缺了 403 | 不直接调 API；从 SSR HTML 的 `<script id="SIGI_STATE">` 或 `window.__INIT_PROPS__` 里挖 JSON，让浏览器在 SPA 渲染中"自然触发"请求并被 `handle_response` 拦到 |
+| **6. 登录态** | `www.douyin.com/video/<id>` 未登录会被重定向到首页 feed | 不是所有 URL 都能匿名看；详见下方替代品 |
+
+### URL 路由表（核心）
+
+抖音根据入口路径给反爬规则分级，本项目实测发现：
+
+| URL | 反爬严格度 | 能否拿 aweme_detail | 备注 |
+|---|---|---|---|
+| `v.douyin.com/<短链>` | 重定向，不直连 | — | 用户粘贴的入口，302 到下面之一 |
+| `iesdouyin.com/share/video/<id>?...` | **最严** | ❌ WAF JS challenge 完全过不了 | 移动分享页，不要走这条路 |
+| `www.douyin.com/video/<id>` | 中 | ❌ 未登录跳首页 feed | 即使页面有 `<video>` 元素，API 拿不到 payload |
+| `www.douyin.com/discover?modal_id=<id>` | **宽松** | ✅ | **首选**，抖音站内推荐弹窗用此格式 |
+| `www.douyin.com/note/<id>` | 较严 | ⚠️ 备份 | 部分视频用此格式 |
+
+### 提取流程（当前实现）
+
+```
+用户粘贴 v.douyin.com/CQehcb6iXAo/
+  ↓ Playwright goto
+短链 302 落到某个 URL(可能是 share 或 video 或有别的)
+  ↓
+用 5 种 regex(/share/video/<id> / /video/<id> / /note/<id> /
+   ?modal_id=<id> / aweme_detail?aweme_id=<id>)抽 aweme_id
+  ↓
+依次 goto 三个候选 URL(discover → note → video)各等 8 秒
+每个都给 handle_response 一段窗口拦 aweme_detail API
+  ↓ 拿到 payload 就 break
+等 SPA 渲染完成 + 主动 click 播放按钮触发懒加载
+从 aweme_detail_payload.video.bit_rate[0].play_addr.url_list[0]
+  拿到真实 mp4 URL,填入 result
+  ↓
+Go 后端用 net/http 配浏览器同套 UA/Referer 直下 mp4 到 ./uploads/
+```
+
+### 设计上的几个明确决策
+
+| 项 | 选择 | 为什么 |
+|---|---|---|
+| **不持久登录 cookie** | 完全匿名 + 每次新 context | 部署到公网环境后，cookie 风险归不到具体用户头上；本项目不是发布工作流，只是收藏场景 |
+| **不在后台跑轮询 cookie 服务** | 不做 | 即便做了，抖音的 token 刷新策略 1-3 月会变，维护成本高；不如每次重新跑隐身 |
+| **不依赖单个视频 API** | 从 SSR HTML 里挖 JSON | API 要 `_signature` 戳；HTML 跟请求是浏览器自然发的，抖音只验浏览器行为不验这层 |
+| **discover?modal_id 优先** | discover/note/video 三选一 | 实测这个格式反爬最松，资源加载最快，拿到 payload 后再 break |
+
+### 已知/未来风险
+
+抖音反爬每 1-3 月会升级一次。当下面任意一个症状出现时，意味着现在这套可能失效：
+
+- 所有 URL 变体拿不到 aweme_detail，但 WAF challenge 通过；说明 SPA 数据接口路径变了，需抓取新的 `handle_response` 拦截关键词
+- `_looks_like_waf_challenge` 永远判 false 但 HTML 始终 < 20KB；说明 WAF 升级到无 JS 警告式，需要看 HTTP 503 响应
+- `discover?modal_id=` 也被识别成自动化；说明抖音针对单一 URL 做了指纹累计；考虑走 `webcast.amemv.com`（直播挂载路径）或导出本机 cookie 注入
+
+所有策略代码集中在 `backend/extract_douyin.py` 单文件（约 500 行），无 Python 包或外部依赖；将来维护以这一个文件为主战场。
+
+
 ## 📁 项目结构
 
 ```
