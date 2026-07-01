@@ -4,6 +4,7 @@ Douyin video extractor using Playwright - returns JSON with video URL and title
 """
 
 import asyncio
+import os
 import sys
 import re
 import json
@@ -155,7 +156,13 @@ def _extract_from_html_fallback(html: str):
 async def extract_video_info(url: str) -> dict:
     """Extract video URL and title from Douyin share URL using headless browser"""
     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=True)
+        # Docker 容器里 chromium 必须 --no-sandbox(容器本身已隔离,不需 chrome sandbox)
+        # 非容器环境走默认(有 sandbox,更安全)
+        launch_args = {"headless": True}
+        if os.environ.get("DOCKER") == "1":
+            launch_args["args"] = ["--no-sandbox", "--disable-setuid-sandbox"]
+
+        browser = await p.chromium.launch(**launch_args)
         context = await browser.new_context(
             user_agent='Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
             viewport={'width': 1920, 'height': 1080},

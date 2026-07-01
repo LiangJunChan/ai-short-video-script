@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"log"
+	"os"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -69,7 +70,12 @@ type UserVideo struct {
 
 func InitDB() {
 	var err error
-	DB, err = sql.Open("sqlite3", "./videos.db?_foreign_keys=ON")
+	// DB_PATH env 覆盖(Docker 里挂 host 目录用),默认相对路径与旧行为一致
+	dbPath := os.Getenv("DB_PATH")
+	if dbPath == "" {
+		dbPath = "./videos.db"
+	}
+	DB, err = sql.Open("sqlite3", dbPath+"?_foreign_keys=ON")
 	if err != nil {
 		log.Fatalf("Failed to open database: %v", err)
 	}

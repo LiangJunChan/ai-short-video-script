@@ -131,8 +131,12 @@ func RecognizeSpeech(audioPath string) (string, error) {
 	}
 	writer.Close()
 
-	// 发送 POST 请求到 Fun-ASR 服务
-	req, err := http.NewRequest("POST", "http://localhost:8000/asr", body)
+	// 发送 POST 请求到 Fun-ASR 服务(Docker 环境用 compose 里的服务名,由 ASR_URL env 注入)
+	asrURL := os.Getenv("ASR_URL")
+	if asrURL == "" {
+		asrURL = "http://localhost:8000/asr"
+	}
+	req, err := http.NewRequest("POST", asrURL, body)
 	if err != nil {
 		return "", fmt.Errorf("failed to create request: %w", err)
 	}
