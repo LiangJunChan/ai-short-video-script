@@ -83,11 +83,18 @@ func extractWithPlaywright(shareURL string) (string, string, error) {
 
 	log.Printf("Calling extraction script: %s", scriptPath)
 
+	// 优先使用 PYTHON_BIN 环境变量指向的解释器（通常是 backend/.venv/bin/python，bootstrap.sh 会写入 .env）
+	// 未设置时回退到系统 python3 —— 但那样必须保证系统 python3 装了 playwright，否则会失败
+	pythonBin := os.Getenv("PYTHON_BIN")
+	if pythonBin == "" {
+		pythonBin = "python3"
+	}
+
 	// 调用Python脚本
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 
-	cmd := exec.CommandContext(ctx, "python3", scriptPath, shareURL)
+	cmd := exec.CommandContext(ctx, pythonBin, scriptPath, shareURL)
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr

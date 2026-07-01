@@ -1,7 +1,16 @@
-.PHONY: dev dev-backend dev-frontend dev-asr up stop
+.PHONY: bootstrap dev dev-backend dev-frontend dev-asr up stop check
 
+# 首次配置 —— 检测依赖 + 建 venv + 装 chromium + 拉 pnpm deps
+bootstrap:
+	./bootstrap.sh
+
+# 只体检不装依赖
+check:
+	./bootstrap.sh --check
+
+# 起全部服务（前台，Ctrl+C 停）
 dev:
-	make dev-asr & make dev-backend & make dev-frontend
+	./start.sh
 
 dev-backend:
 	cd backend && go run .
@@ -9,11 +18,12 @@ dev-backend:
 dev-frontend:
 	cd frontend && pnpm dev
 
+# ASR 直接调 venv 的 python，无需 activate（bootstrap.sh 已建好 asr/.venv）
 dev-asr:
-	cd asr && source .venv/bin/activate && python app.py
+	./asr/.venv/bin/python asr/app.py
 
 up:
 	docker compose up --build
 
 stop:
-	docker compose down
+	./stop.sh

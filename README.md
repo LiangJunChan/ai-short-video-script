@@ -81,48 +81,39 @@
 
 ### 环境要求
 
-| 依赖 | 版本 | 用途 |
+| 依赖 | 版本 | 装法 |
 |------|------|------|
-| Go | 1.21+ | 后端服务 |
-| Node.js | 18+ | 前端开发 |
-| pnpm | 最新 | 前端包管理 |
-| Python | 3.13+ | ASR 语音识别服务 |
-| FFmpeg | 最新 | 音视频处理 |
-| Playwright | 最新 | 抖音链接提取 |
+| Homebrew | 最新 | [官网](https://brew.sh) |
+| Go | 1.21+ | `brew install go` |
+| Node.js | 18+ | `brew install node` |
+| pnpm | 最新 | `brew install pnpm` |
+| Python | 3.13 | `brew install python@3.13` |
+| FFmpeg | 最新 | `brew install ffmpeg` |
 
-> **首次使用需安装 Playwright 浏览器**：`pip install playwright && playwright install chromium`
+> 抖音链接提取所需的 **Playwright + Chromium** 由 `bootstrap.sh` 自动装到 `backend/.venv`(约 130MB Chromium 二进制 + 依赖)，无需手动 `pip install`。
 
-### 方式一：一键启动（推荐）
-
-项目提供了 `Makefile`，可以一条命令启动所有服务：
+### 方式一：一键启动(推荐 macOS)
 
 ```bash
-# 1. 克隆项目
+# 1. 克隆
 git clone git@github.com:LiangJunChan/ai-short-video-script.git
 cd ai-short-video-script
 
-# 2. 首次运行：初始化 ASR 虚拟环境
-cd asr
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-deactivate
-cd ..
+# 2. 一键初始化环境
+#    体检 brew/node/pnpm/go/ffmpeg/python@3.13 —— 缺什么会明确报错并给安装命令
+#    然后建 asr/.venv + backend/.venv、装 Playwright + Chromium、拉 pnpm 依赖、
+#    生成 backend/.env(追加 PYTHON_BIN 让 Go 稳定命中 venv)
+./bootstrap.sh
 
-# 3. 首次运行：初始化前端依赖
-cd frontend && pnpm install && cd ..
+# 3. 填 API Key(LLM_PROVIDER / MINIMAX_API_KEY 或 AGNES_API_KEY 等)
+vim backend/.env
 
-# 4. 首次运行：配置后端环境变量
-cd backend
-cp .env.example .env
-# 编辑 .env 填入你的 API Key（MiniMax 或火山方舟）
-cd ..
-
-# 5. 一键启动所有服务 🎉
+# 4. 一键启动 🎉
 make dev
+# 等价于 ./start.sh
 ```
 
-启动后将同时运行三个服务：
+启动后同时运行三个服务：
 
 | 服务 | 地址 | 说明 |
 |------|------|------|
@@ -130,69 +121,103 @@ make dev
 | 后端 | http://localhost:3000 | Go API 服务 |
 | ASR | http://localhost:8000 | Fun-ASR 语音识别服务 |
 
-> **注意**：ASR 服务首次启动时会自动从 [ModelScope](https://www.modelscope.cn) 下载模型（约 1.9GB），请耐心等待。后续启动将直接使用缓存模型，无需重复下载。
+> **首次 ASR 启动**会自动从 [ModelScope](https://www.modelscope.cn) 下载 FunASR 模型(约 1.9GB)，需数分钟；后续启动直接读缓存。
 
-### 方式二：Docker Compose 一键部署
-
-适合生产环境或不想本地安装依赖的场景：
+**常用命令：**
 
 ```bash
-# 构建并启动所有服务
-docker compose up --build
-
-# 后台运行
-docker compose up --build -d
-
-# 停止所有服务
-docker compose down
+./bootstrap.sh --check   # 只体检，不装依赖
+make dev                 # 起全部
+make dev-backend         # 单起后端
+make dev-frontend        # 单起前端
+make dev-asr             # 单起 ASR
+./start.sh --frp         # 起服务并顺带拉 FRP 隧道(见 docs/DEPLOY-FRP.md)
+./stop.sh                # 停全部
 ```
 
-或使用 Make 命令：
+### 方式二：Docker Compose(跨 macOS / Linux)
+
+适合生产部署或不想本地装 Node/Go/Python 的场景。
 
 ```bash
-make up     # 构建并启动
-make stop   # 停止所有服务
+git clone git@github.com:LiangJunChan/ai-short-video-script.git
+cd ai-short-video-script
+
+./bootstrap-docker.sh
+# → 缺 docker：报错 + macOS/Linux 差异化安装指引
+# → daemon 未起：提示启动方式
+# → OK：生成 backend/.env 模板(首次需你填 API Key)、build 三个镜像、up -d 启动
 ```
 
-### 方式三：逐个启动
+**首次执行的取舍：**
 
-如需单独启动某个服务，可使用以下命令：
+- backend 镜像约 1.5GB（Go binary + chromium + ffmpeg + playwright）
+- ASR 镜像约 3GB（torch + funasr）
+- 首次 `docker compose build` 约 15-30 分钟
+- FunASR 1.9G 模型挂 `modelscope-cache` volume，容器重启不用重下
+- 上传视频 / 缩略图 / 音频挂 host 目录（`./uploads` / `./thumbnails` / `./audio`），不入镜像
+
+**常用命令：**
 
 ```bash
-# 启动 ASR 语音识别服务
-make dev-asr
-
-# 启动后端 API 服务
-make dev-backend
-
-# 启动前端开发服务器
-make dev-frontend
+./bootstrap-docker.sh --check   # 只体检 docker / compose
+./bootstrap-docker.sh --logs    # 启动 + 跟随日志
+./bootstrap-docker.sh down      # 停 + 清容器(数据卷保留)
+docker compose logs -f backend  # 单看某服务
+docker compose restart backend  # 改 .env 后重启后端生效
+docker compose down -v          # ⚠️ 连数据卷一起删,ASR 模型要重下
 ```
 
-### ASR 服务说明
+**Linux 部署要点：**
 
-ASR 服务位于 `asr/` 目录，基于阿里巴巴 Fun-ASR 框架，提供以下能力：
+- Docker 需要 v20+ 且 `docker compose`（v2 插件）；老 `docker-compose` v1 也兼容但会警告
+- 非 root 用户需加入 `docker` 组：`sudo usermod -aG docker $USER`（重开终端生效）
+- 抖音链接提取的 Chromium 在容器内以 `--no-sandbox` 运行（`extract_douyin.py` 检测 `DOCKER=1` env 自动开启）
 
-- **语音识别（ASR）**：基于 Paraformer-large 模型，中文识别精度高
-- **标点恢复**：自动添加句号、逗号、问号等标点
-- **多格式支持**：支持 wav / mp3 / m4a
-- **本地部署**：模型在本地，无需联网调用 API
+**⚠️ 国内网络必配 Docker Hub 镜像加速器**（不配大概率报 `Bad Gateway`）：
 
-启动后可通过浏览器访问交互式 API 文档：
+推荐 mirror 列表（免费公开源）：
 
-| 文档类型 | 地址 |
-|---------|------|
-| Swagger UI | http://localhost:8000/docs |
-| ReDoc | http://localhost:8000/redoc |
+```json
+{
+  "registry-mirrors": [
+    "https://docker.m.daocloud.io",
+    "https://dockerproxy.com",
+    "https://docker.mirrors.ustc.edu.cn",
+    "https://mirror.baidubce.com"
+  ]
+}
+```
 
-**健康检查**：
+各家 Docker 运行时的配置位置：
+
+| 运行时 | 配置文件 | 重启命令 |
+|---|---|---|
+| Docker Desktop | Settings → Docker Engine 里的 JSON 输入框 | 点 Apply & Restart |
+| OrbStack | `~/.orbstack/config/docker.json` | `orbctl restart docker` |
+| Colima | `~/.colima/default/colima.yaml` 的 `docker.registry-mirrors:` | `colima restart` |
+| Linux 原生 | `/etc/docker/daemon.json` | `sudo systemctl restart docker` |
+
+`./bootstrap-docker.sh` 会自动 pull 一个 hello-world 探针镜像做网络自检，失败时会打印上述完整配置指引。
+
+**⚠️ Dockerfile 内其它国内镜像**（已内置，无需你手配）：
+
+| 依赖源 | 默认 | Dockerfile 内改用 | 影响 |
+|---|---|---|---|
+| Go module | `proxy.golang.org`（被墙） | `goproxy.cn` + `mirrors.aliyun.com` | backend build 时下 Go 依赖 |
+| Go checksum | `sum.golang.org`（被墙） | `sum.golang.google.cn` | 同上 |
+| PyPI | `pypi.org`（慢/timeout） | `pypi.tuna.tsinghua.edu.cn` | backend / asr 装 pip 包（尤其 torch 2GB） |
+| Debian apt | `deb.debian.org` | 保持不变（CDN 覆盖国内 OK） | ffmpeg / chromium 系统库 |
+
+**在境外服务器部署时**，如果不需要这些国内镜像（甚至可能因为镜像不同步导致包版本落后），可以在 build 时通过 `--build-arg` 或修改 Dockerfile 覆盖，比如：
 
 ```bash
-curl http://localhost:8000/health
-# {"status":"ok","model":"paraformer","punctuation":true}
+# 恢复默认（境外或墙外主机）
+docker compose build --build-arg GOPROXY=direct --build-arg PIP_INDEX_URL=https://pypi.org/simple backend
 ```
 
-> 后端默认调用地址为 `http://localhost:8000/asr`，如需修改请编辑 `backend/service/processor.go` 中的 `RecognizeSpeech` 函数。
+或直接编辑 `backend/Dockerfile` / `asr/Dockerfile` 顶部的 `ENV` 行。
+
 
 ## 📁 项目结构
 

@@ -1,0 +1,4 @@
+# 抖音链接提取所需 Python 依赖
+# extract_douyin.py 通过 Playwright 无头浏览器绕过抖音 WAF
+# 安装：pip install -r requirements.txt && playwright install chromium
+playwright>=1.40.0

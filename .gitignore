@@ -14,6 +14,7 @@ backend/.env
 
 # Database
 backend/videos.db
+data/
 
 # Logs
 backend.log
@@ -47,6 +48,10 @@ backend/ai-short-video-backend
 asr/.venv/
 asr/__pycache__/
 asr/.env
+
+# Backend Python venv (由 bootstrap.sh 建，装 Playwright 用；勿 commit)
+backend/.venv/
+backend/__pycache__/
 
 # FRP tooling (binaries, do not commit)
 frp_*/
