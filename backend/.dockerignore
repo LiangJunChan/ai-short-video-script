@@ -1,0 +1,21 @@
+# 本地 secrets / 大文件不要进镜像
+.env
+.env.local
+.venv/
+__pycache__/
+*.pyc
+
+# Go 编译产物 / IDE
+server
+ai-short-video-backend
+*.exe
+.vscode/
+.idea/
+
+# 数据库(用 volume)
+*.db
+
+# 上传目录(用 volume)
+../uploads
+../thumbnails
+../audio
