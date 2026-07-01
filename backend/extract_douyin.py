@@ -267,12 +267,28 @@ async def extract_video_info(url: str) -> dict:
             # 打印跳转后的最终 URL(v.douyin.com 短链会 302,可能落在 m/webcast/share 等页面)
             print(f"Final URL after redirect: {page.url}", file=sys.stderr)
 
-            # ★★★ 关键跳板:抖音移动分享页 WAF 极严,桌面 video 页需登录会跳首页
+            # ★★★ 关键跳板:抖音移动分享页 WAF 极严,桌面 video 页未登录会跳首页
             # 依次尝试三种桌面 URL 变体,任一拿到 aweme_detail_payload 就 break
-            aweme_id_match_initial = re.search(r'/share/video/(\d+)', page.url or "")
-            if aweme_id_match_initial:
-                aid = aweme_id_match_initial.group(1)
-                # 三种 URL 依次试(discover?modal_id 是抖音站内推荐弹窗,note 是通用格式)
+            # 短链 302 后可能落地在 iesdouyin.com/share/video/<id> 或 www.douyin.com/video/<id>,
+            # 两种格式都要能提到 aweme_id;而且即使落地是 discover 或 note 也切成 discover 试(统一处理)
+            initial_url = page.url or ""
+            aid_patterns = [
+                r'/share/video/(\d+)',                    # iesdouyin.com/share/video/<id>
+                r'/video/(\d+)',                          # www.douyin.com/video/<id>
+                r'/note/(\d+)',                           # www.douyin.com/note/<id>
+                r'[?&]modal_id=(\d+)',                    # discover?modal_id=<id>
+                r'/aweme/v1/web/aweme/detail/[^?]*[?&]aweme_id=(\d+)',
+            ]
+            aid = None
+            for pat in aid_patterns:
+                m = re.search(pat, initial_url)
+                if m:
+                    aid = m.group(1)
+                    break
+
+            if aid:
+                print(f"Extracted aweme_id={aid} from initial URL", file=sys.stderr)
+                # 三种 URL 依次试(discover?modal_id 反爬最松,note 备用,video 未登录会跳首页)
                 candidate_urls = [
                     f"https://www.douyin.com/discover?modal_id={aid}",
                     f"https://www.douyin.com/note/{aid}",
@@ -281,6 +297,11 @@ async def extract_video_info(url: str) -> dict:
                 for candidate in candidate_urls:
                     if aweme_detail_payload is not None:
                         break
+                    # 不去重复跑当前已在的 URL
+                    current = page.url or ""
+                    if aid in current and any(x in current for x in ["discover", "note", "video"]) and candidate.replace("https://", "") in current:
+                        print(f"Already on {candidate}, skip", file=sys.stderr)
+                        continue
                     print(f"Trying URL variant: {candidate}", file=sys.stderr)
                     try:
                         await page.goto(candidate, wait_until='domcontentloaded', timeout=60000)
@@ -292,9 +313,11 @@ async def extract_video_info(url: str) -> dict:
                             print(f"  ✅ Got aweme_detail_payload from this variant!", file=sys.stderr)
                             break
                         else:
-                            print(f"  ✗ No aweme_detail intercepted (page may still be loading)", file=sys.stderr)
+                            print(f"  ✗ No aweme_detail intercepted", file=sys.stderr)
                     except Exception as e:
                         print(f"  Variant failed: {e}", file=sys.stderr)
+            else:
+                print(f"Could not extract aweme_id from {initial_url}", file=sys.stderr)
         except Exception as e:
             print(f"Page load error: {e}", file=sys.stderr)
             result['error'] = f'页面加载失败: {e}'
@@ -492,15 +515,30 @@ async def extract_video_info(url: str) -> dict:
         clean_url = src.replace('\\/', '/').replace('\\u002F', '/').replace('&amp;', '&')
         result['video_url'] = clean_url
 
-        # 获取标题
+        # 获取标题:优先从 aweme_detail payload 的 desc 字段(视频真实描述),
+        # fallback 到 page.title()(discover 页会拿到首页标题,不理想)
+        title = ""
         try:
-            title = await page.title()
-            title = re.sub(r'[-_]抖音$', '', title)
-            title = re.sub(r'@抖音$', '', title)
-            result['title'] = title.strip()
-            print(f"Title: {result['title']}", file=sys.stderr)
-        except Exception:
-            pass
+            if aweme_detail_payload:
+                aweme = aweme_detail_payload.get("aweme_detail") if isinstance(aweme_detail_payload, dict) else None
+                if isinstance(aweme, dict):
+                    desc = aweme.get("desc") or ""
+                    if desc.strip():
+                        title = desc.strip()
+                        print(f"Title from aweme_detail.desc: {title[:80]}", file=sys.stderr)
+            if not title:
+                page_title = await page.title()
+                page_title = re.sub(r'[-_]抖音$', '', page_title)
+                page_title = re.sub(r'@抖音$', '', page_title)
+                # 过滤抖音首页默认标题(discover 页会命中这个)
+                if page_title.strip() and page_title.strip() not in ["抖音", "抖音 - 记录美好生活"]:
+                    title = page_title.strip()
+                    print(f"Title from page.title(): {title[:80]}", file=sys.stderr)
+                else:
+                    print(f"page.title()={page_title!r} skipped as fallback", file=sys.stderr)
+            result['title'] = title
+        except Exception as e:
+            print(f"Title extraction failed: {e}", file=sys.stderr)
 
         await browser.close()
         return result
