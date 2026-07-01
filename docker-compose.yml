@@ -36,6 +36,9 @@ services:
     container_name: avs-asr
     ports:
       - "8000:8000"
+    environment:
+      # 容器内 FastAPI 必须绑 0.0.0.0 才能让其它容器(backend)访问,本机开发默认 127.0.0.1
+      - ASR_HOST=0.0.0.0
     volumes:
       # FunASR 1.9G 模型缓存到 host,重启不用重下
       - modelscope-cache:/root/.cache/modelscope

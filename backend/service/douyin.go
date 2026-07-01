@@ -91,7 +91,9 @@ func extractWithPlaywright(shareURL string) (string, string, error) {
 	}
 
 	// 调用Python脚本
-	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	// Python 脚本超时:extract_douyin.py 里 CHALLENGE_MAX_WAIT_SECONDS=90,
+	// 加上 goto/DETAIL_WAIT 等其它 IO,总时长可能到 120s
+	ctx, cancel := context.WithTimeout(context.Background(), 150*time.Second)
 	defer cancel()
 
 	cmd := exec.CommandContext(ctx, pythonBin, scriptPath, shareURL)

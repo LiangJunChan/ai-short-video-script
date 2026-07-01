@@ -122,10 +122,12 @@ async def health_check():
 
 
 if __name__ == "__main__":
-    # 部署在本地 localhost
+    # host 默认 127.0.0.1(本机开发,不暴露到外网)
+    # Docker 里 compose 会传 ASR_HOST=0.0.0.0 让容器外可访问
+    import os
     uvicorn.run(
         "app:app",
-        host="127.0.0.1",
-        port=8000,
+        host=os.environ.get("ASR_HOST", "127.0.0.1"),
+        port=int(os.environ.get("ASR_PORT", "8000")),
         reload=False,
     )
