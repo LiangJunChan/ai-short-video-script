@@ -23,13 +23,26 @@ function DetailPage() {
   const [showBackTop, setShowBackTop] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
 
-  const { data, isLoading } = useGetVideoDetailQuery(numericId)
+  // 关键:
+  // 1) refetchOnMountOrArgChange 保证每次进入详情页都强制 refetch,不吃 60s 缓存
+  //    (否则:上传后停在 processing → 返回主页 → 再进详情,RTK Query 命中缓存仍显示 processing)
+  // 2) 动态 pollingInterval:后端 AI 提取是异步 goroutine,前端不轮询无法感知完成。
+  //    status === 'processing' 时每 3s 拉一次,拿到 done/failed 后置 0 自动停止,不浪费请求
+  const [pollInterval, setPollInterval] = useState(0)
+  const { data, isLoading } = useGetVideoDetailQuery(numericId, {
+    refetchOnMountOrArgChange: true,
+    pollingInterval: pollInterval,
+  })
+  const video = data?.data
+
+  useEffect(() => {
+    setPollInterval(video?.status === 'processing' ? 3000 : 0)
+  }, [video?.status])
+
   const { refetch: refetchMe } = useGetMeQuery()
   const [reextractVideo, { isLoading: isReextracting }] = useReextractVideoMutation()
   const [deleteVideo] = useDeleteVideoMutation()
   const [createStoryboard] = useCreateStoryboardMutation()
-
-  const video = data?.data
 
   // Scroll to show/hide back-to-top button
   useEffect(() => {

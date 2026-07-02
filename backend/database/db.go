@@ -352,6 +352,9 @@ func InitDB() {
 	RunSquareMigrations()
 	FixAnalysisResultsUniqueConstraint()
 	RunStoryboardRunMigrations()
+
+	// 邮箱登录功能迁移
+	RunEmailAuthMigrations()
 }
 
 // FixAnalysisResultsUniqueConstraint 修复 analysis_results 唯一约束

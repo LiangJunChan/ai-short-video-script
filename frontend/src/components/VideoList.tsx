@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useGetVideoListQuery, useDeleteVideoMutation, useExportMarkdownMutation } from '../store/videoApi'
 import VideoCard from './VideoCard'
@@ -23,12 +23,23 @@ function VideoList({ onUpload }: VideoListProps) {
   const [showToast, setShowToast] = useState<string | null>(null)
   const [showBatchDeleteConfirm, setShowBatchDeleteConfirm] = useState(false)
 
-  const { data, isLoading, isError } = useGetVideoListQuery({ page, pageSize })
-  const [deleteVideo, { isLoading: isDeleting }] = useDeleteVideoMutation()
-  const [exportMarkdown, { isLoading: isExporting }] = useExportMarkdownMutation()
-
+  // 列表页也强制 refetchOnMountOrArgChange:从详情页返回列表时刷新最新 status,
+  // 避免主页看到的还是旧的 "处理中" 卡片。
+  // 另外只要列表里有 processing 卡片,每 5s 轮询一次让状态实时更新
+  const [pollInterval, setPollInterval] = useState(0)
+  const { data, isLoading, isError } = useGetVideoListQuery(
+    { page, pageSize },
+    { refetchOnMountOrArgChange: true, pollingInterval: pollInterval }
+  )
   const videos = data?.data?.videos ?? []
   const pagination = data?.data?.pagination
+
+  useEffect(() => {
+    setPollInterval(videos.some(v => v.status === 'processing') ? 5000 : 0)
+  }, [videos])
+
+  const [deleteVideo, { isLoading: isDeleting }] = useDeleteVideoMutation()
+  const [exportMarkdown, { isLoading: isExporting }] = useExportMarkdownMutation()
 
   const handleDelete = async () => {
     if (!deleteTarget) return

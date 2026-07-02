@@ -8,6 +8,7 @@ import Layout from './components/Layout'
 import DetailPage from './pages/DetailPage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
+import ForgotPasswordPage from './pages/ForgotPasswordPage'
 import LibraryPage from './pages/LibraryPage'
 import CollectionDetailPage from './pages/CollectionDetailPage'
 import TagFilterPage from './pages/TagFilterPage'
@@ -54,6 +55,10 @@ const router = createBrowserRouter([
   {
     path: '/register',
     element: <RegisterPage />,
+  },
+  {
+    path: '/forgot-password',
+    element: <ForgotPasswordPage />,
   },
 ])
 

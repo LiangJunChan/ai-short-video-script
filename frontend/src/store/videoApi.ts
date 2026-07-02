@@ -58,6 +58,38 @@ export const videoApi = createApi({
         body: credentials,
       }),
     }),
+    // 邮箱验证码
+    sendCode: builder.mutation<{ code: number; message: string }, { email: string; purpose: string }>({
+      query: (body) => ({
+        url: '/auth/send-code',
+        method: 'POST',
+        body,
+      }),
+    }),
+    // 邮箱注册
+    registerByEmail: builder.mutation<LoginResponse, { email: string; code: string; password: string; confirm_password: string }>({
+      query: (body) => ({
+        url: '/auth/register-by-email',
+        method: 'POST',
+        body,
+      }),
+    }),
+    // 邮箱登录
+    loginByEmail: builder.mutation<LoginResponse, { email: string; password: string }>({
+      query: (body) => ({
+        url: '/auth/login-by-email',
+        method: 'POST',
+        body,
+      }),
+    }),
+    // 重置密码
+    resetPassword: builder.mutation<{ code: number; message: string }, { email: string; code: string; password: string; confirm_password: string }>({
+      query: (body) => ({
+        url: '/auth/reset-password',
+        method: 'POST',
+        body,
+      }),
+    }),
     getMe: builder.query<MeResponse, void>({
       query: () => '/auth/me',
       providesTags: ['User'],
@@ -444,6 +476,10 @@ export const videoApi = createApi({
 export const {
   useLoginMutation,
   useRegisterMutation,
+  useSendCodeMutation,
+  useRegisterByEmailMutation,
+  useLoginByEmailMutation,
+  useResetPasswordMutation,
   useGetMeQuery,
   useGetCreditsQuery,
   useGetCheckinStatusQuery,

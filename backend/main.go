@@ -52,6 +52,10 @@ func main() {
 	{
 		api.POST("/auth/register", handler.Register)
 		api.POST("/auth/login", handler.Login)
+		api.POST("/auth/send-code", handler.SendCode)
+		api.POST("/auth/register-by-email", handler.RegisterByEmail)
+		api.POST("/auth/login-by-email", handler.LoginByEmail)
+		api.POST("/auth/reset-password", handler.ResetPassword)
 	}
 
 	// 受保护的API路由

@@ -152,6 +152,7 @@ func Login(c *gin.Context) {
 				"username":  user.Username,
 				"user_type": user.UserType,
 				"credits":   user.Credits,
+				"email":     user.Email,
 			},
 		},
 	})
@@ -178,6 +179,7 @@ func GetMe(c *gin.Context) {
 			"username":  user.Username,
 			"user_type": user.UserType,
 			"credits":   user.Credits,
+			"email":     user.Email,
 		},
 	})
 }
