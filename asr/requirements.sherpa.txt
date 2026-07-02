@@ -1,0 +1,7 @@
+# ASR 依赖 — sherpa-onnx 引擎(低内存,默认)
+# 用 sherpa-onnx + SenseVoice int8 ONNX,避免 1.8G 内存机器 OOM。
+sherpa-onnx>=1.10.0
+numpy>=1.24.0,<2.0.0
+uvicorn>=0.20.0,<1.0.0
+fastapi>=0.100.0,<1.0.0
+python-multipart>=0.0.6,<1.0.0

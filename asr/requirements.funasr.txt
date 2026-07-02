@@ -1,0 +1,9 @@
+# ASR 依赖 — funasr 引擎(高内存,原版)
+# funasr + torch + SenseVoiceSmall。torch/torchaudio 的 CPU 版由 Dockerfile 单独装。
+# 适合 MacBook 等内存充足(>=3G)的开发机。
+funasr>=1.0.0,<2.0.0
+torch>=2.0.0,<2.12.0
+torchaudio>=2.0.0,<2.12.0
+uvicorn>=0.20.0,<1.0.0
+fastapi>=0.100.0,<1.0.0
+python-multipart>=0.0.6,<1.0.0

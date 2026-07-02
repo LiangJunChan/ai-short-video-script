@@ -71,10 +71,10 @@
 | 前端 | React 19 · Vite · TypeScript · Tailwind CSS · RTK Query · React Flow 11 |
 | 画布工作流 | React Flow（节点拖拽 / 连线 / 自动布局） |
 | 音视频 | FFmpeg（缩略图 + 音频提取） |
-| 语音识别 | Fun-ASR（阿里开源，离线部署） |
+| 语音识别 | **双引擎**：sherpa-onnx + SenseVoice int8（低内存，默认）/ Fun-ASR + torch（高内存） |
 | LLM 文案 | MiniMax M2 / 火山方舟 Doubao / **Agnes 2.0 Flash** |
 | AI 图片/视频 | Agnes（image-2.1-flash / video-v2.0） |
-| 链接提取 | Playwright（抖音反爬绕过） |
+| 链接提取 | Playwright（抖音反爬绕过，支持可选登录态） |
 | 字体 | Inter + JetBrains Mono（Google Fonts） |
 
 ## 🚀 快速开始
@@ -152,10 +152,45 @@ cd ai-short-video-script
 **首次执行的取舍：**
 
 - backend 镜像约 1.5GB（Go binary + chromium + ffmpeg + playwright）
-- ASR 镜像约 3GB（torch + funasr）
-- 首次 `docker compose build` 约 15-30 分钟
-- FunASR 1.9G 模型挂 `modelscope-cache` volume，容器重启不用重下
+- ASR 镜像大小取决于引擎：**sherpa ~600MB** / **funasr ~3GB**（torch 是大头）
+- 首次 `docker compose build`：sherpa 约 3-5 分钟 / funasr 约 15-30 分钟
 - 上传视频 / 缩略图 / 音频挂 host 目录（`./uploads` / `./thumbnails` / `./audio`），不入镜像
+
+### 🎙️ ASR 语音识别双引擎（按内存自动切换）
+
+`bootstrap-docker.sh` 会**自动检测机器总内存**决定用哪个 ASR 引擎，无需手动配置：
+
+| 引擎 | 触发条件 | 内存占用 | 模型来源 | 适用 |
+|---|---|---|---|---|
+| **sherpa**（默认） | 总内存 **< 3G** | 峰值 ~450MB | int8 ONNX（229MB），首次由脚本从 hf-mirror 下载到 `asr/models/` 并打包进镜像 | 阿里云等小内存 VPS |
+| **funasr** | 总内存 **≥ 3G** | 加载即 700MB+，峰值 1.5G+ | 运行时由 modelscope 自动下载（缓存到 `modelscope-cache` 卷） | MacBook 等开发机 |
+
+两种引擎**对外 HTTP 接口完全一致**（`POST /asr`、`GET /health`），业务代码无感。
+
+**手动指定引擎**（覆盖自动检测）：
+
+```bash
+ASR_ENGINE=funasr ./bootstrap-docker.sh   # 强制用 funasr（torch）
+ASR_ENGINE=sherpa ./bootstrap-docker.sh   # 强制用 sherpa（低内存）
+# 或写进 backend/.env / shell 环境变量,docker-compose 会读取
+```
+
+> ⚠️ **1.8G 等小内存机器注意**：sherpa 引擎的 chromium（抖音提取）已内置激进省内存参数，可与 ASR 共存。但若强行在小内存机器上用 funasr，会因 OOM 无限重启，务必用默认 sherpa。
+
+### 🔑 抖音提取登录态（可选）
+
+抖音对**机房 IP + 未登录**的无头浏览器会触发 bdturing 滑块风控，导致视频详情接口返回空。解决办法是注入登录态：
+
+- **有** `backend/douyin_state.json`（含有效 cookies）→ 以登录态访问，绕过风控（推荐服务器部署）
+- **无 / 空文件** → 走匿名逻辑（本地 IP 通常够用，如 MacBook 开发）
+
+`bootstrap-docker.sh` 会自动创建空占位文件。要启用登录态，用浏览器 Cookie 导出扩展（能导出 httpOnly cookie）导出抖音登录 cookie（需含 `sessionid_ss`/`sid_guard`/`ttwid` 等），包装成 Playwright storage_state 格式：
+
+```json
+{"cookies": [{"name":"sessionid_ss","value":"...","domain":".douyin.com","path":"/","httpOnly":true,"secure":true,"sameSite":"None"}, ...], "origins": []}
+```
+
+存到 `backend/douyin_state.json` 即可（该文件已 gitignore，含账号凭证不入库）。cookie 有有效期（`sid_guard` 约 60 天），失效后重新导出替换即可，**无需重建镜像**（compose 只读挂载，实时生效）。
 
 **常用命令：**
 
@@ -165,7 +200,7 @@ cd ai-short-video-script
 ./bootstrap-docker.sh down      # 停 + 清容器(数据卷保留)
 docker compose logs -f backend  # 单看某服务
 docker compose restart backend  # 改 .env 后重启后端生效
-docker compose down -v          # ⚠️ 连数据卷一起删,ASR 模型要重下
+docker compose down -v          # ⚠️ 连数据卷一起删,funasr 引擎模型要重下
 ```
 
 **Linux 部署要点：**
@@ -206,7 +241,7 @@ docker compose down -v          # ⚠️ 连数据卷一起删,ASR 模型要重�
 |---|---|---|---|
 | Go module | `proxy.golang.org`（被墙） | `goproxy.cn` + `mirrors.aliyun.com` | backend build 时下 Go 依赖 |
 | Go checksum | `sum.golang.org`（被墙） | `sum.golang.google.cn` | 同上 |
-| PyPI | `pypi.org`（慢/timeout） | `pypi.tuna.tsinghua.edu.cn` | backend / asr 装 pip 包（尤其 torch 2GB） |
+| PyPI | `pypi.org`（慢/timeout） | `pypi.tuna.tsinghua.edu.cn` | backend / asr 装 pip 包（funasr 引擎的 torch 2GB 尤甚） |
 | Debian apt | `deb.debian.org` | 保持不变（CDN 覆盖国内 OK） | ffmpeg / chromium 系统库 |
 
 **在境外服务器部署时**，如果不需要这些国内镜像（甚至可能因为镜像不同步导致包版本落后），可以在 build 时通过 `--build-arg` 或修改 Dockerfile 覆盖，比如：
@@ -299,7 +334,7 @@ ai-short-video-script/
 │   ├── database/               # SQLite CRUD · 迁移
 │   ├── handler/                # API 处理器（video/storyboard/auth/user_profile...）
 │   └── service/
-│       ├── processor.go        # FFmpeg · Fun-ASR 调用
+│       ├── processor.go        # FFmpeg · ASR 调用
 │       ├── douyin.go           # 抖音提取服务
 │       ├── llm.go              # LLMProvider 接口 · MiniMax / 火山方舟
 │       ├── llm_agnes.go        # Agnes 2.0 Flash LLM provider
@@ -318,7 +353,13 @@ ai-short-video-script/
 │   │   └── pages/              # 全部页面（含画布编辑器）
 │   ├── tailwind.config.js      # 暗色 av- 设计系统
 │   └── src/index.css           # 暗色设计 token + 组件类
-├── asr/                        # ASR 语音识别服务（Python + FastAPI）
+├── asr/                        # ASR 语音识别服务（Python + FastAPI，双引擎）
+│   ├── app.py                  # 双引擎调度（ASR_ENGINE=sherpa/funasr）
+│   ├── Dockerfile              # ARG ASR_ENGINE 构建期选依赖
+│   ├── requirements.sherpa.txt # sherpa-onnx 依赖（低内存）
+│   ├── requirements.funasr.txt # funasr + torch 依赖（高内存）
+│   └── models/                 # sherpa int8 ONNX 模型（bootstrap 下载，不入库）
+├── backend/douyin_state.json   # 抖音登录态（可选，不入库；见"抖音提取登录态"）
 ├── DESIGN_SPEC.md              # 暗色设计规范文档
 ├── docker-compose.yml          # 三服务统一编排
 ├── Makefile                    # 开发快捷命令
@@ -453,6 +494,7 @@ sudo nginx -t && sudo nginx -s reload
 - [x] **暗色科技感设计系统**（基于 `DESIGN_SPEC.md`，`<html class="dark">`，av-bg/av-text/av-primary/av-glow 等）
 - [x] **LLM 新增 Agnes 2.0 Flash provider**：OpenAI 兼容 `/v1/chat/completions`
 - [x] **LLM provider 配置错误化**：所有 provider case 精准匹配，`default` 不再静默兜底到 minimax，未配置时明确报错
+- [x] **Docker 部署适配（小内存友好）**：ASR 双引擎（sherpa-onnx 低内存 / funasr torch，按内存自动切换）、抖音提取可选登录态（绕过 bdturing 风控）、chromium 省内存参数，可在 1.8G VPS 稳定运行
 
 ## 📄 许可证
 

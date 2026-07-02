@@ -243,6 +243,76 @@ fi
 mkdir -p uploads thumbnails audio thumbnails/square data
 
 # ============================================================
+# ASR 引擎自动选择(按可用内存)
+#   sherpa (低内存 ONNX): 总内存 < 3G → 阿里云等小机器
+#   funasr (torch 高内存): 总内存 >= 3G → MacBook 等开发机
+# 用户可显式覆盖: ASR_ENGINE=funasr ./bootstrap-docker.sh
+# 该变量通过 export 传给 docker compose(compose 的 ${ASR_ENGINE:-sherpa} 会读到)
+# ============================================================
+detect_total_mem_mb() {
+  if [ "$PLATFORM" = "macOS" ]; then
+    # macOS: sysctl 返回字节
+    echo $(( $(sysctl -n hw.memsize 2>/dev/null || echo 0) / 1024 / 1024 ))
+  else
+    # Linux: /proc/meminfo 单位 KB
+    echo $(( $(awk '/MemTotal/{print $2}' /proc/meminfo 2>/dev/null || echo 0) / 1024 ))
+  fi
+}
+
+if [ -z "$ASR_ENGINE" ]; then
+  MEM_MB=$(detect_total_mem_mb)
+  if [ "$MEM_MB" -gt 0 ] && [ "$MEM_MB" -lt 3072 ]; then
+    ASR_ENGINE="sherpa"
+    info "检测到内存 ${MEM_MB}MB (<3G) → ASR 引擎自动选 sherpa(低内存 ONNX)"
+  else
+    ASR_ENGINE="funasr"
+    info "检测到内存 ${MEM_MB}MB (>=3G) → ASR 引擎自动选 funasr(torch,原版逻辑)"
+  fi
+else
+  info "ASR_ENGINE 已由环境指定为: $ASR_ENGINE"
+fi
+export ASR_ENGINE
+info "本次部署使用 ASR 引擎: ${GREEN}${ASR_ENGINE}${NC}(可用 ASR_ENGINE=xxx 覆盖)"
+
+# ============================================================
+# sherpa 引擎: 确保 int8 ONNX 模型已下载(镜像 build 会 COPY models/)
+#   模型不入 git,首次部署时从 hf-mirror.com 下载(国内快)
+# funasr 引擎: 无需本地模型(运行时 modelscope 自动下),但 models/ 目录仍需存在供 COPY
+# ============================================================
+mkdir -p asr/models
+if [ "$ASR_ENGINE" = "sherpa" ]; then
+  if [ ! -f asr/models/model.int8.onnx ] || [ ! -f asr/models/tokens.txt ]; then
+    info "下载 sherpa SenseVoice int8 模型(约 229MB,从 hf-mirror.com)..."
+    SHERPA_BASE="https://hf-mirror.com/csukuangfj/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/resolve/main"
+    if command -v curl >/dev/null 2>&1; then
+      curl -fL "$SHERPA_BASE/model.int8.onnx" -o asr/models/model.int8.onnx || fail "模型下载失败,请检查网络或手动下载到 asr/models/"
+      curl -fL "$SHERPA_BASE/tokens.txt" -o asr/models/tokens.txt || fail "tokens.txt 下载失败"
+    elif command -v wget >/dev/null 2>&1; then
+      wget -O asr/models/model.int8.onnx "$SHERPA_BASE/model.int8.onnx" || fail "模型下载失败"
+      wget -O asr/models/tokens.txt "$SHERPA_BASE/tokens.txt" || fail "tokens.txt 下载失败"
+    else
+      fail "需要 curl 或 wget 下载模型,请先安装"
+    fi
+    ok "sherpa 模型已就位: asr/models/model.int8.onnx"
+  else
+    ok "sherpa 模型已存在,跳过下载"
+  fi
+else
+  # funasr 模式: 放一个占位保证 COPY models/ 不失败
+  [ -f asr/models/.gitkeep ] || touch asr/models/.gitkeep
+fi
+
+# ============================================================
+# 抖音登录态占位: compose 只读挂载 backend/douyin_state.json,
+#   文件不存在时 docker 会误建成目录导致挂载异常。这里确保它是文件。
+#   内容留空 {} → extract_douyin.py 检测到无有效登录态会走匿名逻辑。
+# ============================================================
+if [ ! -f backend/douyin_state.json ]; then
+  info "创建空的 backend/douyin_state.json 占位(走匿名提取;如需登录态请替换为真实 storage_state)"
+  echo '{"cookies":[],"origins":[]}' > backend/douyin_state.json
+fi
+
+# ============================================================
 # build (前台流式输出,能看到 pip / apt / chromium 下载进度)
 # ============================================================
 info "开始 build 三个镜像(首次约 10-25 分钟,进度会实时打印在下方)..."

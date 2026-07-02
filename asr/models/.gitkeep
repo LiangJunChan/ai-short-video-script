@@ -1,0 +1,3 @@
+# 此目录存放 sherpa-onnx 的 SenseVoice int8 模型(由 bootstrap-docker.sh 下载):
+#   model.int8.onnx (约229MB) / tokens.txt
+# 大文件不入 git,构建镜像时(sherpa 引擎)会 COPY 本目录。

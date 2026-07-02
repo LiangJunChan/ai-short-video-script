@@ -1,9 +1,5 @@
-# asr/requirements.txt
-# 版本组合与本机 asr/.venv 一致(python 3.11 + torch 2.11.0)
-# torch/torchaudio 由 Dockerfile 单独装 CPU 版,这里不重复约束
-funasr>=1.0.0,<2.0.0
-torch>=2.0.0,<2.12.0
-torchaudio>=2.0.0,<2.12.0
-uvicorn>=0.20.0,<1.0.0
-fastapi>=0.100.0,<1.0.0
-python-multipart>=0.0.6,<1.0.0
+# requirements.txt 保留为向后兼容入口,默认指向 sherpa(低内存)。
+# 实际构建请用 Dockerfile 的 ASR_ENGINE build-arg 选择引擎:
+#   - sherpa: requirements.sherpa.txt
+#   - funasr: requirements.funasr.txt
+-r requirements.sherpa.txt

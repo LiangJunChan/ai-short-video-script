@@ -1,69 +1,167 @@
 """
-Fun-ASR Web Service
-提供 HTTP 接口接受音频输入，返回识别文本
+ASR Web Service — 双引擎版
+提供 HTTP 接口接受音频输入，返回识别文本。
+
+通过环境变量 ASR_ENGINE 选择推理引擎:
+  - ASR_ENGINE=sherpa (默认): sherpa-onnx + SenseVoice int8 ONNX
+      低内存(峰值~450MB),适合 1.8G 等小内存机器。模型在 ./models/ 下随镜像打包。
+  - ASR_ENGINE=funasr: funasr + torch + SenseVoiceSmall
+      内存需求高(加载即 700MB+,峰值 1.5G+),适合 MacBook 等内存充足的开发机。
+      模型首次运行时由 modelscope 自动下载。
+
+两种引擎对外 HTTP 接口完全一致(POST /asr, GET /health)。
 """
 
 import os
+import gc
 import tempfile
+import subprocess
 from contextlib import asynccontextmanager
 from pathlib import Path
 
 import uvicorn
 from fastapi import FastAPI, UploadFile, File, HTTPException
-from funasr import AutoModel
 
-# 模型 ID (SenseVoice Small 轻量模型，自带标点输出，CPU 推理更快)
-MODEL_ID = "iic/SenseVoiceSmall"
+# 引擎选择:默认 sherpa(低内存)
+ASR_ENGINE = os.environ.get("ASR_ENGINE", "sherpa").lower().strip()
 
-# 全局模型实例
-model = None
+SAMPLE_RATE = 16000
+SEG_SECONDS = int(os.environ.get("ASR_SEG_SECONDS", "25"))  # sherpa 分段秒数
+
+# ---- sherpa 专用 ----
+MODEL_DIR = Path(os.environ.get("MODEL_DIR", "/app/models"))
+MODEL_PATH = MODEL_DIR / "model.int8.onnx"
+TOKENS_PATH = MODEL_DIR / "tokens.txt"
+
+# ---- funasr 专用 ----
+FUNASR_MODEL_ID = os.environ.get("FUNASR_MODEL_ID", "iic/SenseVoiceSmall")
+
+# 全局引擎实例(两种引擎共用一个变量名,类型不同)
+_engine = None
 
 
-def init_model():
-    """初始化 SenseVoice Small 模型"""
-    global model
-    if model is None:
-        model = AutoModel(
-            model=MODEL_ID,
+# ============================================================
+# sherpa-onnx 引擎(低内存)
+# ============================================================
+def _init_sherpa():
+    global _engine
+    if _engine is None:
+        import sherpa_onnx
+        _engine = sherpa_onnx.OfflineRecognizer.from_sense_voice(
+            model=str(MODEL_PATH),
+            tokens=str(TOKENS_PATH),
+            num_threads=2,
+            use_itn=True,
+            debug=False,
+        )
+        print(f"[sherpa] SenseVoice int8 模型加载成功: {MODEL_PATH}")
+    return _engine
+
+
+def _decode_audio_to_pcm(src_path: str):
+    """用 ffmpeg 把任意音频解码成 16k 单声道 float32 PCM(sherpa 用)。"""
+    import numpy as np
+    cmd = [
+        "ffmpeg", "-nostdin", "-hide_banner", "-loglevel", "error",
+        "-i", src_path,
+        "-f", "f32le", "-ac", "1", "-ar", str(SAMPLE_RATE),
+        "pipe:1",
+    ]
+    proc = subprocess.run(cmd, capture_output=True)
+    if proc.returncode != 0:
+        raise RuntimeError(f"ffmpeg 解码失败: {proc.stderr.decode(errors='ignore')[:500]}")
+    return np.frombuffer(proc.stdout, dtype=np.float32)
+
+
+def _recognize_sherpa(tmp_path: str) -> str:
+    rec = _init_sherpa()
+    samples = _decode_audio_to_pcm(tmp_path)
+    seg_len = SEG_SECONDS * SAMPLE_RATE
+    texts = []
+    for start in range(0, len(samples), seg_len):
+        chunk = samples[start:start + seg_len]
+        if len(chunk) == 0:
+            continue
+        stream = rec.create_stream()
+        stream.accept_waveform(SAMPLE_RATE, chunk)
+        rec.decode_stream(stream)
+        if stream.result.text:
+            texts.append(stream.result.text)
+        del stream
+        gc.collect()
+    del samples
+    gc.collect()
+    return "".join(texts).strip()
+
+
+# ============================================================
+# funasr 引擎(高内存,原版逻辑)
+# ============================================================
+def _init_funasr():
+    global _engine
+    if _engine is None:
+        from funasr import AutoModel
+        _engine = AutoModel(
+            model=FUNASR_MODEL_ID,
             device="cpu",
             disable_update=True,
         )
-        print(f"SenseVoice Small 模型加载成功")
-    return model
+        print(f"[funasr] {FUNASR_MODEL_ID} 模型加载成功")
+    return _engine
+
+
+def _recognize_funasr(tmp_path: str) -> str:
+    model = _init_funasr()
+    result = model.generate(input=tmp_path, use_itn=True)
+    if result and len(result) > 0:
+        item = result[0]
+        if isinstance(item, dict):
+            text = item.get("text", "")
+            if not text and "keys" in item:
+                text = item["keys"][0] if item["keys"] else ""
+        elif isinstance(item, str):
+            text = item
+        else:
+            text = str(item)
+    else:
+        text = ""
+    return text
+
+
+# ============================================================
+# 统一调度
+# ============================================================
+def init_model():
+    if ASR_ENGINE == "funasr":
+        return _init_funasr()
+    return _init_sherpa()
+
+
+def recognize(tmp_path: str) -> str:
+    if ASR_ENGINE == "funasr":
+        return _recognize_funasr(tmp_path)
+    return _recognize_sherpa(tmp_path)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """应用生命周期管理 - 启动时加载模型"""
+    print(f"ASR 引擎: {ASR_ENGINE}")
     init_model()
-    print(f"模型 {MODEL_ID} 加载完成")
+    print(f"ASR 服务就绪 (engine={ASR_ENGINE})")
     yield
     print("服务关闭")
 
 
 app = FastAPI(
-    title="Fun-ASR 语音识别服务",
-    description="基于 SenseVoice Small 轻量模型的本地语音识别服务，自带标点输出，CPU 推理更快",
-    version="1.2.0",
+    title="ASR 语音识别服务(双引擎)",
+    description="ASR_ENGINE=sherpa(低内存 ONNX)/ funasr(torch)。接口一致。",
+    version="3.0.0",
     lifespan=lifespan,
 )
 
 
 @app.post("/asr")
 async def recognize_speech(file: UploadFile = File(...)):
-    """
-    接受音频文件，返回识别文本
-
-    支持格式: wav, mp3, m4a
-
-    请求:
-        - file: 音频文件 (multipart/form-data)
-
-    返回:
-        - text: 识别文本
-        - success: 是否成功
-    """
-    # 检查文件格式
     filename = file.filename or ""
     ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
 
@@ -74,57 +172,34 @@ async def recognize_speech(file: UploadFile = File(...)):
             detail=f"不支持的音频格式: {ext}。支持的格式: {', '.join(allowed_formats)}"
         )
 
-    # 读取音频文件到临时文件
     audio_bytes = await file.read()
-
-    # funasr 需要文件路径，使用临时文件
     with tempfile.NamedTemporaryFile(suffix=f".{ext}", delete=False) as tmp:
         tmp.write(audio_bytes)
         tmp_path = tmp.name
 
     try:
-        # 执行识别（use_itn=True 启用标点输出）
-        result = model.generate(input=tmp_path, use_itn=True)
-        print(f"ASR原始结果: {result}")
-
-        # 解析结果 - generate 返回 list，每项是 dict 或字符串
-        if result and len(result) > 0:
-            item = result[0]
-            if isinstance(item, dict):
-                text = item.get("text", "")
-                if not text and "keys" in item:
-                    text = item["keys"][0] if item["keys"] else ""
-            elif isinstance(item, str):
-                text = item
-            else:
-                text = str(item)
-        else:
-            text = ""
-
-        return {
-            "success": True,
-            "text": text,
-            "filename": filename,
-        }
-
+        text = recognize(tmp_path)
+        return {"success": True, "text": text, "filename": filename}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"识别失败: {str(e)}")
     finally:
-        # 清理临时文件
         if os.path.exists(tmp_path):
             os.unlink(tmp_path)
 
 
 @app.get("/health")
 async def health_check():
-    """健康检查接口"""
-    return {"status": "ok", "model": MODEL_ID}
+    info = {"status": "ok", "engine": ASR_ENGINE}
+    if ASR_ENGINE == "funasr":
+        info["model"] = FUNASR_MODEL_ID
+    else:
+        info["model"] = str(MODEL_PATH)
+    return info
 
 
 if __name__ == "__main__":
     # host 默认 127.0.0.1(本机开发,不暴露到外网)
     # Docker 里 compose 会传 ASR_HOST=0.0.0.0 让容器外可访问
-    import os
     uvicorn.run(
         "app:app",
         host=os.environ.get("ASR_HOST", "127.0.0.1"),
