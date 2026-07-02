@@ -190,6 +190,9 @@ async def extract_video_info(url: str) -> dict:
             # --disable-gpu: 无头无显卡环境
             # 其余为激进省内存参数:1.8G 机器上 ASR(占~450MB)运行时,chromium 会因内存
             #   不足被内核 OOM 杀死,加这些参数把 chromium 内存压到很低,可与 ASR 共存。
+            #   --single-process/--no-zygote: 单进程模式,省掉多进程开销
+            #   --js-flags=--max-old-space-size=256: 限制 V8 堆内存
+            #   --blink-settings=imagesEnabled=false: 不加载图片(提取只需 API/DOM 数据)
             launch_args["args"] = launch_args["args"] + [
                 "--no-sandbox",
                 "--disable-setuid-sandbox",
