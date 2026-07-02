@@ -1,8 +1,5 @@
-# ASR 依赖 (sherpa-onnx 版，低内存)
-# 用 sherpa-onnx + SenseVoice int8 ONNX 替代 funasr+torch，
-# 避免 1.8G 内存机器 OOM。
-sherpa-onnx>=1.10.0
-numpy>=1.24.0,<2.0.0
-uvicorn>=0.20.0,<1.0.0
-fastapi>=0.100.0,<1.0.0
-python-multipart>=0.0.6,<1.0.0
+# requirements.txt 保留为向后兼容入口,默认指向 sherpa(低内存)。
+# 实际构建请用 Dockerfile 的 ASR_ENGINE build-arg 选择引擎:
+#   - sherpa: requirements.sherpa.txt
+#   - funasr: requirements.funasr.txt
+-r requirements.sherpa.txt

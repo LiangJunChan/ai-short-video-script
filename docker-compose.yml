@@ -36,12 +36,25 @@ services:
     restart: unless-stopped
 
   asr:
-    build: ./asr
+    build:
+      context: ./asr
+      args:
+        # 引擎选择: sherpa(低内存,默认) / funasr(高内存)
+        # 可在 .env 或 shell 设 ASR_ENGINE 覆盖;bootstrap-docker.sh 按内存自动设置。
+        ASR_ENGINE: ${ASR_ENGINE:-sherpa}
     container_name: avs-asr
     ports:
       - "8000:8000"
     environment:
       # 容器内 FastAPI 必须绑 0.0.0.0 才能让其它容器(backend)访问,本机开发默认 127.0.0.1
       - ASR_HOST=0.0.0.0
-    # sherpa-onnx int8 模型已随镜像打包(约229MB),无需运行时下载或缓存卷
+      # 运行期也传一份 ASR_ENGINE(app.py 读它选引擎),与构建期保持一致
+      - ASR_ENGINE=${ASR_ENGINE:-sherpa}
+    # sherpa: int8 模型随镜像打包;funasr: 模型运行时由 modelscope 下载并缓存到卷
+    volumes:
+      - modelscope-cache:/root/.cache/modelscope
     restart: unless-stopped
+
+volumes:
+  modelscope-cache:
+

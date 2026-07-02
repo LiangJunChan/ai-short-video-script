@@ -1,3 +1,8 @@
 .venv/
 __pycache__/
 .env
+# sherpa 模型大文件(由 bootstrap 下载,不入库)
+models/*.onnx
+models/tokens.txt
+models/config.yaml
+!models/.gitkeep
