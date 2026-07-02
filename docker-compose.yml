@@ -2,6 +2,8 @@ services:
   backend:
     build: ./backend
     container_name: avs-backend
+    # chromium(抖音提取)默认 /dev/shm 64MB 会导致 Page crashed,提到 512MB 双保险
+    shm_size: "512mb"
     env_file:
       - ./backend/.env
     ports:
@@ -9,6 +11,8 @@ services:
     volumes:
       # 视频/缩略图/音频 挂 host 目录(路径与 Go 代码硬编码的 ../uploads 对齐)
       - ./uploads:/uploads
+      # 抖音登录态(方案A): 含 sessionid 等凭证,不进镜像/git,只读挂载
+      - ./backend/douyin_state.json:/app/douyin_state.json:ro
       - ./thumbnails:/thumbnails
       - ./audio:/audio
       # SQLite 数据库挂 host 目录(db.go 用 DB_PATH env 指向 /data/videos.db)
@@ -39,12 +43,5 @@ services:
     environment:
       # 容器内 FastAPI 必须绑 0.0.0.0 才能让其它容器(backend)访问,本机开发默认 127.0.0.1
       - ASR_HOST=0.0.0.0
-    volumes:
-      # FunASR 1.9G 模型缓存到 host,重启不用重下
-      - modelscope-cache:/root/.cache/modelscope
-      - hf-cache:/root/.cache/huggingface
+    # sherpa-onnx int8 模型已随镜像打包(约229MB),无需运行时下载或缓存卷
     restart: unless-stopped
-
-volumes:
-  modelscope-cache:
-  hf-cache:

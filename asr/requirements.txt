@@ -1,9 +1,8 @@
-# asr/requirements.txt
-# 版本组合与本机 asr/.venv 一致(python 3.11 + torch 2.11.0)
-# torch/torchaudio 由 Dockerfile 单独装 CPU 版,这里不重复约束
-funasr>=1.0.0,<2.0.0
-torch>=2.0.0,<2.12.0
-torchaudio>=2.0.0,<2.12.0
+# ASR 依赖 (sherpa-onnx 版，低内存)
+# 用 sherpa-onnx + SenseVoice int8 ONNX 替代 funasr+torch，
+# 避免 1.8G 内存机器 OOM。
+sherpa-onnx>=1.10.0
+numpy>=1.24.0,<2.0.0
 uvicorn>=0.20.0,<1.0.0
 fastapi>=0.100.0,<1.0.0
 python-multipart>=0.0.6,<1.0.0

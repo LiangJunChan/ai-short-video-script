@@ -184,17 +184,58 @@ async def extract_video_info(url: str) -> dict:
         # channel="chromium" 强制用完整 chromium 二进制,避免 playwright 1.49+ 默认找 chrome-headless-shell
         launch_args = {"headless": True, "channel": "chromium", "args": stealth_args}
         if os.environ.get("DOCKER") == "1":
-            launch_args["args"] = launch_args["args"] + ["--no-sandbox", "--disable-setuid-sandbox"]
+            # 容器内追加参数:
+            # --disable-dev-shm-usage: 容器默认 /dev/shm 仅 64MB,chromium 渲染抖音重页面会
+            #   因共享内存不足直接 "Page crashed",此 flag 改用 /tmp 避免崩溃(关键!)
+            # --disable-gpu: 无头无显卡环境
+            # 其余为激进省内存参数:1.8G 机器上 ASR(占~450MB)运行时,chromium 会因内存
+            #   不足被内核 OOM 杀死,加这些参数把 chromium 内存压到很低,可与 ASR 共存。
+            launch_args["args"] = launch_args["args"] + [
+                "--no-sandbox",
+                "--disable-setuid-sandbox",
+                "--disable-dev-shm-usage",
+                "--disable-gpu",
+                "--single-process",
+                "--no-zygote",
+                "--disable-extensions",
+                "--disable-background-networking",
+                "--disable-background-timer-throttling",
+                "--disable-renderer-backgrounding",
+                "--js-flags=--max-old-space-size=256",
+                "--memory-pressure-off",
+                "--blink-settings=imagesEnabled=false",
+            ]
 
         browser = await p.chromium.launch(**launch_args)
-        # UA 从 Chrome 120 → Chrome 149(与 chromium-1228 build 一致),
-        # 平台 macOS(容器里跑 Linux 但 UA 装成 macOS,抖音移动/桌面判断走这个)
-        context = await browser.new_context(
+
+        # UA 对齐容器里实际 chromium 版本(149);平台 macOS(容器里跑 Linux 但 UA 装成 macOS)
+        context_kwargs = dict(
             user_agent='Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36',
             viewport={'width': 1920, 'height': 1080},
             locale='zh-CN',
             timezone_id='Asia/Shanghai',
         )
+        # 方案A: 若存在【含有效 cookie 的】登录态文件则加载。抖音对已登录用户的 aweme_detail
+        # 接口风控宽松;无登录态则走匿名逻辑(原始行为)。
+        # (服务器机房IP + 未登录无头浏览器可能触发 bdturing 滑块验证,detail 返回空 body)
+        # storage_state 路径可用 DOUYIN_STATE 环境变量覆盖,默认 /app/douyin_state.json
+        state_path = os.environ.get("DOUYIN_STATE", "/app/douyin_state.json")
+        _has_login = False
+        if os.path.exists(state_path):
+            try:
+                with open(state_path, encoding="utf-8") as _f:
+                    _state = json.load(_f)
+                if _state.get("cookies"):
+                    _has_login = True
+            except Exception as _e:
+                print(f"Login state file unreadable ({_e}), fallback to anonymous", file=sys.stderr)
+        if _has_login:
+            context_kwargs["storage_state"] = state_path
+            print(f"Loaded login state from: {state_path}", file=sys.stderr)
+        else:
+            print(f"No valid login state (anonymous mode)", file=sys.stderr)
+
+        context = await browser.new_context(**context_kwargs)
         await context.set_extra_http_headers({
             'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
             'sec-ch-ua': '"Chromium";v="149", "Not_A Brand";v="24"',

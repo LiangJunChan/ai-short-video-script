@@ -68,3 +68,7 @@ trae-ai-creativity-competition/
 
 # Stray design spec duplicate (canonical copy lives in design-system/)
 /DESIGN_SPEC.md
+
+# 抖音登录态(含 sessionid 等凭证,禁止入库)
+backend/douyin_state.json
+
