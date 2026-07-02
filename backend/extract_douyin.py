@@ -184,16 +184,16 @@ async def extract_video_info(url: str) -> dict:
         # channel="chromium" 强制用完整 chromium 二进制,避免 playwright 1.49+ 默认找 chrome-headless-shell
         launch_args = {"headless": True, "channel": "chromium", "args": stealth_args}
         if os.environ.get("DOCKER") == "1":
-            # 容器内追加参数:
-            # --disable-dev-shm-usage: 容器默认 /dev/shm 仅 64MB,chromium 渲染抖音重页面会
-            #   因共享内存不足直接 "Page crashed",此 flag 改用 /tmp 避免崩溃(关键!)
-            # --disable-gpu: 无头无显卡环境
-            # 其余为激进省内存参数:1.8G 机器上 ASR(占~450MB)运行时,chromium 会因内存
-            #   不足被内核 OOM 杀死,加这些参数把 chromium 内存压到很低,可与 ASR 共存。
-            #   --single-process/--no-zygote: 单进程模式,省掉多进程开销
-            #   --js-flags=--max-old-space-size=256: 限制 V8 堆内存
+            # 容器内【覆盖】整套 args(不能与 stealth_args 追加叠加,否则出现两个
+            #   --disable-features 且与 --single-process 冲突,导致 chrome 虚拟内存爆炸被 OOM 杀)。
+            # 这里把反爬关键项(AutomationControlled)与省内存项合成一套互不冲突的参数:
+            #   --disable-dev-shm-usage: 容器 /dev/shm 仅 64MB,不加会 "Page crashed"(关键!)
+            #   --single-process/--no-zygote: 单进程,大幅降低真实内存(1.8G 机器与 ASR 共存关键)
+            #   --disable-features 合并成一个: 同时禁 site 隔离 + Translate(单进程要求无 site 隔离)
+            #   --js-flags=--max-old-space-size=256: 限制 V8 堆
             #   --blink-settings=imagesEnabled=false: 不加载图片(提取只需 API/DOM 数据)
-            launch_args["args"] = launch_args["args"] + [
+            launch_args["args"] = [
+                "--disable-blink-features=AutomationControlled",
                 "--no-sandbox",
                 "--disable-setuid-sandbox",
                 "--disable-dev-shm-usage",
@@ -204,6 +204,7 @@ async def extract_video_info(url: str) -> dict:
                 "--disable-background-networking",
                 "--disable-background-timer-throttling",
                 "--disable-renderer-backgrounding",
+                "--disable-features=IsolateOrigins,site-per-process,TranslateUI",
                 "--js-flags=--max-old-space-size=256",
                 "--memory-pressure-off",
                 "--blink-settings=imagesEnabled=false",
