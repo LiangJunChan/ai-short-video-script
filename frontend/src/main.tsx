@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom'
 import { Provider } from 'react-redux'
 import { store } from './store'
+import { useAppSelector } from './store/hooks'
 import App from './App'
 import Layout from './components/Layout'
 import DetailPage from './pages/DetailPage'
@@ -19,10 +20,10 @@ import StoryboardListPage from './pages/StoryboardListPage'
 import StoryboardEditorPage from './pages/StoryboardEditorPage'
 import './index.css'
 
-// 受保护路由组件
+// 受保护路由组件 — 优先使用 Redux store 的 isAuthenticated 状态 (fix-protected-route-auth)
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const token = localStorage.getItem('token')
-  if (!token) {
+  const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated)
+  if (!isAuthenticated) {
     return <Navigate to="/login" replace />
   }
   return <>{children}</>

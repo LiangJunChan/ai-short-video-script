@@ -3,17 +3,19 @@ ASR Web Service — 双引擎版
 提供 HTTP 接口接受音频输入，返回识别文本。
 
 通过环境变量 ASR_ENGINE 选择推理引擎:
-  - ASR_ENGINE=sherpa (默认): sherpa-onnx + SenseVoice int8 ONNX
+  - ASR_ENGINE=sherpa: sherpa-onnx + SenseVoice int8 ONNX
       低内存(峰值~450MB),适合 1.8G 等小内存机器。模型在 ./models/ 下随镜像打包。
-  - ASR_ENGINE=funasr: funasr + torch + SenseVoiceSmall
+  - ASR_ENGINE=funasr (默认): funasr + torch + SenseVoiceSmall
       内存需求高(加载即 700MB+,峰值 1.5G+),适合 MacBook 等内存充足的开发机。
       模型首次运行时由 modelscope 自动下载。
+  - 未设置时自动检测: sherpa_onnx 可用则用 sherpa,否则 fallback 到 funasr。
 
 两种引擎对外 HTTP 接口完全一致(POST /asr, GET /health)。
 """
 
 import os
 import gc
+import importlib
 import tempfile
 import subprocess
 from contextlib import asynccontextmanager
@@ -22,8 +24,17 @@ from pathlib import Path
 import uvicorn
 from fastapi import FastAPI, UploadFile, File, HTTPException
 
-# 引擎选择:默认 sherpa(低内存)
-ASR_ENGINE = os.environ.get("ASR_ENGINE", "sherpa").lower().strip()
+# 引擎选择:环境变量显式指定 > 自动检测(优先 sherpa > fallback funasr)
+_env_engine = os.environ.get("ASR_ENGINE", "").lower().strip()
+if _env_engine:
+    ASR_ENGINE = _env_engine
+else:
+    # 自动检测: sherpa_onnx 可用就用 sherpa,否则 fallback funasr
+    if importlib.util.find_spec("sherpa_onnx") is not None:
+        ASR_ENGINE = "sherpa"
+    else:
+        ASR_ENGINE = "funasr"
+    print(f"[ASR] 未设置 ASR_ENGINE,自动检测选择: {ASR_ENGINE}")
 
 SAMPLE_RATE = 16000
 SEG_SECONDS = int(os.environ.get("ASR_SEG_SECONDS", "25"))  # sherpa 分段秒数

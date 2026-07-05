@@ -52,7 +52,7 @@ function SquarePage() {
           clearTimeout(toastTimeoutRef.current)
         }
         setToast(response.message || '收藏成功！')
-        toastTimeoutRef.current = setTimeout(() => setToast(null), 3000)
+        toastTimeoutRef.current = window.setTimeout(() => setToast(null), 3000)
         setSelectedVideoId(null)
         // Navigate to the new video detail page
         navigate(`/detail/${response.data.newVideoId}`);
@@ -63,7 +63,7 @@ function SquarePage() {
           clearTimeout(toastTimeoutRef.current)
         }
         setToast(error.data?.message || '收藏失败，请重试')
-        toastTimeoutRef.current = setTimeout(() => setToast(null), 3000)
+        toastTimeoutRef.current = window.setTimeout(() => setToast(null), 3000)
       });
   }
 
@@ -117,40 +117,30 @@ function SquarePage() {
   const pagination = data?.data?.pagination
 
   return (
-    <div className="max-w-[1400px] mx-auto px-8 py-8">
-      <div className="flex items-center justify-between mb-8">
-        <div>
+    <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+      <div className="page-header">
+        <div className="page-header-left">
           <h1
             className="heading-lg gradient-text"
             style={{ textWrap: 'balance', wordBreak: 'keep-all' }}
           >
             短视频广场
           </h1>
-          <p className="text-sm mt-1.5" style={{ color: 'var(--color-text-secondary)' }}>
+          <p className="page-subtitle" style={{ color: 'var(--color-text-secondary)' }}>
             发现热门短视频脚本，激发创作灵感
           </p>
         </div>
-        {/* Sort Pills */}
-        <div
-          className="flex items-center gap-1 rounded-full px-1 py-1"
-          style={{ background: 'rgba(22, 24, 34, 0.6)' }}
-        >
+        {/* Sort Pills — 与设计稿对齐：圆角 full + sort-pill 类 */}
+        <div className="sort-pills">
           <button
             onClick={() => { setSortBy('newest'); setPage(1); }}
-            className={`sort-pill-active px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 cursor-pointer ${
-              sortBy === 'newest' ? '' : '!bg-transparent !shadow-none !text-av-text-secondary hover:!text-av-text-primary'
-            }`}
+            className={`sort-pill ${sortBy === 'newest' ? 'sort-pill-active' : ''}`}
           >
             最新
           </button>
           <button
             onClick={() => { setSortBy('popular'); setPage(1); }}
-            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors duration-200 cursor-pointer ${
-              sortBy === 'popular' ? 'sort-pill-active' : ''
-            }`}
-            style={
-              sortBy !== 'popular' ? { color: 'var(--color-text-secondary)' } : undefined
-            }
+            className={`sort-pill ${sortBy === 'popular' ? 'sort-pill-active' : ''}`}
           >
             热门
           </button>
@@ -172,34 +162,33 @@ function SquarePage() {
         <>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
             {videos.map((video: SquareVideo) => (
-              <div key={video.id} className="relative group">
+              <div key={video.id} className="video-card-wrapper">
                 <VideoCard
                   video={convertToVideo(video)}
                   onClick={() => goToDetail(video.id)}
                   onDelete={() => {}}
+                  showUploader
+                  tags={video.tags}
                 />
-                {/* Collection overlay — 业务保留（VideoCard 内部也提供删除入口，二者并存） */}
-                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-20">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleCollect(video.id)
-                    }}
-                    className="p-2 bg-av-bg-elevated/80 backdrop-blur-sm rounded-xl shadow-av-sm hover:bg-primary hover:text-av-text-inverse transition-colors"
-                    title="收藏到素材库"
-                  >
-                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  </button>
-                </div>
-                {/* Collect count badge — 保留业务计数展示 */}
+                {/* 收藏按钮（右上角，hover 显示） — 与设计稿 .collect-btn 对齐 */}
+                <button
+                  className="collect-btn"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleCollect(video.id)
+                  }}
+                  title="收藏到素材库"
+                  aria-label="收藏到素材库"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
+                  </svg>
+                </button>
+                {/* 收藏计数徽章（左上角） — 与设计稿 .collect-count 对齐 */}
                 {video.collectCount > 0 && (
-                  <div className="absolute top-2 left-2 z-10">
-                    <span className="glass-bg-light px-2 py-0.5 rounded-md text-xs" style={{ color: 'var(--color-text-tertiary)' }}>
-                      ♡ {video.collectCount}
-                    </span>
-                  </div>
+                  <span className="collect-count">
+                    ♡ {video.collectCount}
+                  </span>
                 )}
               </div>
             ))}

@@ -4,6 +4,7 @@ import { useLoginMutation, useLoginByEmailMutation } from '../store/videoApi'
 import { useDispatch } from 'react-redux'
 import { login } from '../store/authSlice'
 import { features } from '../config/features'
+import EyeIcon from '../components/EyeIcon'
 
 type LoginTab = 'username' | 'email'
 
@@ -42,14 +43,17 @@ function LoginPage() {
     try {
       const result = await loginMutation({ username, password }).unwrap()
       if (result.code === 200) {
-        localStorage.setItem('token', result.data.token)
+        // authSlice.login 内部已设置 localStorage，无需重复设置 (fix-duplicate-token)
         dispatch(login(result.data))
         navigate('/')
       } else {
         setError(result.message || '登录失败')
       }
-    } catch (err: any) {
-      setError(err.data?.message || '用户名或密码错误')
+    } catch (err: unknown) {
+      const message = err && typeof err === 'object' && 'data' in err
+        ? (err as { data?: { message?: string } }).data?.message
+        : undefined
+      setError(message || '用户名或密码错误')
     } finally {
       setIsLoading(false)
     }
@@ -81,69 +85,42 @@ function LoginPage() {
     try {
       const result = await loginByEmailMutation({ email, password: emailPassword }).unwrap()
       if (result.code === 200) {
-        localStorage.setItem('token', result.data.token)
         dispatch(login(result.data))
         navigate('/')
       } else {
         setError(result.message || '登录失败')
       }
-    } catch (err: any) {
-      setError(err.data?.message || '邮箱或密码错误')
+    } catch (err: unknown) {
+      const message = err && typeof err === 'object' && 'data' in err
+        ? (err as { data?: { message?: string } }).data?.message
+        : undefined
+      setError(message || '邮箱或密码错误')
     } finally {
       setIsLoading(false)
     }
   }
 
-  // 密码可见性切换图标
-  const EyeIcon = ({ visible, onClick }: { visible: boolean; onClick: () => void }) => (
-    <button
-      type="button"
-      aria-label="切换密码可见性"
-      className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded transition-opacity duration-200"
-      style={{
-        color: 'var(--color-text-tertiary)',
-        background: 'transparent',
-        border: 'none',
-        cursor: 'pointer',
-      }}
-      onClick={onClick}
-    >
-      <svg
-        width="18"
-        height="18"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        {visible ? (
-          <>
-            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
-            <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
-            <line x1="1" y1="1" x2="23" y2="23" />
-            <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24" />
-          </>
-        ) : (
-          <>
-            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-            <circle cx="12" cy="12" r="3" />
-          </>
-        )}
-      </svg>
-    </button>
-  )
-
   return (
-    <div className="fixed inset-0 overflow-hidden bg-av-bg-primary flex items-center justify-center p-6">
-      {/* 背景层：网格 + 径向辉光 + 浮动渐变球 */}
+    <div className="fixed inset-0 overflow-hidden bg-av-bg-primary flex items-center justify-center p-4 sm:p-6">
+      {/* 背景层：网格 + 径向辉光 + 浮动渐变球 + 扫描线 + 粒子 */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute inset-0 grid-bg animate-grid-move" />
         <div
           className="absolute inset-0"
           style={{ background: 'radial-gradient(ellipse at center, rgba(6,214,160,0.06) 0%, transparent 60%)' }}
         />
+        {/* 扫描线 */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div
+            className="absolute left-0 w-full"
+            style={{
+              height: '2px',
+              background: 'linear-gradient(90deg, transparent, rgba(6,214,160,0.08), transparent)',
+              animation: 'scanline 8s linear infinite',
+            }}
+          />
+        </div>
+        {/* 浮动渐变球 */}
         <div
           className="absolute -top-32 -right-32 rounded-full animate-float"
           style={{ width: '400px', height: '400px', background: 'var(--color-primary-muted)', filter: 'blur(100px)' }}
@@ -152,22 +129,43 @@ function LoginPage() {
           className="absolute -bottom-32 -left-32 rounded-full animate-float"
           style={{ width: '350px', height: '350px', background: 'var(--color-accent-muted)', filter: 'blur(100px)', animationDelay: '2s' }}
         />
+        {/* 粒子点缀 */}
+        <div className="absolute top-[12%] left-[8%] w-1 h-1 rounded-full" style={{ background: 'var(--color-primary)', opacity: 0.3 }} />
+        <div className="absolute top-[25%] right-[15%] w-0.5 h-0.5 rounded-full" style={{ background: 'var(--color-accent)', opacity: 0.25 }} />
+        <div className="absolute top-[60%] left-[5%] w-0.5 h-0.5 rounded-full" style={{ background: 'var(--color-primary)', opacity: 0.2 }} />
+        <div className="absolute bottom-[20%] right-[10%] w-1 h-1 rounded-full" style={{ background: 'var(--color-accent)', opacity: 0.2 }} />
+        <div className="absolute top-[40%] right-[6%] w-0.5 h-0.5 rounded-full" style={{ background: 'var(--color-primary)', opacity: 0.15 }} />
+        <div className="absolute bottom-[35%] left-[12%] w-1 h-1 rounded-full" style={{ background: 'var(--color-accent)', opacity: 0.18 }} />
       </div>
 
       <div className="w-full max-w-md relative z-10 animate-slide-up">
-        {/* Logo */}
+        {/* Logo + Brand */}
         <div className="flex flex-col items-center mb-8">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl gradient-primary flex items-center justify-center shadow-av-glow animate-glow-pulse">
-            <svg className="w-9 h-9 text-av-text-inverse" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
+          <div className="w-16 h-16 rounded-2xl overflow-hidden mb-4 animate-glow-pulse" style={{ boxShadow: 'var(--shadow-glow)' }}>
+            <img src="/logo.jpg" alt="谷语AI" className="w-full h-full object-cover" />
           </div>
-          <h1 className="text-2xl font-bold gradient-text">AI短视频脚本平台</h1>
-          <p className="text-av-text-secondary mt-2">登录到您的账户</p>
+          <h1
+            className="heading-xl gradient-text"
+            style={{ textWrap: 'balance', wordBreak: 'keep-all' }}
+          >
+            谷语AI
+          </h1>
         </div>
 
         {/* Form Card */}
-        <div className="neon-border rounded-xl p-8" style={{ backgroundColor: 'var(--color-bg-secondary)' }}>
+        <div className="neon-border rounded-xl p-6 sm:p-8" style={{ backgroundColor: 'var(--color-bg-secondary)' }}>
+          <div className="mb-6">
+            <h2
+              className="heading-md mb-1"
+              style={{ color: 'var(--color-text-primary)', textWrap: 'balance', wordBreak: 'keep-all' }}
+            >
+              登录到您的账户
+            </h2>
+            <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
+              使用您的账户继续创作
+            </p>
+          </div>
+
           {/* Tab 切换 */}
           <div className="flex mb-6 rounded-lg overflow-hidden" style={{ background: 'var(--color-bg-primary)' }}>
             <button

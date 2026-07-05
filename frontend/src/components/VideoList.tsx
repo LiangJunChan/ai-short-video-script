@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useGetVideoListQuery, useDeleteVideoMutation, useExportMarkdownMutation } from '../store/videoApi'
+import { useToast } from '../hooks/useToast'
 import VideoCard from './VideoCard'
 import Loading from './Loading'
 import DeleteModal from './DeleteModal'
@@ -20,7 +21,7 @@ function VideoList({ onUpload }: VideoListProps) {
   const [deleteTarget, setDeleteTarget] = useState<Video | null>(null)
   const [selectMode, setSelectMode] = useState(false)
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
-  const [showToast, setShowToast] = useState<string | null>(null)
+  const { toast, show: showToast } = useToast()
   const [showBatchDeleteConfirm, setShowBatchDeleteConfirm] = useState(false)
 
   // 列表页也强制 refetchOnMountOrArgChange:从详情页返回列表时刷新最新 status,
@@ -90,8 +91,7 @@ function VideoList({ onUpload }: VideoListProps) {
       a.click()
       document.body.removeChild(a)
       window.URL.revokeObjectURL(url)
-      setShowToast(`成功导出 ${selectedIds.size} 个视频文案`)
-      setTimeout(() => setShowToast(null), 3000)
+      showToast(`成功导出 ${selectedIds.size} 个视频文案`)
       // 清除选择
       clearSelection()
     } catch {
@@ -110,24 +110,14 @@ function VideoList({ onUpload }: VideoListProps) {
 
   const confirmBatchDelete = async () => {
     setShowBatchDeleteConfirm(false)
-    // 逐个删除
-    let successCount = 0
-    for (const id of Array.from(selectedIds)) {
-      try {
-        await deleteVideo(id).unwrap()
-        if (selectedIds.has(id)) {
-          const newSelected = new Set(selectedIds)
-          newSelected.delete(id)
-          setSelectedIds(newSelected)
-        }
-        successCount++
-      } catch {
-        // 失败跳过
-      }
-    }
+    // 并行删除，使用 Promise.allSettled 保证不因单个失败中断 (fix-batch-delete)
+    const ids = Array.from(selectedIds)
+    const results = await Promise.allSettled(
+      ids.map(id => deleteVideo(id).unwrap())
+    )
+    const successCount = results.filter(r => r.status === 'fulfilled').length
 
-    setShowToast(`删除完成，成功删除 ${successCount} 个视频`)
-    setTimeout(() => setShowToast(null), 3000)
+    showToast(`删除完成，成功删除 ${successCount} 个视频`)
     clearSelection()
   }
 
@@ -287,7 +277,7 @@ function VideoList({ onUpload }: VideoListProps) {
       )}
 
       {/* Toast */}
-      {showToast && <Toast message={showToast} />}
+      {toast && <Toast message={toast} />}
     </div>
   )
 }

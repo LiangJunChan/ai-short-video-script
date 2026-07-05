@@ -56,40 +56,28 @@ function Header({ user, isAuthenticated, onOpenUpload, onOpenUrlExtract, onShowT
         borderBottom: '1px solid var(--color-border-subtle)',
       }}
     >
-      <div className="max-w-[1400px] mx-auto px-6 h-16 flex items-center justify-between">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
         {/* Left: Logo + Nav Pills */}
-        <div className="flex items-center gap-8">
+        <div className="flex items-center gap-4 sm:gap-8 min-w-0 flex-1">
           {/* Logo */}
-          <div className="flex items-center gap-2.5 group cursor-pointer" onClick={() => navigate('/')}>
-            <div className="w-9 h-9 rounded-xl gradient-primary flex items-center justify-center shadow-av-glow transition-all duration-300 group-hover:shadow-av-glow-strong group-hover:scale-105">
-              <svg
-                className="w-5 h-5"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                style={{ color: 'var(--color-text-inverse)' }}
-              >
-                <path d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+          <div className="flex items-center gap-2.5 group cursor-pointer flex-shrink-0" onClick={() => navigate('/')}>
+            <div className="w-9 h-9 rounded-xl overflow-hidden shadow-av-glow transition-all duration-300 group-hover:shadow-av-glow-strong group-hover:scale-105">
+              <img src="/logo.jpg" alt="谷语AI" className="w-full h-full object-cover" />
             </div>
             <span className="text-base font-semibold text-av-text-primary tracking-tight">
-              AI短视频
+              谷语AI
             </span>
           </div>
 
           {/* Navigation Pills */}
           {isAuthenticated && user && (
             <div
-              className="flex items-center gap-1 rounded-av-lg px-1 py-1"
+              className="flex items-center gap-1 rounded-av-lg px-1 py-1 overflow-x-auto no-scrollbar min-w-0"
               style={{ background: 'rgba(22, 24, 34, 0.6)' }}
             >
               <button
                 onClick={() => navigate('/')}
-                className={`nav-pill px-4 py-1.5 rounded-av-md text-sm font-medium transition-colors duration-200 cursor-pointer ${
+                className={`nav-pill px-3 sm:px-4 py-1.5 rounded-av-md text-sm font-medium transition-colors duration-200 cursor-pointer whitespace-nowrap ${
                   location.pathname === '/' ? 'nav-pill-active' : ''
                 }`}
                 style={
@@ -103,7 +91,7 @@ function Header({ user, isAuthenticated, onOpenUpload, onOpenUrlExtract, onShowT
 
               <button
                 onClick={() => navigate('/square')}
-                className={`nav-pill px-4 py-1.5 rounded-av-md text-sm font-medium transition-colors duration-200 cursor-pointer ${
+                className={`nav-pill px-3 sm:px-4 py-1.5 rounded-av-md text-sm font-medium transition-colors duration-200 cursor-pointer whitespace-nowrap ${
                   location.pathname === '/square' ? 'nav-pill-active' : ''
                 }`}
                 style={
@@ -117,7 +105,7 @@ function Header({ user, isAuthenticated, onOpenUpload, onOpenUrlExtract, onShowT
 
               <button
                 onClick={() => navigate('/library')}
-                className={`nav-pill px-4 py-1.5 rounded-av-md text-sm font-medium transition-colors duration-200 cursor-pointer ${
+                className={`nav-pill px-3 sm:px-4 py-1.5 rounded-av-md text-sm font-medium transition-colors duration-200 cursor-pointer whitespace-nowrap ${
                   location.pathname.startsWith('/library') ? 'nav-pill-active' : ''
                 }`}
                 style={
@@ -131,7 +119,7 @@ function Header({ user, isAuthenticated, onOpenUpload, onOpenUrlExtract, onShowT
 
               <button
                 onClick={() => navigate('/storyboards')}
-                className={`nav-pill px-4 py-1.5 rounded-av-md text-sm font-medium transition-colors duration-200 cursor-pointer ${
+                className={`nav-pill px-3 sm:px-4 py-1.5 rounded-av-md text-sm font-medium transition-colors duration-200 cursor-pointer whitespace-nowrap ${
                   location.pathname.startsWith('/storyboards') ? 'nav-pill-active' : ''
                 }`}
                 style={
@@ -147,7 +135,7 @@ function Header({ user, isAuthenticated, onOpenUpload, onOpenUrlExtract, onShowT
         </div>
 
         {/* Right Actions */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
           {isAuthenticated && user ? (
             <>
               {/* Credits Badge */}
@@ -194,22 +182,33 @@ function Header({ user, isAuthenticated, onOpenUpload, onOpenUrlExtract, onShowT
               {/* Profile */}
               <button
                 onClick={() => navigate('/profile')}
-                className={`flex items-center gap-2 px-2 py-1.5 text-sm font-medium rounded-av-md transition-all duration-200 cursor-pointer ${
+                className={`hidden sm:flex items-center gap-2 px-2 py-1.5 text-sm font-medium rounded-av-md transition-all duration-200 cursor-pointer ${
                   location.pathname === '/profile'
                     ? 'bg-primary/10 text-primary border border-primary/30'
                     : 'text-av-text-secondary hover:text-av-text-primary hover:bg-av-bg-hover'
                 }`}
+                title={user.username}
               >
                 <div className="w-7 h-7 rounded-full gradient-primary flex items-center justify-center text-av-text-inverse text-xs font-semibold">
                   {user.username.charAt(0).toUpperCase()}
                 </div>
-                {user.username}
+                <span className="max-w-[100px] truncate">{user.username}</span>
+              </button>
+
+              {/* Mobile Profile (avatar only) */}
+              <button
+                onClick={() => navigate('/profile')}
+                className="sm:hidden w-8 h-8 rounded-full gradient-primary flex items-center justify-center text-av-text-inverse text-xs font-semibold cursor-pointer"
+                title={user.username}
+                aria-label={user.username}
+              >
+                {user.username.charAt(0).toUpperCase()}
               </button>
 
               {/* Ghost Button: 链接提取 */}
               <button
                 onClick={onOpenUrlExtract}
-                className="px-4 py-1.5 rounded-lg text-sm font-medium transition-colors duration-200 cursor-pointer"
+                className="hidden md:block px-4 py-1.5 rounded-lg text-sm font-medium transition-colors duration-200 cursor-pointer"
                 style={{
                   color: 'var(--color-text-secondary)',
                   border: '1px solid var(--color-border-subtle)',
@@ -222,10 +221,11 @@ function Header({ user, isAuthenticated, onOpenUpload, onOpenUrlExtract, onShowT
               {/* Primary Button: 上传视频 */}
               <button
                 onClick={onOpenUpload}
-                className="px-4 py-1.5 rounded-lg text-sm font-semibold btn-gradient-primary hover:opacity-90 transition-opacity duration-200 cursor-pointer"
+                className="px-3 sm:px-4 py-1.5 rounded-lg text-sm font-semibold btn-gradient-primary hover:opacity-90 transition-opacity duration-200 cursor-pointer whitespace-nowrap"
                 style={{ color: 'var(--color-text-inverse)', border: 'none' }}
               >
-                上传视频
+                <span className="hidden sm:inline">上传视频</span>
+                <span className="sm:hidden">上传</span>
               </button>
 
               {/* Logout */}

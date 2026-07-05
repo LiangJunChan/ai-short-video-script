@@ -7,6 +7,10 @@ interface VideoCardProps {
   onDelete: (video: Video) => void
   selected?: boolean
   onToggleSelect?: (video: Video) => void
+  /** 广场页：是否显示上传者信息 */
+  showUploader?: boolean
+  /** 广场页：标签列表（逗号分隔字符串或数组） */
+  tags?: string | string[] | null
 }
 
 const gradientClasses = [
@@ -18,7 +22,7 @@ const gradientClasses = [
 ]
 const patternClasses = ['thumb-pattern', 'thumb-pattern-2']
 
-function VideoCard({ video, onClick, onDelete, selected, onToggleSelect }: VideoCardProps) {
+function VideoCard({ video, onClick, onDelete, selected, onToggleSelect, showUploader, tags }: VideoCardProps) {
   const [isHovered, setIsHovered] = useState(false)
 
   // 通过 video.id 派生一个稳定但不同的 gradient/pattern index
@@ -45,6 +49,14 @@ function VideoCard({ video, onClick, onDelete, selected, onToggleSelect }: Video
     if (!text || text.length <= maxLength) return text || ''
     return text.substring(0, maxLength) + '...'
   }
+
+  // 解析 tags：支持逗号分隔字符串或字符串数组
+  const parsedTags: string[] = Array.isArray(tags)
+    ? tags.filter(Boolean)
+    : (tags ?? '')
+        .split(/[,，]/)
+        .map((t) => t.trim())
+        .filter(Boolean)
 
   const handleDeleteClick = (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -192,6 +204,22 @@ function VideoCard({ video, onClick, onDelete, selected, onToggleSelect }: Video
         <div className="text-xs text-av-text-tertiary mt-1">
           {formatDate(video.createdAt)}
         </div>
+        {/* 广场页：显示上传者 */}
+        {showUploader && video.uploader && (
+          <div className="video-uploader">
+            来自 <span>@{video.uploader}</span>
+          </div>
+        )}
+        {/* 广场页：显示标签 */}
+        {showUploader && parsedTags.length > 0 && (
+          <div className="video-tags">
+            {parsedTags.slice(0, 3).map((t) => (
+              <span key={t} className="tag-pill">
+                {t}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
     </article>
   )

@@ -582,21 +582,27 @@ input, textarea, select {
               box-shadow var(--duration-fast) var(--ease);
 }
 
-/* ── Collection Card（与 LAYOUT_REFERENCE.md 对齐） ── */
+/* ── Collection Card（与素材库设计稿对齐） ── */
 .collection-card {
+  position: relative;
   transition: transform var(--duration) var(--ease),
               box-shadow var(--duration) var(--ease),
               border-color var(--duration) var(--ease);
 }
 .collection-card:hover {
+  border-color: rgba(76, 201, 240, 0.3);
+  box-shadow: inset 0 0 20px rgba(76, 201, 240, 0.03), var(--shadow-glow-accent);
   transform: translateY(-1px);
 }
 .collection-card .delete-btn {
   opacity: 0;
-  transition: opacity 160ms var(--ease);
+  transition: opacity 160ms var(--ease), color 160ms var(--ease);
 }
 .collection-card:hover .delete-btn {
   opacity: 1;
+}
+.collection-card .delete-btn:hover {
+  color: var(--state-error);
 }
 
 /* ── Storyboard Card（与 LAYOUT_REFERENCE.md 对齐） ── */
@@ -628,11 +634,24 @@ input, textarea, select {
   align-items: center;
   justify-content: space-between;
   margin-bottom: var(--space-6, 24px);
+  flex-wrap: wrap;
+  gap: var(--space-3, 12px);
+}
+@media (max-width: 640px) {
+  .page-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
 }
 .page-header-left {
   display: flex;
   flex-direction: column;
   gap: var(--space-1, 4px);
+}
+.page-subtitle {
+  font-size: var(--text-sm, 0.8125rem);
+  color: var(--color-text-secondary);
+  margin-top: var(--space-1, 4px);
 }
 .sort-label {
   font-size: var(--text-sm, 0.8125rem);
@@ -755,6 +774,18 @@ input, textarea, select {
   background: var(--color-primary-subtle);
   border: 1px solid var(--color-border-subtle);
   margin-bottom: var(--space-6, 24px);
+  flex-wrap: wrap;
+  gap: var(--space-3, 12px);
+}
+@media (max-width: 640px) {
+  .batch-action-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .batch-actions {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
 }
 .batch-count {
   font-size: var(--text-sm, 0.8125rem);
@@ -832,9 +863,112 @@ input, textarea, select {
   box-shadow: none;
 }
 
+/* ── 视频卡片包装（广场页：含 collect-count 与 collect-btn 覆盖层） ── */
+.video-card-wrapper {
+  position: relative;
+}
+
+/* ── 收藏计数徽章（左上角） ── */
+.collect-count {
+  position: absolute;
+  top: var(--space-2, 8px);
+  left: var(--space-2, 8px);
+  z-index: 10;
+  padding: 2px var(--space-2, 8px);
+  border-radius: var(--radius-sm, 6px);
+  font-size: var(--text-xs, 0.75rem);
+  background: rgba(15, 17, 23, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: var(--color-text-tertiary);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  pointer-events: none;
+}
+
+/* ── 收藏按钮（右上角，hover 显示） ── */
+.collect-btn {
+  position: absolute;
+  top: var(--space-2, 8px);
+  right: var(--space-2, 8px);
+  z-index: 20;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md, 10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(28, 31, 46, 0.8);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: none;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--duration, 200ms) var(--ease),
+              color var(--duration, 200ms) var(--ease),
+              background var(--duration, 200ms) var(--ease),
+              transform var(--duration, 200ms) var(--ease);
+}
+.video-card-wrapper:hover .collect-btn {
+  opacity: 1;
+}
+.collect-btn:hover {
+  color: var(--color-text-inverse);
+  background: var(--color-primary);
+  transform: scale(1.05);
+}
+
+/* ── 视频上传者（广场卡片信息区） ── */
+.video-uploader {
+  font-size: var(--text-xs, 0.75rem);
+  color: var(--color-text-tertiary);
+  margin-top: var(--space-1, 4px);
+}
+.video-uploader span {
+  color: var(--color-accent);
+}
+
+/* ── 视频标签组（广场卡片信息区） ── */
+.video-tags {
+  display: flex;
+  gap: var(--space-1, 4px);
+  margin-top: var(--space-2, 8px);
+  flex-wrap: wrap;
+}
+.video-tags .tag-pill {
+  padding: 1px var(--space-2, 8px);
+  border-radius: var(--radius-full, 9999px);
+  font-size: var(--text-xs, 0.75rem);
+}
+
+/* ── 排序 pill 容器（圆角 full） ── */
+.sort-pills {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1, 4px);
+  background: rgba(22, 24, 34, 0.6);
+  border-radius: var(--radius-full, 9999px);
+  padding: var(--space-1, 4px);
+}
+.sort-pill {
+  padding: 6px var(--space-4, 16px);
+  border-radius: var(--radius-full, 9999px);
+  font-size: var(--text-sm, 0.8125rem);
+  font-weight: var(--weight-medium, 500);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all var(--duration, 200ms) var(--ease);
+  border: none;
+  background: transparent;
+  white-space: nowrap;
+}
+.sort-pill:hover {
+  color: var(--color-text-primary);
+}
+
 /* ── Pagination（页码按钮） ── */
 .page-btn {
-  padding: var(--space-2, 8px) var(--space-5, 20px);
+  padding: var(--space-2, 8px) var(--space-4, 16px);
   border-radius: var(--radius-md, 10px);
   font-size: var(--text-sm, 0.8125rem);
   font-weight: var(--weight-medium, 500);

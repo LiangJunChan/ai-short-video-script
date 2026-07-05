@@ -134,7 +134,7 @@ function ForgotPasswordPage() {
   }
 
   return (
-    <div className="fixed inset-0 overflow-hidden bg-av-bg-primary flex items-center justify-center p-6">
+    <div className="fixed inset-0 overflow-hidden bg-av-bg-primary flex items-center justify-center p-4 sm:p-6">
       {/* 背景层 */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute inset-0 grid-bg animate-grid-move" />
@@ -142,6 +142,17 @@ function ForgotPasswordPage() {
           className="absolute inset-0"
           style={{ background: 'radial-gradient(ellipse at center, rgba(6,214,160,0.06) 0%, transparent 60%)' }}
         />
+        {/* 扫描线 */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div
+            className="absolute left-0 w-full"
+            style={{
+              height: '2px',
+              background: 'linear-gradient(90deg, transparent, rgba(6,214,160,0.08), transparent)',
+              animation: 'scanline 8s linear infinite',
+            }}
+          />
+        </div>
         <div
           className="absolute -top-32 -right-32 rounded-full animate-float"
           style={{ width: '400px', height: '400px', background: 'var(--color-primary-muted)', filter: 'blur(100px)' }}
@@ -150,22 +161,43 @@ function ForgotPasswordPage() {
           className="absolute -bottom-32 -left-32 rounded-full animate-float"
           style={{ width: '350px', height: '350px', background: 'var(--color-accent-muted)', filter: 'blur(100px)', animationDelay: '2s' }}
         />
+        {/* 粒子点缀 */}
+        <div className="absolute top-[12%] left-[8%] w-1 h-1 rounded-full" style={{ background: 'var(--color-primary)', opacity: 0.3 }} />
+        <div className="absolute top-[25%] right-[15%] w-0.5 h-0.5 rounded-full" style={{ background: 'var(--color-accent)', opacity: 0.25 }} />
+        <div className="absolute top-[60%] left-[5%] w-0.5 h-0.5 rounded-full" style={{ background: 'var(--color-primary)', opacity: 0.2 }} />
+        <div className="absolute bottom-[20%] right-[10%] w-1 h-1 rounded-full" style={{ background: 'var(--color-accent)', opacity: 0.2 }} />
+        <div className="absolute top-[40%] right-[6%] w-0.5 h-0.5 rounded-full" style={{ background: 'var(--color-primary)', opacity: 0.15 }} />
+        <div className="absolute bottom-[35%] left-[12%] w-1 h-1 rounded-full" style={{ background: 'var(--color-accent)', opacity: 0.18 }} />
       </div>
 
       <div className="w-full max-w-md relative z-10 animate-slide-up">
-        {/* Logo */}
+        {/* Logo + Brand */}
         <div className="flex flex-col items-center mb-8">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl gradient-primary flex items-center justify-center shadow-av-glow animate-glow-pulse">
-            <svg className="w-9 h-9 text-av-text-inverse" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
+          <div className="w-16 h-16 rounded-2xl overflow-hidden mb-4 animate-glow-pulse" style={{ boxShadow: 'var(--shadow-glow)' }}>
+            <img src="/logo.jpg" alt="谷语AI" className="w-full h-full object-cover" />
           </div>
-          <h1 className="text-2xl font-bold gradient-text">重置密码</h1>
-          <p className="text-av-text-secondary mt-2">通过邮箱验证码重置您的密码</p>
+          <h1
+            className="heading-xl gradient-text"
+            style={{ textWrap: 'balance', wordBreak: 'keep-all' }}
+          >
+            谷语AI
+          </h1>
         </div>
 
         {/* Form Card */}
-        <div className="neon-border rounded-xl p-8" style={{ backgroundColor: 'var(--color-bg-secondary)' }}>
+        <div className="neon-border rounded-xl p-6 sm:p-8" style={{ backgroundColor: 'var(--color-bg-secondary)' }}>
+          <div className="mb-6">
+            <h2
+              className="heading-md mb-1"
+              style={{ color: 'var(--color-text-primary)', textWrap: 'balance', wordBreak: 'keep-all' }}
+            >
+              重置密码
+            </h2>
+            <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
+              通过邮箱验证码重置您的密码
+            </p>
+          </div>
+
           {/* 成功提示 */}
           {success ? (
             <div className="text-center py-8">

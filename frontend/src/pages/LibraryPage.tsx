@@ -59,13 +59,18 @@ function LibraryPage() {
 
   return (
     <div className="min-h-screen bg-av-bg-primary">
-      <div className="max-w-7xl mx-auto px-6 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         {/* Page Header */}
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="heading-lg gradient-text">我的素材库</h1>
+        <div className="page-header">
+          <h1
+            className="heading-lg gradient-text"
+            style={{ textWrap: 'balance', wordBreak: 'keep-all' }}
+          >
+            素材库
+          </h1>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="gradient-primary text-sm font-semibold px-4 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer"
+            className="btn-gradient-primary text-sm font-semibold px-4 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer"
             style={{ color: 'var(--color-text-inverse)', border: 'none' }}
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -77,7 +82,7 @@ function LibraryPage() {
         </div>
 
         {/* 3-Column Layout: Collections (3/4) + Tags Sidebar (1/4) */}
-        <div className="flex gap-6">
+        <div className="flex flex-col lg:flex-row gap-6">
           {/* Collections Section */}
           <section className="flex-1 min-w-0" style={{ flex: 3 }}>
             <h2 className="heading-md mb-5" style={{ color: 'var(--color-text-primary)' }}>收藏夹</h2>
@@ -204,7 +209,7 @@ function LibraryPage() {
           </section>
 
           {/* Tags Sidebar */}
-          <aside className="w-72 flex-shrink-0 space-y-6" style={{ flex: 1 }}>
+          <aside className="w-full lg:w-72 flex-shrink-0 space-y-6" style={{ flex: 1 }}>
             <div>
               <h2 className="heading-md mb-4" style={{ color: 'var(--color-text-primary)' }}>标签</h2>
               {tagsLoading ? (

@@ -7,6 +7,8 @@ import {
   useGetMeQuery,
   useCreateStoryboardMutation,
 } from '../store/videoApi'
+import { useToast } from '../hooks/useToast'
+import { copyToClipboard } from '../utils/download'
 import Loading from '../components/Loading'
 import Toast from '../components/Toast'
 import DeleteModal from '../components/DeleteModal'
@@ -19,7 +21,7 @@ function DetailPage() {
   const navigate = useNavigate()
   const numericId = Number(id)
 
-  const [toast, setToast] = useState<string | null>(null)
+  const { toast, show: showToast } = useToast()
   const [showBackTop, setShowBackTop] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
 
@@ -57,24 +59,10 @@ function DetailPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  const showToast = (message: string) => {
-    setToast(message)
-    setTimeout(() => setToast(null), 3000)
-  }
-
+  // 统一使用 utils/download.ts 的 copyToClipboard，避免重复实现 (fix-copy-dup)
   const handleCopy = async (text: string) => {
-    try {
-      await navigator.clipboard.writeText(text)
-      showToast('文案已复制')
-    } catch {
-      const textArea = document.createElement('textarea')
-      textArea.value = text
-      document.body.appendChild(textArea)
-      textArea.select()
-      document.execCommand('copy')
-      document.body.removeChild(textArea)
-      showToast('文案已复制')
-    }
+    await copyToClipboard(text)
+    showToast('文案已复制')
   }
 
   const handleReextract = async () => {

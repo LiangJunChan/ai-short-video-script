@@ -37,6 +37,9 @@ fail()  { printf "${RED}[fail]${NC} %s\n" "$*" >&2; exit 1; }
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$PROJECT_ROOT"
 
+# 清除可能干扰 venv 的环境变量（TRAE 等 IDE 可能设置 PYTHONHOME）
+unset PYTHONHOME
+
 CHECK_ONLY=0
 for arg in "$@"; do
   case "$arg" in
@@ -124,20 +127,60 @@ if [ "$CHECK_ONLY" -eq 1 ]; then
 fi
 
 # ============================================================
+# ASR 引擎自动选择（按可用内存，与 bootstrap-docker.sh 逻辑一致）
+#   sherpa (低内存 ONNX): 总内存 < 3G → 阿里云等小机器
+#   funasr (torch 高内存): 总内存 >= 3G → MacBook 等开发机
+# 用户可显式覆盖: ASR_ENGINE=sherpa ./bootstrap.sh
+# ============================================================
+if [ -n "$ASR_ENGINE" ]; then
+  ASR_ENGINE_LOCAL="$ASR_ENGINE"
+else
+  ASR_ENGINE_LOCAL=""
+fi
+
+if [ -z "$ASR_ENGINE_LOCAL" ]; then
+  MEM_MB=$(sysctl -n hw.memsize 2>/dev/null | awk '{printf "%d", $1/1024/1024}' || echo 0)
+  if [ "$MEM_MB" -gt 0 ] && [ "$MEM_MB" -lt 3072 ]; then
+    ASR_ENGINE_LOCAL="sherpa"
+    info "检测到内存 ${MEM_MB}MB (<3G) → ASR 引擎自动选 sherpa(低内存 ONNX)"
+  else
+    ASR_ENGINE_LOCAL="funasr"
+    info "检测到内存 ${MEM_MB}MB (>=3G) → ASR 引擎自动选 funasr(torch)"
+  fi
+else
+  info "ASR_ENGINE 已由环境指定为: $ASR_ENGINE_LOCAL"
+fi
+
+# 根据引擎选择对应的 requirements 文件
+if [ "$ASR_ENGINE_LOCAL" = "sherpa" ]; then
+  ASR_REQ_FILE="asr/requirements.sherpa.txt"
+else
+  ASR_REQ_FILE="asr/requirements.funasr.txt"
+fi
+
+# ============================================================
 # 建 ASR venv
 # ============================================================
-info "[1/4] 初始化 asr/.venv (FunASR + FastAPI)..."
+info "[1/4] 初始化 asr/.venv (引擎: ${ASR_ENGINE_LOCAL})..."
 if [ ! -x asr/.venv/bin/python ]; then
   "$PYTHON_BIN" -m venv asr/.venv
   asr/.venv/bin/pip install --quiet --upgrade pip
-  asr/.venv/bin/pip install --quiet -r asr/requirements.txt
-  ok "asr/.venv 已创建并装好依赖"
-elif ! asr/.venv/bin/python -c "import funasr, fastapi" 2>/dev/null; then
-  info "     → 检测到 asr/.venv 存在但依赖不完整，补装..."
-  asr/.venv/bin/pip install --quiet -r asr/requirements.txt
-  ok "asr/.venv 依赖补齐"
+  asr/.venv/bin/pip install --quiet -r "$ASR_REQ_FILE"
+  ok "asr/.venv 已创建并装好依赖 (引擎: ${ASR_ENGINE_LOCAL})"
 else
-  ok "asr/.venv 已就绪(跳过 pip)"
+  # 根据引擎类型检测关键模块
+  if [ "$ASR_ENGINE_LOCAL" = "funasr" ]; then
+    CHECK_IMPORT="import funasr, fastapi"
+  else
+    CHECK_IMPORT="import sherpa_onnx, fastapi"
+  fi
+  if ! asr/.venv/bin/python -c "$CHECK_IMPORT" 2>/dev/null; then
+    info "     → 检测到 asr/.venv 存在但依赖不完整(引擎: ${ASR_ENGINE_LOCAL})，补装..."
+    asr/.venv/bin/pip install --quiet -r "$ASR_REQ_FILE"
+    ok "asr/.venv 依赖补齐 (引擎: ${ASR_ENGINE_LOCAL})"
+  else
+    ok "asr/.venv 已就绪(跳过 pip)"
+  fi
 fi
 
 # ============================================================
@@ -216,10 +259,16 @@ info "冒烟测试..."
 if ! backend/.venv/bin/python -c "import playwright; import sys; sys.exit(0)" 2>/dev/null; then
   fail "backend/.venv 无法 import playwright"
 fi
-if ! asr/.venv/bin/python -c "import funasr; import fastapi; import sys; sys.exit(0)" 2>/dev/null; then
-  fail "asr/.venv 无法 import funasr/fastapi"
+# 冒烟测试也根据引擎类型检测
+if [ "$ASR_ENGINE_LOCAL" = "funasr" ]; then
+  SMOKE_IMPORT="import funasr, fastapi"
+else
+  SMOKE_IMPORT="import sherpa_onnx, fastapi"
 fi
-ok "Python 依赖 import 检查通过"
+if ! asr/.venv/bin/python -c "$SMOKE_IMPORT; import sys; sys.exit(0)" 2>/dev/null; then
+  fail "asr/.venv 无法 import ${ASR_ENGINE_LOCAL}/fastapi，请运行: asr/.venv/bin/pip install -r ${ASR_REQ_FILE}"
+fi
+ok "Python 依赖 import 检查通过 (ASR 引擎: ${ASR_ENGINE_LOCAL})"
 
 # ============================================================
 # 完成
@@ -237,7 +286,12 @@ ${GREEN}✅ 环境就绪！${NC}
   3. 打开 http://localhost:5173
 
 提示：
-  - ASR 首次启动会从 ModelScope 下载 ~1.9G FunASR 模型，请耐心等待
+  - ASR 引擎: ${GREEN}${ASR_ENGINE_LOCAL}${NC}（可根据内存自动选择，也可 ASR_ENGINE=sherpa ./bootstrap.sh 覆盖）
+$(if [ "$ASR_ENGINE_LOCAL" = "funasr" ]; then
+  echo "  - ASR 首次启动会从 ModelScope 下载 ~1.9G FunASR 模型，请耐心等待"
+else
+  echo "  - ASR 使用 sherpa-onnx 引擎，模型已包含在 asr/models/ 目录"
+fi)
   - 抖音链接提取需要 Chromium（已自动装）
   - 只体检不装依赖：./bootstrap.sh --check
 EOF

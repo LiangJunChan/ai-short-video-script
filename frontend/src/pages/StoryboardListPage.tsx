@@ -38,17 +38,17 @@ export default function StoryboardListPage() {
 
   return (
     <div className="min-h-screen bg-av-bg-primary">
-      <main className="max-w-5xl mx-auto px-6 py-10">
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
         {/* Page Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
+        <div className="page-header">
+          <div className="page-header-left">
             <h1
               className="heading-lg gradient-text"
-              style={{ marginBottom: 'var(--space-2)' }}
+              style={{ textWrap: 'balance', wordBreak: 'keep-all' }}
             >
               脚本工作台
             </h1>
-            <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
+            <p className="page-subtitle" style={{ color: 'var(--color-text-secondary)' }}>
               管理和编辑你的AI短视频脚本
             </p>
           </div>
