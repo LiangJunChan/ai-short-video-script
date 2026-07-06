@@ -1,11 +1,12 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom'
+import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import { Provider } from 'react-redux'
 import { store } from './store'
-import { useAppSelector } from './store/hooks'
+import { AuthProvider } from './contexts/AuthContext'
 import App from './App'
 import Layout from './components/Layout'
+import ProtectedRoute from './components/ProtectedRoute'
 import DetailPage from './pages/DetailPage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
@@ -19,15 +20,6 @@ import ProfilePage from './pages/ProfilePage'
 import StoryboardListPage from './pages/StoryboardListPage'
 import StoryboardEditorPage from './pages/StoryboardEditorPage'
 import './index.css'
-
-// 受保护路由组件 — 优先使用 Redux store 的 isAuthenticated 状态 (fix-protected-route-auth)
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated)
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />
-  }
-  return <>{children}</>
-}
 
 const router = createBrowserRouter([
   {
@@ -66,7 +58,9 @@ const router = createBrowserRouter([
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <Provider store={store}>
-      <RouterProvider router={router} />
+      <AuthProvider>
+        <RouterProvider router={router} />
+      </AuthProvider>
     </Provider>
   </React.StrictMode>,
 )

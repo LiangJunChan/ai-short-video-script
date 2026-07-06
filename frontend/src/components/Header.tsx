@@ -2,7 +2,8 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { useDispatch } from 'react-redux'
 import { User } from '../types'
 import { videoApi } from '../store/videoApi'
-import { logout, updateCredits } from '../store/authSlice'
+import { updateCredits } from '../store/authSlice'
+import { useAuthContext } from '../contexts/AuthContext'
 
 interface HeaderProps {
   user: User | null
@@ -16,6 +17,7 @@ function Header({ user, isAuthenticated, onOpenUpload, onOpenUrlExtract, onShowT
   const dispatch = useDispatch()
   const navigate = useNavigate()
   const location = useLocation()
+  const { logout } = useAuthContext()
 
   const { data: checkinData } = videoApi.useGetCheckinStatusQuery(undefined, {
     skip: !isAuthenticated,
@@ -26,8 +28,7 @@ function Header({ user, isAuthenticated, onOpenUpload, onOpenUrlExtract, onShowT
   const [doCheckin, { isLoading: isCheckingIn }] = videoApi.useDoCheckinMutation()
 
   const handleLogout = () => {
-    dispatch(logout())
-    dispatch(videoApi.util.resetApiState())
+    logout()
     navigate('/login')
   }
 

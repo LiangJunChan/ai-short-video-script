@@ -1,8 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useLoginMutation, useLoginByEmailMutation } from '../store/videoApi'
-import { useDispatch } from 'react-redux'
-import { login } from '../store/authSlice'
+import { useAuthContext } from '../contexts/AuthContext'
 import { features } from '../config/features'
 import EyeIcon from '../components/EyeIcon'
 
@@ -10,7 +9,7 @@ type LoginTab = 'username' | 'email'
 
 function LoginPage() {
   const navigate = useNavigate()
-  const dispatch = useDispatch()
+  const { login } = useAuthContext()
   const [activeTab, setActiveTab] = useState<LoginTab>('username')
 
   // 用户名登录状态
@@ -43,8 +42,7 @@ function LoginPage() {
     try {
       const result = await loginMutation({ username, password }).unwrap()
       if (result.code === 200) {
-        // authSlice.login 内部已设置 localStorage，无需重复设置 (fix-duplicate-token)
-        dispatch(login(result.data))
+        login(result.data.user, result.data.token)
         navigate('/')
       } else {
         setError(result.message || '登录失败')
@@ -85,7 +83,7 @@ function LoginPage() {
     try {
       const result = await loginByEmailMutation({ email, password: emailPassword }).unwrap()
       if (result.code === 200) {
-        dispatch(login(result.data))
+        login(result.data.user, result.data.token)
         navigate('/')
       } else {
         setError(result.message || '登录失败')

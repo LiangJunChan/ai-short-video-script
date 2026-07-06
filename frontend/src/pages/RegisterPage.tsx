@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useRegisterMutation, useSendCodeMutation, useRegisterByEmailMutation } from '../store/videoApi'
-import { useDispatch } from 'react-redux'
-import { login } from '../store/authSlice'
+import { useAuthContext } from '../contexts/AuthContext'
 import { features } from '../config/features'
 import EyeIcon from '../components/EyeIcon'
 
@@ -10,7 +9,7 @@ type RegisterTab = 'username' | 'email'
 
 function RegisterPage() {
   const navigate = useNavigate()
-  const dispatch = useDispatch()
+  const { login } = useAuthContext()
   const [activeTab, setActiveTab] = useState<RegisterTab>(
     features.usernameSignUp ? 'username' : 'email'
   )
@@ -190,8 +189,7 @@ function RegisterPage() {
         confirm_password: emailConfirmPassword,
       }).unwrap()
       if (result.code === 200) {
-        localStorage.setItem('token', result.data.token)
-        dispatch(login(result.data))
+        login(result.data.user, result.data.token)
         navigate('/')
       } else {
         setError(result.message || '注册失败')

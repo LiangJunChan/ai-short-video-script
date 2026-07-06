@@ -5,13 +5,13 @@ import Header from './Header'
 import UploadModal from './UploadModal'
 import UrlExtractModal from './UrlExtractModal'
 import Toast from './Toast'
-import { useAuth } from '../hooks/useAuth'
+import { useAuthContext } from '../contexts/AuthContext'
 import { updateCredits } from '../store/authSlice'
 import { videoApi } from '../store/videoApi'
 
 function Layout() {
   const dispatch = useDispatch()
-  const { user, isAuthenticated } = useAuth()
+  const { user, isAuthenticated } = useAuthContext()
   const [showUploadModal, setShowUploadModal] = useState(false)
   const [showUrlExtractModal, setShowUrlExtractModal] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
