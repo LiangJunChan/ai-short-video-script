@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react'
 import { useDispatch } from 'react-redux'
 import type { User } from '../types'
-import { updateCredits, setUser } from '../store/authSlice'
+import { setUser } from '../store/authSlice'
 import { videoApi } from '../store/videoApi'
 
 interface AuthContextType {
@@ -50,12 +50,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshCredits = useCallback(() => {
     // Credits are refreshed by the Layout component via videoApi
-  }, [])
-
-  // 更新用户信息
-  const updateUser = useCallback((userData: User) => {
-    setUserState(userData)
-    localStorage.setItem('user', JSON.stringify(userData))
   }, [])
 
   const value: AuthContextType = {
