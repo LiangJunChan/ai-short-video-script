@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Outlet } from 'react-router-dom'
 import { useDispatch } from 'react-redux'
 import Header from './Header'
+import Footer from './Footer'
 import UploadModal from './UploadModal'
 import UrlExtractModal from './UrlExtractModal'
 import Toast from './Toast'
@@ -32,7 +33,7 @@ function Layout() {
   }
 
   return (
-    <div className="min-h-screen bg-av-bg-primary">
+    <div className="min-h-screen bg-av-bg-primary flex flex-col">
       <Header
         user={user}
         isAuthenticated={isAuthenticated}
@@ -42,9 +43,11 @@ function Layout() {
       />
 
       {/* Main Content — 各子页面自行控制宽度与 padding */}
-      <main className="min-h-[calc(100vh-4rem)]">
+      <main className="flex-1 min-h-[calc(100vh-4rem-3rem)]">
         <Outlet context={{ onOpenUpload: () => setShowUploadModal(true) }} />
       </main>
+
+      <Footer />
 
       {/* Modals */}
       {showUploadModal && (
