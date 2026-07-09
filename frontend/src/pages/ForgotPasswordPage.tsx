@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useSendCodeMutation, useResetPasswordMutation } from '../store/videoApi'
+import Footer from '../components/Footer'
 
 function ForgotPasswordPage() {
   const navigate = useNavigate()
@@ -377,6 +378,9 @@ function ForgotPasswordPage() {
             </p>
           </div>
         </div>
+      </div>
+      <div className="absolute bottom-0 left-0 right-0 z-10">
+        <Footer />
       </div>
     </div>
   )
