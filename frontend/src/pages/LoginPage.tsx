@@ -4,6 +4,7 @@ import { useLoginMutation, useLoginByEmailMutation } from '../store/videoApi'
 import { useAuthContext } from '../contexts/AuthContext'
 import { features } from '../config/features'
 import EyeIcon from '../components/EyeIcon'
+import Footer from '../components/Footer'
 
 type LoginTab = 'username' | 'email'
 
@@ -336,6 +337,9 @@ function LoginPage() {
             </div>
           )}
         </div>
+      </div>
+      <div className="absolute bottom-0 left-0 right-0 z-10">
+        <Footer />
       </div>
     </div>
   )
