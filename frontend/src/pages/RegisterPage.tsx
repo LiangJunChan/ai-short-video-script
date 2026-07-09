@@ -4,6 +4,7 @@ import { useRegisterMutation, useSendCodeMutation, useRegisterByEmailMutation } 
 import { useAuthContext } from '../contexts/AuthContext'
 import { features } from '../config/features'
 import EyeIcon from '../components/EyeIcon'
+import Footer from '../components/Footer'
 
 type RegisterTab = 'username' | 'email'
 
@@ -504,6 +505,9 @@ function RegisterPage() {
             </p>
           </div>
         </div>
+      </div>
+      <div className="absolute bottom-0 left-0 right-0 z-10">
+        <Footer />
       </div>
     </div>
   )
