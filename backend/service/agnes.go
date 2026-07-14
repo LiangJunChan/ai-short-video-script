@@ -25,11 +25,12 @@ type AgnesService struct {
 	client  *http.Client
 }
 
-// AgnesImageRequest 文生图请求。
+// AgnesImageRequest 图片生成请求；ImageURL 为空时为文生图，非空时为图生图。
 type AgnesImageRequest struct {
 	Prompt         string
 	Size           string
 	ResponseFormat string
+	ImageURL       string
 }
 
 // AgnesImageResult 文生图结果。
@@ -103,11 +104,16 @@ func (s *AgnesService) GenerateImage(req AgnesImageRequest) (*AgnesImageResult, 
 		"prompt": req.Prompt,
 		"size":   req.Size,
 	}
-	if req.ResponseFormat == "b64_json" {
-		body["return_base64"] = true
-	} else {
-		body["extra_body"] = map[string]interface{}{"response_format": "url"}
+
+	extraBody := map[string]interface{}{
+		"response_format": req.ResponseFormat,
 	}
+
+	if req.ImageURL != "" {
+		extraBody["image"] = []string{req.ImageURL}
+	}
+
+	body["extra_body"] = extraBody
 
 	respBody, err := s.postJSON(s.v1Endpoint("/images/generations"), body)
 	if err != nil {

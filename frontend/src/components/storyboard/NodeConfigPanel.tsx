@@ -122,11 +122,28 @@ export default function NodeConfigPanel({ nodeId, nodeType, config, result, onSa
         {nodeType === 'ai_image' && (
           <div className="space-y-3">
             <div>
+              <label className="block text-xs text-av-text-secondary mb-1">生成模式</label>
+              <select value={formData.mode || 'text_to_image'} onChange={(e) => handleChange('mode', e.target.value)}
+                className="input-field w-full px-3 py-1.5 text-sm">
+                <option value="text_to_image">文生图</option>
+                <option value="image_to_image">图生图</option>
+              </select>
+            </div>
+            <div>
               <label className="block text-xs text-av-text-secondary mb-1">图片描述（必填）</label>
               <textarea value={formData.prompt || ''} onChange={(e) => handleChange('prompt', e.target.value)}
                 rows={3} placeholder="一个女孩在咖啡厅微笑，暖色调，电影感"
                 className="input-field w-full px-3 py-2 text-sm resize-none" />
             </div>
+            {formData.mode === 'image_to_image' && (
+              <div>
+                <label className="block text-xs text-av-text-secondary mb-1">参考图片 URL</label>
+                <input type="text" value={formData.image_url || ''} onChange={(e) => handleChange('image_url', e.target.value)}
+                  placeholder="可留空，优先使用上游 AI 图片节点结果"
+                  className="input-field w-full px-3 py-1.5 text-sm" />
+                <p className="text-xs text-av-text-tertiary mt-1">连接 ai_image → ai_image 时会自动使用上游生成图片。</p>
+              </div>
+            )}
             <div>
               <label className="block text-xs text-av-text-secondary mb-1">尺寸</label>
               <select value={formData.size || '1024x768'} onChange={(e) => handleChange('size', e.target.value)}
@@ -136,7 +153,7 @@ export default function NodeConfigPanel({ nodeId, nodeType, config, result, onSa
                 <option value="1024x1024">1024x1024（方图）</option>
               </select>
             </div>
-            <p className="text-xs text-av-state-success">✓ 使用 Agnes Image 2.1 Flash，第一版暂不扣积分</p>
+            <p className="text-xs text-av-state-success">✓ 使用 Agnes Image 2.1 Flash，支持文生图与图生图，第一版暂不扣积分</p>
           </div>
         )}
 

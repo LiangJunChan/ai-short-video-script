@@ -28,7 +28,7 @@ interface CanvasProps {
   onNodesChange: (nodes: Node[]) => void
   onEdgesChange: (edges: Edge[]) => void
   onNodeClick: (nodeId: string) => void
-  onPaneContextMenu: (position: { x: number; y: number }) => void
+  onPaneContextMenu: (screenPosition: { x: number; y: number }, flowPosition: { x: number; y: number }) => void
   fitViewKey?: number
 }
 
@@ -117,7 +117,11 @@ export default function Canvas({
   const onPaneContextMenuWrapper = useCallback(
     (event: React.MouseEvent) => {
       event.preventDefault()
-      onPaneContextMenu({ x: event.clientX, y: event.clientY })
+      const screenPosition = { x: event.clientX, y: event.clientY }
+      const flowPosition = reactFlowInstance.current
+        ? reactFlowInstance.current.screenToFlowPosition(screenPosition)
+        : screenPosition
+      onPaneContextMenu(screenPosition, flowPosition)
     },
     [onPaneContextMenu]
   )

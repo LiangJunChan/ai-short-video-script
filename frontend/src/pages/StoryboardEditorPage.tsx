@@ -11,6 +11,7 @@ import ExportMenu from '../components/storyboard/ExportMenu'
 import ExecutePanel from '../components/storyboard/ExecutePanel'
 import ExecutionProgressBar from '../components/storyboard/ExecutionProgressBar'
 import Toast from '../components/Toast'
+import { MediaViewerProvider } from '../components/storyboard/MediaViewerContext'
 
 export default function StoryboardEditorPage() {
   const { id } = useParams<{ id: string }>()
@@ -38,6 +39,7 @@ export default function StoryboardEditorPage() {
   const [fitViewKey, setFitViewKey] = useState(0)
   const [showNodeMenu, setShowNodeMenu] = useState(false)
   const [nodeMenuPosition, setNodeMenuPosition] = useState({ x: 0, y: 0 })
+  const [nodeFlowPosition, setNodeFlowPosition] = useState({ x: 0, y: 0 })
   const [activeRunId, setActiveRunId] = useState<number | null>(null)
   const [runProgress, setRunProgress] = useState<{
     done: number; total: number; runningLabel: string; errorCount: number; runStatus: string
@@ -232,8 +234,9 @@ export default function StoryboardEditorPage() {
     setIsSaving(false)
   }, [flushCanvasToDB, refetch])
 
-  const handlePaneContextMenu = useCallback((position: { x: number; y: number }) => {
-    setNodeMenuPosition(position)
+  const handlePaneContextMenu = useCallback((screenPosition: { x: number; y: number }, flowPosition: { x: number; y: number }) => {
+    setNodeMenuPosition(screenPosition)
+    setNodeFlowPosition(flowPosition)
     setShowNodeMenu(true)
   }, [])
 
@@ -250,7 +253,7 @@ export default function StoryboardEditorPage() {
     const newNode: Node = {
       id: `temp-${Date.now()}`,
       type: nodeType,
-      position: nodeMenuPosition,
+      position: nodeFlowPosition,
       data: {
         nodeType,
         config: configs[nodeType] || {},
@@ -261,7 +264,7 @@ export default function StoryboardEditorPage() {
     }
     setNodes((nds) => [...nds, newNode])
     setShowNodeMenu(false)
-  }, [nodeMenuPosition])
+  }, [nodeFlowPosition])
 
   const handleNodeClick = useCallback((nodeId: string) => {
     setSelectedNodeId(nodeId)
@@ -369,11 +372,11 @@ export default function StoryboardEditorPage() {
 
   if (isLoading) return <div className="flex items-center justify-center h-screen text-av-text-tertiary">加载中...</div>
 
-  const sceneNodes = nodes.filter((n) => n.data?.nodeType === 'scene')
-  const showEmptyHint = sceneNodes.length === 0
+  const showEmptyHint = nodes.length === 0
 
   return (
-    <div className="h-screen flex flex-col">
+    <MediaViewerProvider>
+      <div className="h-screen flex flex-col">
       <CanvasToolbar name={name} onNameChange={setName} onSave={handleSave}
         onAISplit={() => setShowAISplit(true)} onTemplate={() => setShowTemplate(true)}
         onExport={() => setShowExport(true)} onExecute={() => { if (!activeRunId) setShowExecute(true) }} onBack={() => navigate('/storyboards')}
@@ -463,6 +466,7 @@ export default function StoryboardEditorPage() {
         </div>
       )}
       {toast && <Toast message={toast} />}
-    </div>
+      </div>
+    </MediaViewerProvider>
   )
 }

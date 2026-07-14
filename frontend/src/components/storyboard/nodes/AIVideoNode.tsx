@@ -1,10 +1,12 @@
 import { memo } from 'react'
 import { Handle, Position, NodeProps } from 'reactflow'
 import UnsavedBadge from './UnsavedBadge'
+import { useMediaViewer } from '../MediaViewerContext'
 
 const AIVideoNode = memo(({ data, selected }: NodeProps) => {
   const config = data.config || {}
   const result = data.result || {}
+  const { openMedia } = useMediaViewer()
 
   const modeLabel = config.mode === 'image_to_video' ? '图生视频' : '文生视频'
 
@@ -30,7 +32,18 @@ const AIVideoNode = memo(({ data, selected }: NodeProps) => {
         {config.prompt && <p className="text-xs text-av-text-primary line-clamp-2">📝 {config.prompt}</p>}
         {config.image_url && <p className="text-xs text-av-text-tertiary line-clamp-1">🖼️ {config.image_url}</p>}
         {result.video_url && (
-          <video src={result.video_url} className="w-full h-24 object-cover rounded mt-1" controls />
+          <div className="relative mt-1">
+            <video
+              src={result.video_url}
+              className="w-full h-24 object-cover rounded"
+              controls
+            />
+            <div
+              className="absolute inset-0 cursor-pointer opacity-0 hover:opacity-100 hover:bg-black/10 rounded transition-opacity"
+              onClick={() => openMedia(result.video_url, 'video')}
+              title="点击放大查看"
+            />
+          </div>
         )}
       </div>
 

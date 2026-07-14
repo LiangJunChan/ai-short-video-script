@@ -211,7 +211,7 @@ func (e *WorkflowEngine) executeNode(node database.StoryboardNode, nodeOutputs m
 	case "ai_split":
 		return e.executeAISplit(node.ID, inputText)
 	case "ai_image":
-		return e.executeAIImage(node.ID, config, inputText)
+		return e.executeAIImage(node.ID, config, inputText, nodeOutputs)
 	case "ai_video":
 		return e.executeAIVideo(node.ID, config, inputText, nodeOutputs)
 	case "tts":
@@ -334,7 +334,8 @@ func (e *WorkflowEngine) executeAISplit(nodeID int, inputText string) NodeExecut
 }
 
 // executeAIImage 执行 AI 图片生成节点
-func (e *WorkflowEngine) executeAIImage(nodeID int, config map[string]interface{}, inputText string) NodeExecutionResult {
+func (e *WorkflowEngine) executeAIImage(nodeID int, config map[string]interface{}, inputText string, nodeOutputs map[int]string) NodeExecutionResult {
+	mode := getStringConfig(config, "mode", "text_to_image")
 	prompt := inputText
 	if prompt == "" {
 		if p, ok := config["prompt"].(string); ok {
@@ -347,6 +348,24 @@ func (e *WorkflowEngine) executeAIImage(nodeID int, config map[string]interface{
 			Status:  "error",
 			Error:   "缺少图片提示词：请在上游节点或配置中提供 prompt",
 			Credits: 0,
+		}
+	}
+
+	imageURL := ""
+	if mode == "image_to_image" {
+		imageURL = e.getInputImageURL(nodeID, nodeOutputs)
+		if imageURL == "" {
+			if u, ok := config["image_url"].(string); ok {
+				imageURL = strings.TrimSpace(u)
+			}
+		}
+		if imageURL == "" {
+			return NodeExecutionResult{
+				NodeID:  nodeID,
+				Status:  "error",
+				Error:   "缺少输入图片：请连接 AI 图片节点或手动填写图片 URL",
+				Credits: 0,
+			}
 		}
 	}
 
@@ -366,6 +385,7 @@ func (e *WorkflowEngine) executeAIImage(nodeID int, config map[string]interface{
 		Prompt:         prompt,
 		Size:           size,
 		ResponseFormat: responseFormat,
+		ImageURL:       imageURL,
 	})
 	if err != nil {
 		return NodeExecutionResult{
@@ -382,6 +402,7 @@ func (e *WorkflowEngine) executeAIImage(nodeID int, config map[string]interface{
 		"revised_prompt": result.RevisedPrompt,
 		"model":          result.Model,
 		"size":           result.Size,
+		"mode":           mode,
 		"credits":        0,
 	})
 	return NodeExecutionResult{
