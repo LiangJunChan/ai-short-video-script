@@ -320,7 +320,8 @@ func parseAgnesVideoResponse(respBody []byte) (*AgnesVideoResult, error) {
 		Model               string      `json:"model"`
 		Status              string      `json:"status"`
 		Progress            int         `json:"progress"`
-		VideoURL            string      `json:"video_url"`
+		URL                 string      `json:"url"`        // 官方 completed 响应字段
+		VideoURL            string      `json:"video_url"`  // 旧版兼容
 		RemixedFromVideoID  string      `json:"remixed_from_video_id"`
 		Error               interface{} `json:"error"`
 	}
@@ -329,7 +330,11 @@ func parseAgnesVideoResponse(respBody []byte) (*AgnesVideoResult, error) {
 	}
 
 	status := strings.ToLower(strings.TrimSpace(parsed.Status))
-	videoURL := parsed.VideoURL
+	// 优先取 url（官方 completed 响应），其次 video_url（旧版），最后 remixed_from_video_id
+	videoURL := parsed.URL
+	if videoURL == "" {
+		videoURL = parsed.VideoURL
+	}
 	if videoURL == "" {
 		videoURL = parsed.RemixedFromVideoID
 	}
