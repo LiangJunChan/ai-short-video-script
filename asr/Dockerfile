@@ -19,10 +19,17 @@ ARG PIP_TRUSTED_HOST=pypi.tuna.tsinghua.edu.cn
 ENV PIP_INDEX_URL=${PIP_INDEX_URL}
 ENV PIP_TRUSTED_HOST=${PIP_TRUSTED_HOST}
 
+# apt 走清华镜像(国内直连 deb.debian.org 慢/卡)
+# 境外部署时可覆盖: docker build --build-arg APT_MIRROR=deb.debian.org ...
+ARG APT_MIRROR=mirrors.tuna.tsinghua.edu.cn
+
 # 系统依赖:
 #   - ffmpeg: sherpa 引擎解码音频成 PCM(funasr 也能用它读音频)
 #   - build-essential: funasr 的 editdistance 无预编译 wheel,需现场编 C++
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# 兼容 bookworm(/etc/apt/sources.list) 和 trixie(/etc/apt/sources.list.d/debian.sources)
+RUN find /etc/apt -type f \( -name 'sources.list' -o -name '*.sources' \) \
+      -exec sed -i "s|deb.debian.org|${APT_MIRROR}|g;s|security.debian.org|${APT_MIRROR}|g" {} + \
+    && apt-get update && apt-get install -y --no-install-recommends \
       ffmpeg \
       $([ "$ASR_ENGINE" = "funasr" ] && echo build-essential) \
     && rm -rf /var/lib/apt/lists/*

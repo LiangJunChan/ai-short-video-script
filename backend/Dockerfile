@@ -16,10 +16,17 @@ ARG GOSUMDB=sum.golang.google.cn
 ENV GOPROXY=${GOPROXY}
 ENV GOSUMDB=${GOSUMDB}
 
+# apt 走清华镜像(国内直连 deb.debian.org 慢/卡)
+# 境外部署时可覆盖: docker build --build-arg APT_MIRROR=deb.debian.org ...
+ARG APT_MIRROR=mirrors.tuna.tsinghua.edu.cn
+
 WORKDIR /src
 
 # 只 CGO 需要的最小系统包(sqlite3 走 go-sqlite3,自带 amalgamation,只要 gcc)
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# 兼容 bookworm(/etc/apt/sources.list) 和 trixie(/etc/apt/sources.list.d/debian.sources)
+RUN find /etc/apt -type f \( -name 'sources.list' -o -name '*.sources' \) \
+      -exec sed -i "s|deb.debian.org|${APT_MIRROR}|g;s|security.debian.org|${APT_MIRROR}|g" {} + \
+    && apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     libc6-dev \
     && rm -rf /var/lib/apt/lists/*
@@ -44,13 +51,19 @@ ARG PIP_TRUSTED_HOST=pypi.tuna.tsinghua.edu.cn
 ENV PIP_INDEX_URL=${PIP_INDEX_URL}
 ENV PIP_TRUSTED_HOST=${PIP_TRUSTED_HOST}
 
+# apt 走清华镜像(国内直连 deb.debian.org 慢/卡)
+# 境外部署时可覆盖: docker build --build-arg APT_MIRROR=deb.debian.org ...
+ARG APT_MIRROR=mirrors.tuna.tsinghua.edu.cn
+
 WORKDIR /app
 
 # 系统依赖:
 #   - ffmpeg + ffprobe: 视频缩略图 / 时长
 #   - ca-certificates: HTTPS 请求
 #   - 其他: playwright install --with-deps 会自动装 chromium 的系统库
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN find /etc/apt -type f \( -name 'sources.list' -o -name '*.sources' \) \
+      -exec sed -i "s|deb.debian.org|${APT_MIRROR}|g;s|security.debian.org|${APT_MIRROR}|g" {} + \
+    && apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
