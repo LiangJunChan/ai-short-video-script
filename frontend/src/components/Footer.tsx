@@ -7,8 +7,8 @@
 // POLICE_TEXT: 页面上显示的公安备案完整文案,例如 "京公网安备 11010802012345 号"
 // -----------------------------------------------------------------------------
 const ICP_NUMBER = '粤ICP备2026094795号-1'
-const POLICE_RECORD_CODE = '<公安备案号数字,如:11010802012345>'
-const POLICE_TEXT = '<公安备案文案,如:京公网安备 11010802012345 号>'
+// const POLICE_RECORD_CODE = '<公安备案号数字,如:11010802012345>'
+// const POLICE_TEXT = '<公安备案文案,如:京公网安备 11010802012345 号>'
 
 function Footer() {
   return (
@@ -23,7 +23,7 @@ function Footer() {
           {ICP_NUMBER}
         </a>
         <span className="text-av-border-subtle" aria-hidden="true">·</span>
-        <a
+        {/* <a
           href={`http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=${POLICE_RECORD_CODE}`}
           target="_blank"
           rel="noopener noreferrer"
@@ -36,7 +36,7 @@ function Footer() {
             className="w-3.5 h-3.5"
           />
           {POLICE_TEXT}
-        </a>
+        </a> */}
       </div>
     </footer>
   )
